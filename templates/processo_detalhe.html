@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Processo {{ p.numero_processo }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="layout">
+
+    <aside class="menu-lateral">
+      <div class="logo-menu">Gestão de Processos</div>
+      <nav>
+        <a href="{{ url_for('inicio') }}">Início</a>
+
+        <div class="item-com-submenu">
+          <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('cadastro_civel') }}">Processo Cível</a></li>
+            <li><a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a></li>
+            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+          </ul>
+        </div>
+
+        <div class="item-com-submenu ativo">
+          <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('processos_civel') }}">Processo Cível</a></li>
+            <li><a href="{{ url_for('processos_trabalhista') }}">Processo Trabalhista</a></li>
+            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+          </ul>
+        </div>
+
+      </nav>
+    </aside>
+
+    <div class="conteudo">
+      <div class="cabecalho">
+        <h1>Processo {{ p.numero_processo }}</h1>
+        <div class="subtitulo">{{ p.tipo_acao|replace('_', ' ')|title }} · Cadastrado em {{ p.data_cadastro.strftime('%d/%m/%Y') if p.data_cadastro else '—' }}</div>
+      </div>
+
+      <div class="container" style="max-width: 1000px;">
+
+        <a class="link-voltar" href="{{ url_for('processos_civel') if p.origem_cadastro == 'civel' else url_for('processos_trabalhista') }}">← Voltar para a listagem</a>
+
+        <!-- Identificação -->
+        <div class="secao">
+          <h2>Identificação</h2>
+          <div class="linha">
+            <div class="campo">
+              <label>Número do processo</label>
+              <div class="valor">{{ p.numero_processo }}</div>
+            </div>
+            <div class="campo">
+              <label>Tipo de ação</label>
+              <div class="valor">{{ p.tipo_acao|replace('_', ' ')|title }}</div>
+            </div>
+            <div class="campo">
+              <label>Juizado</label>
+              <div class="valor">{{ p.juizado or '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>Comarca</label>
+              <div class="valor">{{ p.comarca or '—' }}</div>
+            </div>
+          </div>
+          <div class="linha">
+            <div class="campo">
+              <label>Status</label>
+              <div class="valor"><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></div>
+            </div>
+            <div class="campo">
+              <label>Risco</label>
+              <div class="valor">
+                {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif %}
+              </div>
+            </div>
+            <div class="campo">
+              <label>Centro de resultado</label>
+              <div class="valor">{{ p.centro_resultado or '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>Escritório</label>
+              <div class="valor">{{ p.escritorio or '—' }}</div>
+            </div>
+          </div>
+          {% if p.centro_resultado == 'rateio' and p.rateio_crs %}
+          <div class="campo">
+            <label>Rateio entre os CRs</label>
+            <ul class="lista-itens">
+              {% for r in p.rateio_crs %}
+              <li>{{ r.centro_resultado }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Datas e audiências -->
+        <div class="secao">
+          <h2>Datas e audiências</h2>
+          <div class="linha">
+            <div class="campo">
+              <label>Data de distribuição</label>
+              <div class="valor">{{ p.data_distribuicao.strftime('%d/%m/%Y') if p.data_distribuicao else '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>Tempo de tramitação</label>
+              <div class="valor">{{ p.dias_ativos ~ ' dias' if p.dias_ativos is not none else '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>Data de arquivamento</label>
+              <div class="valor">{{ p.data_arquivamento.strftime('%d/%m/%Y') if p.data_arquivamento else '—' }}</div>
+            </div>
+          </div>
+          <div class="linha">
+            <div class="campo">
+              <label>1ª audiência</label>
+              <div class="valor">{{ p.data_audiencia_1.strftime('%d/%m/%Y') if p.data_audiencia_1 else '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>2ª audiência</label>
+              <div class="valor">{{ p.data_audiencia_2.strftime('%d/%m/%Y') if p.data_audiencia_2 else '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>3ª audiência</label>
+              <div class="valor">{{ p.data_audiencia_3.strftime('%d/%m/%Y') if p.data_audiencia_3 else '—' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Partes -->
+        <div class="secao">
+          <h2>Partes</h2>
+          <div class="linha">
+            <div class="campo">
+              <label>Autor(es)</label>
+              {% set autores = p.partes|selectattr('tipo', 'equalto', 'autor')|list %}
+              {% if autores %}
+              <ul class="lista-itens">
+                {% for a in autores %}<li>{{ a.nome }}</li>{% endfor %}
+              </ul>
+              {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
+            </div>
+            <div class="campo">
+              <label>Réu(s)</label>
+              {% set reus = p.partes|selectattr('tipo', 'equalto', 'reu')|list %}
+              {% if reus %}
+              <ul class="lista-itens">
+                {% for r in reus %}<li>{{ r.nome }}</li>{% endfor %}
+              </ul>
+              {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Advogados -->
+        <div class="secao">
+          <h2>Advogados</h2>
+          <div class="linha">
+            <div class="campo">
+              <label>Advogado(s) do autor</label>
+              {% set adv_autor = p.advogados|selectattr('lado', 'equalto', 'autor')|list %}
+              {% if adv_autor %}
+              <ul class="lista-itens">
+                {% for a in adv_autor %}<li>{{ a.nome }}{{ ' — OAB ' ~ a.oab if a.oab else '' }}</li>{% endfor %}
+              </ul>
+              {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
+            </div>
+            <div class="campo">
+              <label>Advogado(s) do réu</label>
+              {% set adv_reu = p.advogados|selectattr('lado', 'equalto', 'reu')|list %}
+              {% if adv_reu %}
+              <ul class="lista-itens">
+                {% for a in adv_reu %}<li>{{ a.nome }}{{ ' — OAB ' ~ a.oab if a.oab else '' }}</li>{% endfor %}
+              </ul>
+              {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Pedidos: cível ou trabalhista, conforme origem -->
+        {% if p.origem_cadastro == 'civel' %}
+        <div class="secao">
+          <h2>Pedidos e requerimentos</h2>
+          {% if p.pedidos_civeis %}
+          <ul class="lista-itens">
+            {% for ped in p.pedidos_civeis %}<li>{{ ped.descricao }}</li>{% endfor %}
+          </ul>
+          {% else %}<div class="valor texto-vazio">Nenhum pedido marcado</div>{% endif %}
+        </div>
+        {% elif p.origem_cadastro == 'trabalhista' %}
+        <div class="secao">
+          <h2>Pedidos / verbas trabalhistas</h2>
+          {% if p.pedidos_trabalhistas %}
+          <ul class="lista-itens">
+            {% for ped in p.pedidos_trabalhistas %}
+            <li>{{ ped.verba }} — {{ 'R$ %.2f'|format(ped.valor)|replace('.', ',') if ped.valor is not none else '—' }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}<div class="valor texto-vazio">Nenhuma verba lançada</div>{% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Movimentos -->
+        <div class="secao">
+          <h2>Movimentações</h2>
+          {% if p.movimentos %}
+          <ul class="lista-itens">
+            {% for m in p.movimentos|sort(attribute='data_movimento') %}
+            <li>{{ m.data_movimento.strftime('%d/%m/%Y') if m.data_movimento else '—' }} — {{ m.tipo_movimento }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}<div class="valor texto-vazio">Nenhuma movimentação registrada</div>{% endif %}
+        </div>
+
+        <!-- Resultado -->
+        <div class="secao">
+          <h2>Resultado</h2>
+          <div class="linha">
+            <div class="campo">
+              <label>Resultado</label>
+              <div class="valor">{{ p.resultado|replace('_', ' ')|title if p.resultado else '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>Sentença</label>
+              <div class="valor">{{ p.sentenca|title if p.sentenca else '—' }}</div>
+            </div>
+          </div>
+          <div class="campo">
+            <label>Resumo</label>
+            <div class="valor">{{ p.resumo or '—' }}</div>
+          </div>
+        </div>
+
+        <!-- Financeiro -->
+        <div class="secao">
+          <h2>Financeiro</h2>
+          <div class="linha">
+            <div class="campo">
+              <label>Valor da causa</label>
+              <div class="valor">{{ 'R$ %.2f'|format(p.valor_causa)|replace('.', ',') if p.valor_causa is not none else '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>Valor final</label>
+              <div class="valor">{{ 'R$ %.2f'|format(p.valor_final)|replace('.', ',') if p.valor_final is not none else '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>Valor recursal</label>
+              <div class="valor">{{ 'R$ %.2f'|format(p.valor_recursal)|replace('.', ',') if p.valor_recursal is not none else '—' }}</div>
+            </div>
+          </div>
+          <div class="linha">
+            <div class="campo">
+              <label>Honorários advocatícios</label>
+              <div class="valor">{{ 'R$ %.2f'|format(p.honorarios_advogado)|replace('.', ',') if p.honorarios_advogado is not none else '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>Honorários periciais</label>
+              <div class="valor">{{ 'R$ %.2f'|format(p.honorarios_periciais)|replace('.', ',') if p.honorarios_periciais is not none else '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>Custas processuais</label>
+              <div class="valor">{{ 'R$ %.2f'|format(p.custas_processuais)|replace('.', ',') if p.custas_processuais is not none else '—' }}</div>
+            </div>
+          </div>
+          <div class="linha">
+            <div class="campo">
+              <label>Valor do alvará</label>
+              <div class="valor">{{ 'R$ %.2f'|format(p.valor_alvara)|replace('.', ',') if p.valor_alvara is not none else '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>Data do alvará</label>
+              <div class="valor">{{ p.data_alvara.strftime('%d/%m/%Y') if p.data_alvara else '—' }}</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

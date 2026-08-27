@@ -60,6 +60,7 @@
                 <th>Risco</th>
                 <th>Tempo de tramitação</th>
                 <th>Valor da causa</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -79,6 +80,7 @@
                 </td>
                 <td>{{ p.dias_ativos if p.dias_ativos is not none else '—' }}{{ ' dias' if p.dias_ativos is not none else '' }}</td>
                 <td>{{ 'R$ %.2f'|format(p.valor_causa)|replace('.', ',') if p.valor_causa is not none else '—' }}</td>
+                <td><a class="btn-detalhe" href="{{ url_for('processo_detalhe', processo_id=p.id) }}">Ver detalhes</a></td>
               </tr>
               {% endfor %}
             </tbody>

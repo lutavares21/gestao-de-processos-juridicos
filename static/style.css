@@ -560,3 +560,59 @@ input[readonly] {
   margin-bottom: 20px;
   font-size: 14px;
 }
+
+/* --- Página de detalhe do processo (somente leitura) --- */
+.campo .valor {
+  padding: 9px 0 4px;
+  font-size: 14px;
+  color: var(--texto);
+}
+
+.lista-itens {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lista-itens li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--borda);
+  font-size: 14px;
+}
+
+.lista-itens li:last-child {
+  border-bottom: none;
+}
+
+.btn-detalhe {
+  display: inline-block;
+  padding: 6px 12px;
+  background: var(--tinta);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 3px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.btn-detalhe:hover {
+  background: var(--tinta-clara);
+}
+
+.link-voltar {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: var(--tinta);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.link-voltar:hover {
+  text-decoration: underline;
+}
+
+.texto-vazio {
+  color: var(--texto-suave);
+  font-style: italic;
+}

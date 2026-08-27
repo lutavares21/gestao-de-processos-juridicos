@@ -175,6 +175,11 @@ def processos_trabalhista():
     )
     return render_template("processos_trabalhista.html", processos=processos)
 
+@app.route("/processo/<int:processo_id>")
+def processo_detalhe(processo_id):
+    processo = Processo.query.get_or_404(processo_id)
+    return render_template("processo_detalhe.html", p=processo)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
