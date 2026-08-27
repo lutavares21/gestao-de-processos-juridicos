@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Cadastro de Processo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="layout">
+
+    <aside class="menu-lateral">
+      <div class="logo-menu">Gestão de Processos</div>
+      <nav>
+        <a href="#" class="desabilitado">Início</a>
+
+        <div class="item-com-submenu ativo">
+          <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('cadastro_civel') }}">Processo Cível</a></li>
+            <li><a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a></li>
+            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+          </ul>
+        </div>
+
+        <div class="item-com-submenu">
+          <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('processos_civel') }}">Processo Cível</a></li>
+            <li><a href="{{ url_for('processos_trabalhista') }}">Processo Trabalhista</a></li>
+            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+          </ul>
+        </div>
+        <a href="#" class="desabilitado">Relatórios</a>
+      </nav>
+    </aside>
+
+    <div class="conteudo">
+      <div class="cabecalho">
+        <h1>Cadastro de Processo</h1>
+        <div class="subtitulo">Gestão de Processos Jurídicos</div>
+      </div>
+
+      <div class="container">
+
+        {% if sucesso %}
+          <div class="flash">Processo cadastrado com sucesso.</div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('cadastro') }}" enctype="multipart/form-data">
+
+          <!-- 1. IDENTIFICAÇÃO -->
+          <div class="secao">
+            <h2>Identificação</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="numero_processo">Número do processo</label>
+                <input type="text" id="numero_processo" name="numero_processo" required>
+              </div>
+              <div class="campo">
+                <label for="juizado">Juizado</label>
+                <input type="text" id="juizado" name="juizado">
+              </div>
+              <div class="campo">
+                <label for="comarca">Comarca</label>
+                <input type="text" id="comarca" name="comarca">
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label for="tipo_acao">Tipo de ação</label>
+                <select id="tipo_acao" name="tipo_acao" required onchange="alternarPedidosTrabalhistas()">
+                  <option value="">Selecione</option>
+                  <option value="trabalhista">Trabalhista</option>
+                  <option value="civel">Cível</option>
+                  <option value="juizado_especial_civel">Juizado Especial Cível</option>
+                  <option value="tributario">Tributário</option>
+                  <option value="procon">PROCON</option>
+                  <option value="acao_monitoria">Ação Monitória</option>
+                  <option value="acao_execucao">Ação de Execução</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Pedidos trabalhistas - só aparece se tipo_acao = trabalhista -->
+            <div id="bloco_pedidos_trabalhistas" class="grupo-dinamico oculto">
+              <label>Pedidos / verbas (trabalhista)</label>
+              <div id="lista_pedidos"></div>
+              <button type="button" class="btn btn-adicionar" onclick="adicionarPedido()">+ Adicionar pedido</button>
+            </div>
+          </div>
+
+          <!-- 2. DATAS E AUDIÊNCIAS -->
+          <div class="secao">
+            <h2>Datas e audiências</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="data_distribuicao">Data de distribuição</label>
+                <input type="date" id="data_distribuicao" name="data_distribuicao" required>
+              </div>
+              <div class="campo">
+                <label for="valor_causa">Valor da causa (R$)</label>
+                <input type="number" step="0.01" id="valor_causa" name="valor_causa">
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label for="data_audiencia_1">1ª audiência</label>
+                <input type="date" id="data_audiencia_1" name="data_audiencia_1">
+              </div>
+              <div class="campo">
+                <label for="data_audiencia_2">2ª audiência</label>
+                <input type="date" id="data_audiencia_2" name="data_audiencia_2">
+              </div>
+              <div class="campo">
+                <label for="data_audiencia_3">3ª audiência</label>
+                <input type="date" id="data_audiencia_3" name="data_audiencia_3">
+              </div>
+              <div class="campo">
+                <label for="data_arquivamento">Data de arquivamento</label>
+                <input type="date" id="data_arquivamento" name="data_arquivamento">
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. PARTES ENVOLVIDAS -->
+          <div class="secao">
+            <h2>Partes envolvidas</h2>
+
+            <label>Autor(es)</label>
+            <div id="lista_autores" class="grupo-dinamico"></div>
+            <button type="button" class="btn btn-adicionar" onclick="adicionarParte('autor')">+ Adicionar autor</button>
+
+            <div style="margin-top:18px;">
+              <label>Advogado(s) do autor <span class="aviso-limite">(até 5)</span></label>
+              <div id="lista_advogados_autor" class="grupo-dinamico"></div>
+              <button type="button" class="btn btn-adicionar" onclick="adicionarAdvogado('autor')">+ Adicionar advogado</button>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--borda);margin:22px 0;">
+
+            <label>Réu</label>
+            <div id="lista_reus" class="grupo-dinamico"></div>
+            <button type="button" class="btn btn-adicionar" onclick="adicionarParte('reu')">+ Adicionar réu</button>
+
+            <div style="margin-top:18px;">
+              <label>Advogado(s) do réu <span class="aviso-limite">(até 5)</span></label>
+              <div id="lista_advogados_reu" class="grupo-dinamico"></div>
+              <button type="button" class="btn btn-adicionar" onclick="adicionarAdvogado('reu')">+ Adicionar advogado</button>
+            </div>
+          </div>
+
+          <!-- 4. ORGANIZAÇÃO INTERNA -->
+          <div class="secao">
+            <h2>Organização interna</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="centro_resultado">Centro de Resultados (CR)</label>
+                <select id="centro_resultado" name="centro_resultado" onchange="alternarRateio()">
+                  <option value="">Selecione</option>
+                  <option value="CR1">CR1</option>
+                  <option value="CR2">CR2</option>
+                  <option value="CR3">CR3</option>
+                  <option value="rateio">Rateio</option>
+                </select>
+              </div>
+              <div class="campo">
+                <label for="escritorio">Escritório</label>
+                <select id="escritorio" name="escritorio">
+                  <option value="">Selecione</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Bloco de rateio - só aparece quando Centro de Resultados = Rateio -->
+            <div id="bloco_rateio" class="grupo-dinamico oculto" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--borda);">
+              <label>CRs que entram no rateio</label>
+              <p class="aviso-limite" style="margin-top:-2px;margin-bottom:10px;">Marque os CRs da lista, ou digite outro que não esteja na lista.</p>
+
+              <div class="chip-risco" style="flex-wrap:wrap;margin-bottom:14px;">
+                <label><input type="checkbox" name="rateio_cr" value="CR1"> CR1</label>
+                <label><input type="checkbox" name="rateio_cr" value="CR2"> CR2</label>
+                <label><input type="checkbox" name="rateio_cr" value="CR3"> CR3</label>
+              </div>
+
+              <div id="lista_rateio_manual"></div>
+              <button type="button" class="btn btn-adicionar" onclick="adicionarRateioManual()">+ Adicionar outro CR</button>
+            </div>
+          </div>
+
+          <!-- 5. RESULTADO, STATUS E RISCO -->
+          <div class="secao">
+            <h2>Resultado, status e risco</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="resultado">Resultado</label>
+                <select id="resultado" name="resultado">
+                  <option value="">Selecione</option>
+                  <option value="procedente">Procedente</option>
+                  <option value="procedente_parcial">Procedente parcial</option>
+                  <option value="improcedente">Improcedente</option>
+                </select>
+              </div>
+              <div class="campo">
+                <label for="sentenca">Sentença</label>
+                <select id="sentenca" name="sentenca">
+                  <option value="">Selecione</option>
+                  <option value="ganhamos">Ganhamos</option>
+                  <option value="perdemos">Perdemos</option>
+                </select>
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                  <option value="ativo">Ativo</option>
+                  <option value="arquivado">Arquivado</option>
+                </select>
+              </div>
+            </div>
+            <div class="campo">
+              <label>Risco</label>
+              <div class="chip-risco">
+                <label><input type="radio" name="risco" value="remoto"> Remoto</label>
+                <label><input type="radio" name="risco" value="possivel"> Possível</label>
+                <label><input type="radio" name="risco" value="provavel"> Provável</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. ACOMPANHAMENTO -->
+          <div class="secao">
+            <h2>Acompanhamento</h2>
+
+            <label>Últimos movimentos</label>
+            <div id="lista_movimentos" class="grupo-dinamico"></div>
+            <button type="button" class="btn btn-adicionar" onclick="adicionarMovimento()">+ Adicionar movimento</button>
+
+            <div class="campo" style="margin-top:18px;">
+              <label for="resumo">Resumo do processo</label>
+              <textarea id="resumo" name="resumo"></textarea>
+            </div>
+
+            <div class="campo">
+              <label for="arquivo_relatorio">Importar relatório</label>
+              <input type="file" id="arquivo_relatorio" name="arquivo_relatorio">
+            </div>
+          </div>
+
+          <!-- 7. VALORES FINANCEIROS -->
+          <div class="secao">
+            <h2>Valores financeiros</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="valor_final">Valor final (R$)</label>
+                <input type="number" step="0.01" id="valor_final" name="valor_final">
+              </div>
+              <div class="campo">
+                <label for="honorarios_advogado">Honorários de advogado (R$)</label>
+                <input type="number" step="0.01" id="honorarios_advogado" name="honorarios_advogado">
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label for="honorarios_periciais">Honorários periciais (R$)</label>
+                <input type="number" step="0.01" id="honorarios_periciais" name="honorarios_periciais">
+              </div>
+              <div class="campo">
+                <label for="custas_processuais">Custas processuais (R$)</label>
+                <input type="number" step="0.01" id="custas_processuais" name="custas_processuais">
+              </div>
+              <div class="campo">
+                <label for="valor_recursal">Valor recursal (R$)</label>
+                <input type="number" step="0.01" id="valor_recursal" name="valor_recursal">
+              </div>
+              <div class="campo">
+                <label for="valor_alvara">Alvará (R$)</label>
+                <input type="number" step="0.01" id="valor_alvara" name="valor_alvara">
+              </div>
+              <div class="campo">
+                <label for="data_alvara">Data do alvará</label>
+                <input type="date" id="data_alvara" name="data_alvara">
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-salvar">Salvar processo</button>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modelos escondidos usados pelo JavaScript para criar novas linhas -->
+  <template id="modelo_parte">
+    <div class="linha-repetida">
+      <div class="campo">
+        <input type="text" name="__NOME__" placeholder="Nome completo">
+      </div>
+      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+    </div>
+  </template>
+
+  <template id="modelo_advogado">
+    <div class="linha-repetida">
+      <div class="campo">
+        <input type="text" name="__NOME__" placeholder="Nome do advogado">
+      </div>
+      <div class="campo">
+        <input type="text" name="__OAB__" placeholder="OAB">
+      </div>
+      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+    </div>
+  </template>
+
+  <template id="modelo_movimento">
+    <div class="linha-repetida">
+      <div class="campo">
+        <input type="date" name="movimento_data">
+      </div>
+      <div class="campo">
+        <input type="text" name="movimento_tipo" placeholder="Ex.: juntada de petição">
+      </div>
+      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+    </div>
+  </template>
+
+  <template id="modelo_pedido">
+    <div class="linha-repetida">
+      <div class="campo">
+        <input type="text" name="pedido_verba" placeholder="Verba (ex.: horas extras)">
+      </div>
+      <div class="campo">
+        <input type="number" step="0.01" name="pedido_valor" placeholder="Valor (R$)">
+      </div>
+      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+    </div>
+  </template>
+
+  <template id="modelo_rateio_manual">
+    <div class="linha-repetida">
+      <div class="campo">
+        <input type="text" name="rateio_cr_manual" placeholder="Nome do CR">
+      </div>
+      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+    </div>
+  </template>
+
+  <script>
+    // Mostra o bloco de pedidos trabalhistas só quando o tipo de ação é "trabalhista"
+    function alternarPedidosTrabalhistas() {
+      const tipo = document.getElementById('tipo_acao').value;
+      const bloco = document.getElementById('bloco_pedidos_trabalhistas');
+      bloco.classList.toggle('oculto', tipo !== 'trabalhista');
+    }
+
+    // Mostra o bloco de rateio só quando Centro de Resultados = "rateio"
+    function alternarRateio() {
+      const valor = document.getElementById('centro_resultado').value;
+      document.getElementById('bloco_rateio').classList.toggle('oculto', valor !== 'rateio');
+    }
+
+    // Adiciona uma linha de CR digitado manualmente no rateio
+    function adicionarRateioManual() {
+      const container = document.getElementById('lista_rateio_manual');
+      const modelo = document.getElementById('modelo_rateio_manual').content.cloneNode(true);
+      container.appendChild(modelo);
+    }
+
+    // Adiciona uma linha de nome (autor ou réu)
+    function adicionarParte(tipo) {
+      const container = document.getElementById(tipo === 'autor' ? 'lista_autores' : 'lista_reus');
+      const modelo = document.getElementById('modelo_parte').content.cloneNode(true);
+      modelo.querySelector('input').name = tipo === 'autor' ? 'autor_nome' : 'reu_nome';
+      container.appendChild(modelo);
+    }
+
+    // Adiciona uma linha de advogado (autor ou réu), respeitando o limite de 5
+    function adicionarAdvogado(lado) {
+      const container = document.getElementById(lado === 'autor' ? 'lista_advogados_autor' : 'lista_advogados_reu');
+      if (container.children.length >= 5) {
+        alert('Limite de 5 advogados por lado.');
+        return;
+      }
+      const modelo = document.getElementById('modelo_advogado').content.cloneNode(true);
+      const inputs = modelo.querySelectorAll('input');
+      inputs[0].name = lado === 'autor' ? 'advogado_autor_nome' : 'advogado_reu_nome';
+      inputs[1].name = lado === 'autor' ? 'advogado_autor_oab' : 'advogado_reu_oab';
+      container.appendChild(modelo);
+    }
+
+    // Adiciona uma linha de movimento (data + tipo)
+    function adicionarMovimento() {
+      const container = document.getElementById('lista_movimentos');
+      const modelo = document.getElementById('modelo_movimento').content.cloneNode(true);
+      container.appendChild(modelo);
+    }
+
+    // Adiciona uma linha de pedido trabalhista (verba + valor)
+    function adicionarPedido() {
+      const container = document.getElementById('lista_pedidos');
+      const modelo = document.getElementById('modelo_pedido').content.cloneNode(true);
+      container.appendChild(modelo);
+    }
+
+    // Ao carregar a página, já deixa uma linha pronta em cada grupo dinâmico
+    // e pré-seleciona o tipo de ação se veio da URL (ex: clique no submenu "Novo cadastro")
+    window.addEventListener('DOMContentLoaded', () => {
+      adicionarParte('autor');
+      adicionarParte('reu');
+      adicionarAdvogado('autor');
+      adicionarAdvogado('reu');
+      adicionarMovimento();
+
+      const tipoInicial = "{{ tipo_acao_inicial|default('') }}";
+      if (tipoInicial) {
+        const select = document.getElementById('tipo_acao');
+        select.value = tipoInicial;
+        alternarPedidosTrabalhistas();
+      }
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Início - Gestão de Processos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="pagina-inicio">
+
+    <div class="inicio-topo">
+      <h1>Gestão de Processos</h1>
+      <div class="subtitulo">Gestão de Processos Jurídicos</div>
+    </div>
+
+    <div class="inicio-blocos">
+
+      <div class="bloco-inicio">
+        <h2>Novo cadastro</h2>
+        <div class="legenda-bloco">Cadastrar um processo novo</div>
+        <div class="links-bloco">
+          <a href="{{ url_for('cadastro_civel') }}">Processo Cível</a>
+          <a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a>
+          <a href="#" class="link-desabilitado">Processo de Recuperação de Crédito</a>
+          <a href="#" class="link-desabilitado">Processos Licitatórios</a>
+        </div>
+      </div>
+
+      <div class="bloco-inicio">
+        <h2>Processos Cadastrados</h2>
+        <div class="legenda-bloco">Consultar os processos já lançados</div>
+        <div class="links-bloco">
+          <a href="{{ url_for('processos_civel') }}">Processo Cível</a>
+          <a href="{{ url_for('processos_trabalhista') }}">Processo Trabalhista</a>
+          <a href="#" class="link-desabilitado">Processo de Recuperação de Crédito</a>
+          <a href="#" class="link-desabilitado">Processos Licitatórios</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

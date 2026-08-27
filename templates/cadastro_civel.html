@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Processo Cível</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="layout">
+
+    <aside class="menu-lateral">
+      <div class="logo-menu">Gestão de Processos</div>
+      <nav>
+        <a href="{{ url_for('inicio') }}">Início</a>
+
+        <div class="item-com-submenu ativo">
+          <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('cadastro_civel') }}">Processo Cível</a></li>
+            <li><a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a></li>
+            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+          </ul>
+        </div>
+
+        <div class="item-com-submenu">
+          <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('processos_civel') }}">Processo Cível</a></li>
+            <li><a href="{{ url_for('processos_trabalhista') }}">Processo Trabalhista</a></li>
+            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+          </ul>
+        </div>
+      </nav>
+    </aside>
+
+    <div class="conteudo">
+      <div class="cabecalho">
+        <h1>Processo Cível</h1>
+        <div class="subtitulo">Gestão de Processos Jurídicos</div>
+      </div>
+
+      <div class="container">
+
+        {% if sucesso %}
+          <div class="flash">Processo cadastrado com sucesso.</div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('cadastro_civel') }}" enctype="multipart/form-data">
+
+          <!-- 1. IDENTIFICAÇÃO -->
+          <div class="secao">
+            <h2>Identificação</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="numero_processo">Número do processo</label>
+                <input type="text" id="numero_processo" name="numero_processo"
+                       placeholder="0000000-00.0000.0.00.0000"
+                       maxlength="25" required
+                       oninput="mascararNumeroProcesso(this)">
+              </div>
+              <div class="campo">
+                <label for="juizado">Juizado</label>
+                <input type="text" id="juizado" name="juizado">
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label for="comarca">Comarca</label>
+                <input type="text" id="comarca" name="comarca">
+              </div>
+              <div class="campo">
+                <label for="tipo_acao">Tipo de ação</label>
+                <select id="tipo_acao" name="tipo_acao" required>
+                  <option value="">Selecione</option>
+                  <option value="acao_civel">Ação Cível</option>
+                  <option value="acao_trabalhista">Ação Trabalhista</option>
+                  <option value="cobranca_judicial">Cobrança Judicial</option>
+                  <option value="cobranca_extrajudicial">Cobrança Extrajudicial</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. DATAS DE DISTRIBUIÇÃO, AUDIÊNCIAS, ARQUIVAMENTO E VALOR DA CAUSA -->
+          <div class="secao">
+            <h2>Datas de Distribuição, Audiências, Arquivamento e Valor da Causa</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="data_distribuicao">Data de distribuição</label>
+                <input type="date" id="data_distribuicao" name="data_distribuicao" required
+                       onchange="calcularTempoTramitacao()">
+              </div>
+              <div class="campo">
+                <label for="valor_causa">Valor da causa (R$)</label>
+                <input type="number" step="0.01" id="valor_causa" name="valor_causa">
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label for="data_audiencia_1">1ª audiência</label>
+                <input type="date" id="data_audiencia_1" name="data_audiencia_1">
+              </div>
+              <div class="campo">
+                <label for="data_audiencia_2">2ª audiência</label>
+                <input type="date" id="data_audiencia_2" name="data_audiencia_2">
+              </div>
+              <div class="campo">
+                <label for="data_audiencia_3">3ª audiência</label>
+                <input type="date" id="data_audiencia_3" name="data_audiencia_3">
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo campo-pequeno">
+                <label for="data_arquivamento">Data de arquivamento</label>
+                <input type="date" id="data_arquivamento" name="data_arquivamento"
+                       onchange="calcularTempoTramitacao()">
+              </div>
+              <div class="campo">
+                <label for="tempo_tramitacao">Tempo de tramitação</label>
+                <input type="text" id="tempo_tramitacao" readonly placeholder="Preencha a data de distribuição">
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. PARTES ENVOLVIDAS -->
+          <div class="secao">
+            <h2>Partes envolvidas</h2>
+
+            <label>Autor(es)</label>
+            <div id="lista_autores" class="grupo-dinamico"></div>
+            <button type="button" class="btn btn-adicionar" onclick="adicionarParte('autor')">+ Adicionar autor</button>
+
+            <div style="margin-top:18px;">
+              <label>Advogado(s) do autor <span class="aviso-limite">(até 5)</span></label>
+              <div id="lista_advogados_autor" class="grupo-dinamico"></div>
+              <button type="button" class="btn btn-adicionar" onclick="adicionarAdvogado('autor')">+ Adicionar advogado</button>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--borda);margin:22px 0;">
+
+            <label>Réu</label>
+            <div id="lista_reus" class="grupo-dinamico"></div>
+            <button type="button" class="btn btn-adicionar" onclick="adicionarParte('reu')">+ Adicionar réu</button>
+
+            <div style="margin-top:18px;">
+              <label>Advogado(s) do réu <span class="aviso-limite">(até 5)</span></label>
+              <div id="lista_advogados_reu" class="grupo-dinamico"></div>
+              <button type="button" class="btn btn-adicionar" onclick="adicionarAdvogado('reu')">+ Adicionar advogado</button>
+            </div>
+          </div>
+
+          <!-- 4. ORGANIZAÇÃO INTERNA -->
+          <div class="secao">
+            <h2>Organização interna</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="centro_resultado">Centro de Resultados (CR)</label>
+                <select id="centro_resultado" name="centro_resultado" onchange="alternarRateio()">
+                  <option value="">Selecione</option>
+                  <option value="CR1">CR1</option>
+                  <option value="CR2">CR2</option>
+                  <option value="CR3">CR3</option>
+                  <option value="rateio">Rateio</option>
+                </select>
+              </div>
+              <div class="campo">
+                <label for="escritorio">Escritório</label>
+                <select id="escritorio" name="escritorio">
+                  <option value="">Selecione</option>
+                  <option value="Dr. Fernando Ximenes">Dr. Fernando Ximenes</option>
+                  <option value="Dra. Cláudia Mello">Dra. Cláudia Mello</option>
+                  <option value="Dr. Luiz Antônio Correa">Dr. Luiz Antônio Correa</option>
+                  <option value="Dr. Rolim">Dr. Rolim</option>
+                  <option value="Escritório Vra Advogados">Escritório Vra Advogados</option>
+                  <option value="Escritório Dannemann">Escritório Dannemann</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Bloco de rateio - só aparece quando Centro de Resultados = Rateio -->
+            <div id="bloco_rateio" class="grupo-dinamico oculto" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--borda);">
+              <label>CRs que entram no rateio</label>
+              <p class="aviso-limite" style="margin-top:-2px;margin-bottom:10px;">Marque os CRs da lista, ou digite outro que não esteja na lista.</p>
+
+              <div class="chip-risco" style="flex-wrap:wrap;margin-bottom:14px;">
+                <label><input type="checkbox" name="rateio_cr" value="CR1"> CR1</label>
+                <label><input type="checkbox" name="rateio_cr" value="CR2"> CR2</label>
+                <label><input type="checkbox" name="rateio_cr" value="CR3"> CR3</label>
+              </div>
+
+              <div id="lista_rateio_manual"></div>
+              <button type="button" class="btn btn-adicionar" onclick="adicionarRateioManual()">+ Adicionar outro CR</button>
+            </div>
+          </div>
+
+          <!-- 5. RESULTADO, STATUS E RISCO -->
+          <div class="secao">
+            <h2>Resultado, status e risco</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="sentenca">Sentença</label>
+                <select id="sentenca" name="sentenca">
+                  <option value="">Selecione</option>
+                  <option value="ganhamos">Ganhamos</option>
+                  <option value="perdemos">Perdemos</option>
+                </select>
+              </div>
+              <div class="campo">
+                <label for="resultado">Resultado</label>
+                <select id="resultado" name="resultado">
+                  <option value="">Selecione</option>
+                  <option value="procedente">Procedente</option>
+                  <option value="procedente_parcial">Procedente parcial</option>
+                  <option value="improcedente">Improcedente</option>
+                </select>
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                  <option value="ativo">Ativo</option>
+                  <option value="suspenso">Suspenso</option>
+                  <option value="arquivado">Arquivado</option>
+                </select>
+              </div>
+            </div>
+            <div class="campo">
+              <label>Risco</label>
+              <div class="chip-risco">
+                <label><input type="radio" name="risco" value="remoto"> Remoto</label>
+                <label><input type="radio" name="risco" value="possivel"> Possível</label>
+                <label><input type="radio" name="risco" value="provavel"> Provável</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. PEDIDOS E REQUERIMENTOS -->
+          <div class="secao">
+            <h2>Pedidos e requerimentos</h2>
+            <div class="grid-requerimentos">
+              <label><input type="checkbox" name="pedido_civel" value="Cancelamento da compra"> Cancelamento da compra</label>
+              <label><input type="checkbox" name="pedido_civel" value="Devolução do valor pago"> Devolução do valor pago</label>
+              <label><input type="checkbox" name="pedido_civel" value="Produto com defeito"> Produto com defeito</label>
+              <label><input type="checkbox" name="pedido_civel" value="Tempo de retorno garantia"> Tempo de retorno garantia</label>
+              <label><input type="checkbox" name="pedido_civel" value="Não recebeu produto do conserto"> Não recebeu produto do conserto</label>
+              <label><input type="checkbox" name="pedido_civel" value="Atendimento Loja"> Atendimento Loja</label>
+              <label><input type="checkbox" name="pedido_civel" value="Indenização danos morais"> Indenização danos morais</label>
+              <label><input type="checkbox" name="pedido_civel" value="Indenização danos materiais"> Indenização danos materiais</label>
+              <label><input type="checkbox" name="pedido_civel" value="Responsabilidade subsidiária"> Responsabilidade subsidiária</label>
+              <label><input type="checkbox" name="pedido_civel" value="Responsabilidade solidária"> Responsabilidade solidária</label>
+              <label><input type="checkbox" name="pedido_civel" value="Tutela antecipada"> Tutela antecipada</label>
+              <label><input type="checkbox" name="pedido_civel" value="Perícia Técnica"> Perícia Técnica</label>
+            </div>
+          </div>
+
+          <!-- 7. ACOMPANHAMENTO -->
+          <div class="secao">
+            <h2>Acompanhamento</h2>
+
+            <label>Últimos movimentos</label>
+            <div id="lista_movimentos" class="grupo-dinamico"></div>
+            <button type="button" class="btn btn-adicionar" onclick="adicionarMovimento()">+ Adicionar movimento</button>
+
+            <div class="campo" style="margin-top:18px;">
+              <label for="resumo">Resumo do processo</label>
+              <textarea id="resumo" name="resumo"></textarea>
+            </div>
+
+            <div class="campo">
+              <label for="arquivo_relatorio">Importar relatório</label>
+              <input type="file" id="arquivo_relatorio" name="arquivo_relatorio">
+            </div>
+          </div>
+
+          <!-- 8. VALORES FINANCEIROS -->
+          <div class="secao">
+            <h2>Valores financeiros</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="valor_final">Valor final (R$)</label>
+                <input type="number" step="0.01" id="valor_final" name="valor_final">
+              </div>
+              <div class="campo">
+                <label for="honorarios_advogado">Honorários de advogado (R$)</label>
+                <input type="number" step="0.01" id="honorarios_advogado" name="honorarios_advogado">
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label for="honorarios_periciais">Honorários periciais (R$)</label>
+                <input type="number" step="0.01" id="honorarios_periciais" name="honorarios_periciais">
+              </div>
+              <div class="campo">
+                <label for="custas_processuais">Custas processuais (R$)</label>
+                <input type="number" step="0.01" id="custas_processuais" name="custas_processuais">
+              </div>
+              <div class="campo">
+                <label for="valor_recursal">Valor recursal (R$)</label>
+                <input type="number" step="0.01" id="valor_recursal" name="valor_recursal">
+              </div>
+              <div class="campo">
+                <label for="valor_alvara">Alvará (R$)</label>
+                <input type="number" step="0.01" id="valor_alvara" name="valor_alvara">
+              </div>
+              <div class="campo">
+                <label for="data_alvara">Data do alvará</label>
+                <input type="date" id="data_alvara" name="data_alvara">
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-salvar">Salvar processo</button>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modelos escondidos usados pelo JavaScript para criar novas linhas -->
+  <template id="modelo_parte">
+    <div class="linha-repetida">
+      <div class="campo">
+        <input type="text" name="__NOME__" placeholder="Nome completo">
+      </div>
+      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+    </div>
+  </template>
+
+  <template id="modelo_advogado">
+    <div class="linha-repetida">
+      <div class="campo campo-grande">
+        <input type="text" name="__NOME__" placeholder="Nome do advogado">
+      </div>
+      <div class="campo campo-pequeno">
+        <input type="text" name="__OAB__" placeholder="OAB">
+      </div>
+      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+    </div>
+  </template>
+
+  <template id="modelo_movimento">
+    <div class="linha-repetida">
+      <div class="campo">
+        <input type="date" name="movimento_data">
+      </div>
+      <div class="campo">
+        <input type="text" name="movimento_tipo" placeholder="Ex.: juntada de petição">
+      </div>
+      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+    </div>
+  </template>
+
+  <template id="modelo_rateio_manual">
+    <div class="linha-repetida">
+      <div class="campo">
+        <input type="text" name="rateio_cr_manual" placeholder="Nome do CR">
+      </div>
+      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+    </div>
+  </template>
+
+  <script>
+    // Aplica a máscara 0000000-00.0000.0.00.0000 (padrão CNJ) conforme o usuário digita
+    function mascararNumeroProcesso(input) {
+      let digitos = input.value.replace(/\D/g, '').slice(0, 20);
+      let saida = '';
+      if (digitos.length > 0) saida = digitos.substring(0, 7);
+      if (digitos.length > 7) saida += '-' + digitos.substring(7, 9);
+      if (digitos.length > 9) saida += '.' + digitos.substring(9, 13);
+      if (digitos.length > 13) saida += '.' + digitos.substring(13, 14);
+      if (digitos.length > 14) saida += '.' + digitos.substring(14, 16);
+      if (digitos.length > 16) saida += '.' + digitos.substring(16, 20);
+      input.value = saida;
+    }
+
+    // Calcula o tempo de tramitação: (arquivamento ou hoje) - distribuição, em dias
+    function calcularTempoTramitacao() {
+      const dataDistStr = document.getElementById('data_distribuicao').value;
+      const dataArqStr = document.getElementById('data_arquivamento').value;
+      const campo = document.getElementById('tempo_tramitacao');
+
+      if (!dataDistStr) {
+        campo.value = '';
+        return;
+      }
+
+      const dataDist = new Date(dataDistStr + 'T00:00:00');
+      const dataFim = dataArqStr ? new Date(dataArqStr + 'T00:00:00') : new Date();
+      dataFim.setHours(0, 0, 0, 0);
+
+      const diffMs = dataFim - dataDist;
+      const dias = Math.round(diffMs / (1000 * 60 * 60 * 24));
+      campo.value = (dias >= 0 ? dias : 0) + ' dias';
+    }
+
+    // Mostra o bloco de rateio só quando Centro de Resultados = "rateio"
+    function alternarRateio() {
+      const valor = document.getElementById('centro_resultado').value;
+      document.getElementById('bloco_rateio').classList.toggle('oculto', valor !== 'rateio');
+    }
+
+    // Adiciona uma linha de CR digitado manualmente no rateio
+    function adicionarRateioManual() {
+      const container = document.getElementById('lista_rateio_manual');
+      const modelo = document.getElementById('modelo_rateio_manual').content.cloneNode(true);
+      container.appendChild(modelo);
+    }
+
+    // Adiciona uma linha de nome (autor ou réu)
+    function adicionarParte(tipo) {
+      const container = document.getElementById(tipo === 'autor' ? 'lista_autores' : 'lista_reus');
+      const modelo = document.getElementById('modelo_parte').content.cloneNode(true);
+      modelo.querySelector('input').name = tipo === 'autor' ? 'autor_nome' : 'reu_nome';
+      container.appendChild(modelo);
+    }
+
+    // Adiciona uma linha de advogado (autor ou réu), respeitando o limite de 5
+    function adicionarAdvogado(lado) {
+      const container = document.getElementById(lado === 'autor' ? 'lista_advogados_autor' : 'lista_advogados_reu');
+      if (container.children.length >= 5) {
+        alert('Limite de 5 advogados por lado.');
+        return;
+      }
+      const modelo = document.getElementById('modelo_advogado').content.cloneNode(true);
+      const inputs = modelo.querySelectorAll('input');
+      inputs[0].name = lado === 'autor' ? 'advogado_autor_nome' : 'advogado_reu_nome';
+      inputs[1].name = lado === 'autor' ? 'advogado_autor_oab' : 'advogado_reu_oab';
+      container.appendChild(modelo);
+    }
+
+    // Adiciona uma linha de movimento (data + tipo)
+    function adicionarMovimento() {
+      const container = document.getElementById('lista_movimentos');
+      const modelo = document.getElementById('modelo_movimento').content.cloneNode(true);
+      container.appendChild(modelo);
+    }
+
+    // Ao carregar a página, já deixa uma linha pronta em cada grupo dinâmico
+    window.addEventListener('DOMContentLoaded', () => {
+      adicionarParte('autor');
+      adicionarParte('reu');
+      adicionarAdvogado('autor');
+      adicionarAdvogado('reu');
+      adicionarMovimento();
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Processos Cadastrados - Cível</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="layout">
+
+    <aside class="menu-lateral">
+      <div class="logo-menu">Gestão de Processos</div>
+      <nav>
+        <a href="{{ url_for('inicio') }}">Início</a>
+
+        <div class="item-com-submenu">
+          <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('cadastro_civel') }}">Processo Cível</a></li>
+            <li><a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a></li>
+            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+          </ul>
+        </div>
+
+        <div class="item-com-submenu ativo">
+          <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('processos_civel') }}">Processo Cível</a></li>
+            <li><a href="{{ url_for('processos_trabalhista') }}">Processo Trabalhista</a></li>
+            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+          </ul>
+        </div>
+
+      </nav>
+    </aside>
+
+    <div class="conteudo">
+      <div class="cabecalho">
+        <h1>Processos Cadastrados - Cível</h1>
+        <div class="subtitulo">Gestão de Processos Jurídicos</div>
+      </div>
+
+      <div class="container" style="max-width: 1200px;">
+
+        {% if processos %}
+        <div class="tabela-wrap">
+          <table class="tabela-processos">
+            <thead>
+              <tr>
+                <th>Número do processo</th>
+                <th>Tipo de ação</th>
+                <th>Autor(es)</th>
+                <th>Réu</th>
+                <th>Status</th>
+                <th>Risco</th>
+                <th>Tempo de tramitação</th>
+                <th>Valor da causa</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in processos %}
+              <tr>
+                <td>{{ p.numero_processo }}</td>
+                <td>{{ p.tipo_acao|replace('_', ' ')|title }}</td>
+                <td>{{ p.partes|selectattr('tipo', 'equalto', 'autor')|map(attribute='nome')|join(', ') or '—' }}</td>
+                <td>{{ p.partes|selectattr('tipo', 'equalto', 'reu')|map(attribute='nome')|join(', ') or '—' }}</td>
+                <td><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></td>
+                <td>
+                  {% if p.risco %}
+                    <span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>{{ p.dias_ativos if p.dias_ativos is not none else '—' }}{{ ' dias' if p.dias_ativos is not none else '' }}</td>
+                <td>{{ 'R$ %.2f'|format(p.valor_causa)|replace('.', ',') if p.valor_causa is not none else '—' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="tabela-wrap">
+          <div class="estado-vazio">Nenhum processo cível cadastrado ainda. <a href="{{ url_for('cadastro_civel') }}">Cadastrar o primeiro</a>.</div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
