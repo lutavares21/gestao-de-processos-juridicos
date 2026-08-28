@@ -19,21 +19,20 @@
         <div class="item-com-submenu">
           <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
           <ul class="submenu">
-            <li><a href="{{ url_for('cadastro_civel') }}">Processo Cível</a></li>
-            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
-            <li><a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a></li>
-
+            <li><a href="{{ url_for('cadastro_civel') }}">Processos Cível</a></li>
+            <li><a href="#" class="oculto-visual">Processos Cível - Recuperação de Crédito</a></li>
             <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+            <li><a href="{{ url_for('cadastro_trabalhista') }}">Processos Trabalhista</a></li>
           </ul>
         </div>
 
         <div class="item-com-submenu ativo">
           <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
           <ul class="submenu">
-            <li><a href="{{ url_for('processos_civel') }}">Processo Cível</a></li>
-            <li><a href="{{ url_for('processos_trabalhista') }}">Processo Trabalhista</a></li>
-            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
+            <li><a href="{{ url_for('processos_civel') }}">Processos Cível</a></li>
+            <a href="#" class="oculto-visual">Processos Cível - Recuperação de Crédito</a>
             <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+            <li><a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista</a></li>
           </ul>
         </div>
 

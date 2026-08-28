@@ -24,8 +24,8 @@
         <div class="links-bloco">
           <a href="{{ url_for('cadastro_civel') }}">Processo Cível</a>
           <a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a>
+          <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
           <a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a>
-          <a href="#" class="link-desabilitado">Processos Licitatórios</a>
         </div>
       </div>
 
@@ -33,10 +33,10 @@
         <h2>Processos Cadastrados</h2>
         <div class="legenda-bloco">Consultar os processos já lançados</div>
         <div class="links-bloco">
-          <a href="{{ url_for('processos_civel') }}">Processo Cível</a>
-          <a href="{{ url_for('processos_trabalhista') }}">Processo Trabalhista</a>
-          <a href="#" class="link-desabilitado">Processo Cível - Recuperação de Crédito</a>
-          <a href="#" class="link-desabilitado">Processos Licitatórios</a>
+          <a href="{{ url_for('processos_civel') }}">Processos Cível</a>
+          <a href="#" class="oculto-visual">Processos Cível - Recuperação de Crédito</a>
+          <a href="#" class="oculto-visual">Processos Licitatórios</a>
+          <a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista</a>
         </div>
       </div>
 
