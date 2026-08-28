@@ -40,7 +40,7 @@
 
     <div class="conteudo">
       <div class="cabecalho">
-        <h1>Cadastro de Processo Trabalhista</h1>
+        <h1>Processo Trabalhista</h1>
         <div class="subtitulo">Gestão de Processos Jurídicos</div>
       </div>
 
@@ -125,7 +125,7 @@
             </div>
             <div class="linha">
               <div class="campo campo-pequeno">
-                <label for="data_arquivamento">Data do arquivamento</label>
+                <label for="data_arquivamento">Data de arquivamento</label>
                 <input type="date" id="data_arquivamento" name="data_arquivamento"
                        onchange="calcularTempoTramitacao()">
               </div>
@@ -341,7 +341,7 @@
             <h2>Valores financeiros</h2>
             <div class="linha">
               <div class="campo">
-                <label for="valor_final_display">Valor final pago(R$)</label>
+                <label for="valor_final_display">Valor final (R$)</label>
                 <input type="text" inputmode="numeric" id="valor_final_display" placeholder="R$ 0,00"
                        data-alvo="valor_final" oninput="formatarDinheiro(this)">
                 <input type="hidden" id="valor_final" name="valor_final">
@@ -367,10 +367,10 @@
                 <input type="hidden" id="custas_processuais" name="custas_processuais">
               </div>
               <div class="campo">
-                <label for="valor_recursal_display">Depósito recursal (R$)</label>
-                <input type="text" inputmode="numeric" id="valor_recursal_display" placeholder="R$ 0,00"
-                       data-alvo="valor_recursal" oninput="formatarDinheiro(this)">
-                <input type="hidden" id="valor_recursal" name="valor_recursal">
+                <label for="deposito_recursal_display">Depósito recursal (R$)</label>
+                <input type="text" inputmode="numeric" id="deposito_recursal_display" placeholder="R$ 0,00"
+                       data-alvo="deposito_recursal" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="deposito_recursal" name="deposito_recursal">
               </div>
               <div class="campo">
                 <label for="valor_alvara_display">Alvará (R$)</label>

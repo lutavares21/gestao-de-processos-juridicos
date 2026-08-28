@@ -40,7 +40,7 @@
 
     <div class="conteudo">
       <div class="cabecalho">
-        <h1>Cadastro de Processo Cível</h1>
+        <h1>Processo Cível</h1>
         <div class="subtitulo">Gestão de Processos Jurídicos</div>
       </div>
 
@@ -86,7 +86,7 @@
             </div>
             <div class="linha">
               <div class="campo">
-                <label>Reclamantes(es)</label>
+                <label>Autor(es)</label>
                 <div id="lista_autores" class="grupo-dinamico"></div>
                 <button type="button" class="btn btn-adicionar" onclick="adicionarParte('autor')">+ Adicionar autor</button>
               </div>
@@ -125,7 +125,7 @@
             </div>
             <div class="linha">
               <div class="campo campo-pequeno">
-                <label for="data_arquivamento">Data do arquivamento</label>
+                <label for="data_arquivamento">Data de arquivamento</label>
                 <input type="date" id="data_arquivamento" name="data_arquivamento"
                        onchange="calcularTempoTramitacao()">
               </div>
@@ -140,23 +140,23 @@
           <div class="secao">
             <h2>Partes envolvidas</h2>
 
-            <label>Reclamantes(es)</label>
+            <label>Autor(es)</label>
             <div id="resumo_autores_partes" style="padding:9px 0 4px;font-size:14px;color:var(--texto-suave);font-style:italic;">—</div>
 
             <div style="margin-top:18px;">
-              <label>Advogado(s) do reclamante <span class="aviso-limite">(até 5)</span></label>
+              <label>Advogado(s) do autor <span class="aviso-limite">(até 5)</span></label>
               <div id="lista_advogados_autor" class="grupo-dinamico"></div>
               <button type="button" class="btn btn-adicionar" onclick="adicionarAdvogado('autor')">+ Adicionar advogado</button>
             </div>
 
             <hr style="border:none;border-top:1px solid var(--borda);margin:22px 0;">
 
-            <label>Reclamada</label>
+            <label>Réu</label>
             <div id="lista_reus" class="grupo-dinamico"></div>
             <button type="button" class="btn btn-adicionar" onclick="adicionarParte('reu')">+ Adicionar réu</button>
 
             <div style="margin-top:18px;">
-              <label>Advogado(s) do reclamada <span class="aviso-limite">(até 5)</span></label>
+              <label>Advogado(s) do réu <span class="aviso-limite">(até 5)</span></label>
               <div id="lista_advogados_reu" class="grupo-dinamico"></div>
               <button type="button" class="btn btn-adicionar" onclick="adicionarAdvogado('reu')">+ Adicionar advogado</button>
             </div>
@@ -301,7 +301,7 @@
             <h2>Valores financeiros</h2>
             <div class="linha">
               <div class="campo">
-                <label for="valor_final_display">Valor final pago (R$)</label>
+                <label for="valor_final_display">Valor final (R$)</label>
                 <input type="text" inputmode="numeric" id="valor_final_display" placeholder="R$ 0,00"
                        data-alvo="valor_final" oninput="formatarDinheiro(this)">
                 <input type="hidden" id="valor_final" name="valor_final">
@@ -327,10 +327,10 @@
                 <input type="hidden" id="custas_processuais" name="custas_processuais">
               </div>
               <div class="campo">
-                <label for="valor_recursal_display">Depósito recursal (R$)</label>
-                <input type="text" inputmode="numeric" id="valor_recursal_display" placeholder="R$ 0,00"
-                       data-alvo="valor_recursal" oninput="formatarDinheiro(this)">
-                <input type="hidden" id="valor_recursal" name="valor_recursal">
+                <label for="deposito_recursal_display">Depósito recursal (R$)</label>
+                <input type="text" inputmode="numeric" id="deposito_recursal_display" placeholder="R$ 0,00"
+                       data-alvo="deposito_recursal" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="deposito_recursal" name="deposito_recursal">
               </div>
               <div class="campo">
                 <label for="valor_alvara_display">Alvará (R$)</label>

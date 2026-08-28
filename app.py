@@ -56,7 +56,7 @@ def montar_processo_base(form):
         honorarios_advogado=texto_para_numero(form.get("honorarios_advogado")),
         honorarios_periciais=texto_para_numero(form.get("honorarios_periciais")),
         custas_processuais=texto_para_numero(form.get("custas_processuais")),
-        valor_recursal=texto_para_numero(form.get("valor_recursal")),
+        deposito_recursal=texto_para_numero(form.get("deposito_recursal")),
         valor_alvara=texto_para_numero(form.get("valor_alvara")),
         data_alvara=texto_para_data(form.get("data_alvara")),
     )

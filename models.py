@@ -63,7 +63,7 @@ class Processo(db.Model):
     honorarios_advogado = db.Column(db.Numeric(14, 2))
     honorarios_periciais = db.Column(db.Numeric(14, 2))
     custas_processuais = db.Column(db.Numeric(14, 2))
-    valor_recursal = db.Column(db.Numeric(14, 2))
+    deposito_recursal = db.Column(db.Numeric(14, 2))
     valor_alvara = db.Column(db.Numeric(14, 2))
     data_alvara = db.Column(db.Date)
 
