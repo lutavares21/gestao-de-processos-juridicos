@@ -48,9 +48,11 @@ class Processo(db.Model):
     sentenca = db.Column(db.String(20))
     # 'ganhamos', 'perdemos'
     status = db.Column(db.String(20), default="ativo")
-    # 'ativo', 'arquivado'
+    # 'ativo', 'arquivado', 'suspenso'
     risco = db.Column(db.String(20))
     # 'possivel', 'provavel', 'remoto'
+    grau_instancia = db.Column(db.String(30))
+    # 'primeira_instancia', 'recurso', 'stj', 'stf'
 
     # --- Acompanhamento ---
     resumo = db.Column(db.Text)

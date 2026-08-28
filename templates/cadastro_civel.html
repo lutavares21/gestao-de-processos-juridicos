@@ -79,9 +79,15 @@
                   <option value="">Selecione</option>
                   <option value="acao_civel">Ação Cível</option>
                   <option value="acao_trabalhista">Ação Trabalhista</option>
-                  <option value="cobranca_judicial">Cobrança Judicial</option>
                   <option value="cobranca_extrajudicial">Cobrança Extrajudicial</option>
+                  <option value="cobranca_judicial">Cobrança Judicial</option>
                 </select>
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label>Autor(es)</label>
+                <div id="resumo_autores_identificacao" style="padding:9px 0 4px;font-size:14px;color:var(--texto-suave);font-style:italic;">—</div>
               </div>
             </div>
           </div>
@@ -96,21 +102,23 @@
                        onchange="calcularTempoTramitacao()">
               </div>
               <div class="campo">
-                <label for="valor_causa">Valor da causa (R$)</label>
-                <input type="number" step="0.01" id="valor_causa" name="valor_causa">
+                <label for="valor_causa_display">Valor da causa (R$)</label>
+                <input type="text" inputmode="numeric" id="valor_causa_display" placeholder="R$ 0,00"
+                       data-alvo="valor_causa" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="valor_causa" name="valor_causa">
               </div>
             </div>
             <div class="linha">
               <div class="campo">
-                <label for="data_audiencia_1">1ª audiência</label>
+                <label for="data_audiencia_1">Próxima audiência</label>
                 <input type="date" id="data_audiencia_1" name="data_audiencia_1">
               </div>
               <div class="campo">
-                <label for="data_audiencia_2">2ª audiência</label>
+                <label for="data_audiencia_2">Última audiência</label>
                 <input type="date" id="data_audiencia_2" name="data_audiencia_2">
               </div>
               <div class="campo">
-                <label for="data_audiencia_3">3ª audiência</label>
+                <label for="data_audiencia_3">Audiência inicial</label>
                 <input type="date" id="data_audiencia_3" name="data_audiencia_3">
               </div>
             </div>
@@ -173,11 +181,11 @@
                 <select id="escritorio" name="escritorio">
                   <option value="">Selecione</option>
                   <option value="Dr. Fernando Ximenes">Dr. Fernando Ximenes</option>
-                  <option value="Dra. Cláudia Mello">Dra. Cláudia Mello</option>
                   <option value="Dr. Luiz Antônio Correa">Dr. Luiz Antônio Correa</option>
                   <option value="Dr. Rolim">Dr. Rolim</option>
-                  <option value="Escritório Vra Advogados">Escritório Vra Advogados</option>
+                  <option value="Dra. Cláudia Mello">Dra. Cláudia Mello</option>
                   <option value="Escritório Dannemann">Escritório Dannemann</option>
+                  <option value="Escritório Vra Advogados">Escritório Vra Advogados</option>
                 </select>
               </div>
             </div>
@@ -203,7 +211,7 @@
             <h2>Resultado, status e risco</h2>
             <div class="linha">
               <div class="campo">
-                <label for="sentenca">Sentença</label>
+                <label for="sentenca">Resultado</label>
                 <select id="sentenca" name="sentenca">
                   <option value="">Selecione</option>
                   <option value="ganhamos">Ganhamos</option>
@@ -211,22 +219,32 @@
                 </select>
               </div>
               <div class="campo">
-                <label for="resultado">Resultado</label>
+                <label for="resultado">Sentença</label>
                 <select id="resultado" name="resultado">
                   <option value="">Selecione</option>
+                  <option value="improcedente">Improcedente</option>
                   <option value="procedente">Procedente</option>
                   <option value="procedente_parcial">Procedente parcial</option>
-                  <option value="improcedente">Improcedente</option>
                 </select>
               </div>
             </div>
             <div class="linha">
-              <div class="campo">
+              <div class="campo campo-pequeno">
                 <label for="status">Status</label>
                 <select id="status" name="status">
-                  <option value="ativo">Ativo</option>
-                  <option value="suspenso">Suspenso</option>
                   <option value="arquivado">Arquivado</option>
+                  <option value="ativo" selected>Ativo</option>
+                  <option value="suspenso">Suspenso</option>
+                </select>
+              </div>
+              <div class="campo">
+                <label for="grau_instancia">Grau/Instância atual</label>
+                <select id="grau_instancia" name="grau_instancia">
+                  <option value="">Selecione</option>
+                  <option value="primeira_instancia">Primeira Instância</option>
+                  <option value="recurso">Recurso</option>
+                  <option value="stj">STJ</option>
+                  <option value="stf">STF</option>
                 </select>
               </div>
             </div>
@@ -244,18 +262,18 @@
           <div class="secao">
             <h2>Pedidos e requerimentos</h2>
             <div class="grid-requerimentos">
+              <label><input type="checkbox" name="pedido_civel" value="Atendimento Loja"> Atendimento Loja</label>
               <label><input type="checkbox" name="pedido_civel" value="Cancelamento da compra"> Cancelamento da compra</label>
               <label><input type="checkbox" name="pedido_civel" value="Devolução do valor pago"> Devolução do valor pago</label>
-              <label><input type="checkbox" name="pedido_civel" value="Produto com defeito"> Produto com defeito</label>
-              <label><input type="checkbox" name="pedido_civel" value="Tempo de retorno garantia"> Tempo de retorno garantia</label>
-              <label><input type="checkbox" name="pedido_civel" value="Não recebeu produto do conserto"> Não recebeu produto do conserto</label>
-              <label><input type="checkbox" name="pedido_civel" value="Atendimento Loja"> Atendimento Loja</label>
-              <label><input type="checkbox" name="pedido_civel" value="Indenização danos morais"> Indenização danos morais</label>
               <label><input type="checkbox" name="pedido_civel" value="Indenização danos materiais"> Indenização danos materiais</label>
-              <label><input type="checkbox" name="pedido_civel" value="Responsabilidade subsidiária"> Responsabilidade subsidiária</label>
-              <label><input type="checkbox" name="pedido_civel" value="Responsabilidade solidária"> Responsabilidade solidária</label>
-              <label><input type="checkbox" name="pedido_civel" value="Tutela antecipada"> Tutela antecipada</label>
+              <label><input type="checkbox" name="pedido_civel" value="Indenização danos morais"> Indenização danos morais</label>
+              <label><input type="checkbox" name="pedido_civel" value="Não recebeu produto do conserto"> Não recebeu produto do conserto</label>
               <label><input type="checkbox" name="pedido_civel" value="Perícia Técnica"> Perícia Técnica</label>
+              <label><input type="checkbox" name="pedido_civel" value="Produto com defeito"> Produto com defeito</label>
+              <label><input type="checkbox" name="pedido_civel" value="Responsabilidade solidária"> Responsabilidade solidária</label>
+              <label><input type="checkbox" name="pedido_civel" value="Responsabilidade subsidiária"> Responsabilidade subsidiária</label>
+              <label><input type="checkbox" name="pedido_civel" value="Tempo de retorno garantia"> Tempo de retorno garantia</label>
+              <label><input type="checkbox" name="pedido_civel" value="Tutela antecipada"> Tutela antecipada</label>
             </div>
           </div>
 
@@ -283,30 +301,42 @@
             <h2>Valores financeiros</h2>
             <div class="linha">
               <div class="campo">
-                <label for="valor_final">Valor final (R$)</label>
-                <input type="number" step="0.01" id="valor_final" name="valor_final">
+                <label for="valor_final_display">Valor final (R$)</label>
+                <input type="text" inputmode="numeric" id="valor_final_display" placeholder="R$ 0,00"
+                       data-alvo="valor_final" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="valor_final" name="valor_final">
               </div>
               <div class="campo">
-                <label for="honorarios_advogado">Honorários de advogado (R$)</label>
-                <input type="number" step="0.01" id="honorarios_advogado" name="honorarios_advogado">
+                <label for="honorarios_advogado_display">Honorários de advogado (R$)</label>
+                <input type="text" inputmode="numeric" id="honorarios_advogado_display" placeholder="R$ 0,00"
+                       data-alvo="honorarios_advogado" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="honorarios_advogado" name="honorarios_advogado">
               </div>
             </div>
             <div class="linha">
               <div class="campo">
-                <label for="honorarios_periciais">Honorários periciais (R$)</label>
-                <input type="number" step="0.01" id="honorarios_periciais" name="honorarios_periciais">
+                <label for="honorarios_periciais_display">Honorários periciais (R$)</label>
+                <input type="text" inputmode="numeric" id="honorarios_periciais_display" placeholder="R$ 0,00"
+                       data-alvo="honorarios_periciais" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="honorarios_periciais" name="honorarios_periciais">
               </div>
               <div class="campo">
-                <label for="custas_processuais">Custas processuais (R$)</label>
-                <input type="number" step="0.01" id="custas_processuais" name="custas_processuais">
+                <label for="custas_processuais_display">Custas processuais (R$)</label>
+                <input type="text" inputmode="numeric" id="custas_processuais_display" placeholder="R$ 0,00"
+                       data-alvo="custas_processuais" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="custas_processuais" name="custas_processuais">
               </div>
               <div class="campo">
-                <label for="valor_recursal">Valor recursal (R$)</label>
-                <input type="number" step="0.01" id="valor_recursal" name="valor_recursal">
+                <label for="valor_recursal_display">Valor recursal (R$)</label>
+                <input type="text" inputmode="numeric" id="valor_recursal_display" placeholder="R$ 0,00"
+                       data-alvo="valor_recursal" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="valor_recursal" name="valor_recursal">
               </div>
               <div class="campo">
-                <label for="valor_alvara">Alvará (R$)</label>
-                <input type="number" step="0.01" id="valor_alvara" name="valor_alvara">
+                <label for="valor_alvara_display">Alvará (R$)</label>
+                <input type="text" inputmode="numeric" id="valor_alvara_display" placeholder="R$ 0,00"
+                       data-alvo="valor_alvara" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="valor_alvara" name="valor_alvara">
               </div>
               <div class="campo">
                 <label for="data_alvara">Data do alvará</label>
@@ -379,6 +409,24 @@
       input.value = saida;
     }
 
+    // Formata automaticamente os campos de dinheiro no padrão contábil (R$ 1.234,56),
+    // enquanto guarda o valor numérico puro (1234.56) no campo escondido correspondente.
+    function formatarDinheiro(campoTexto) {
+      const idAlvo = campoTexto.dataset.alvo;
+      const campoOculto = document.getElementById(idAlvo);
+      const digitos = campoTexto.value.replace(/\D/g, '');
+
+      if (!digitos) {
+        campoTexto.value = '';
+        if (campoOculto) campoOculto.value = '';
+        return;
+      }
+
+      const valor = parseInt(digitos, 10) / 100;
+      campoTexto.value = 'R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (campoOculto) campoOculto.value = valor.toFixed(2);
+    }
+
     // Calcula o tempo de tramitação: (arquivamento ou hoje) - distribuição, em dias
     function calcularTempoTramitacao() {
       const dataDistStr = document.getElementById('data_distribuicao').value;
@@ -410,6 +458,15 @@
       const container = document.getElementById('lista_rateio_manual');
       const modelo = document.getElementById('modelo_rateio_manual').content.cloneNode(true);
       container.appendChild(modelo);
+    }
+
+    // Atualiza o resumo de autores mostrado na seção Identificação, com base
+    // no que estiver digitado na seção Partes envolvidas.
+    function atualizarResumoAutores() {
+      const nomes = Array.from(document.querySelectorAll('#lista_autores input[name="autor_nome"]'))
+        .map((campo) => campo.value.trim())
+        .filter(Boolean);
+      document.getElementById('resumo_autores_identificacao').textContent = nomes.length ? nomes.join(', ') : '—';
     }
 
     // Adiciona uma linha de nome (autor ou réu)
@@ -448,6 +505,11 @@
       adicionarAdvogado('autor');
       adicionarAdvogado('reu');
       adicionarMovimento();
+
+      // Mantém o resumo de autores em Identificação sempre sincronizado
+      const listaAutores = document.getElementById('lista_autores');
+      listaAutores.addEventListener('input', atualizarResumoAutores);
+      new MutationObserver(atualizarResumoAutores).observe(listaAutores, { childList: true });
     });
   </script>
 

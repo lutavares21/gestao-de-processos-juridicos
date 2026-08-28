@@ -121,15 +121,15 @@
           </div>
           <div class="linha">
             <div class="campo">
-              <label>1ª audiência</label>
+              <label>Próxima audiência</label>
               <div class="valor">{{ p.data_audiencia_1.strftime('%d/%m/%Y') if p.data_audiencia_1 else '—' }}</div>
             </div>
             <div class="campo">
-              <label>2ª audiência</label>
+              <label>Última audiência</label>
               <div class="valor">{{ p.data_audiencia_2.strftime('%d/%m/%Y') if p.data_audiencia_2 else '—' }}</div>
             </div>
             <div class="campo">
-              <label>3ª audiência</label>
+              <label>Audiência inicial</label>
               <div class="valor">{{ p.data_audiencia_3.strftime('%d/%m/%Y') if p.data_audiencia_3 else '—' }}</div>
             </div>
           </div>
@@ -225,12 +225,22 @@
           <h2>Resultado</h2>
           <div class="linha">
             <div class="campo">
-              <label>Resultado</label>
+              <label>Sentença</label>
               <div class="valor">{{ p.resultado|replace('_', ' ')|title if p.resultado else '—' }}</div>
             </div>
             <div class="campo">
-              <label>Sentença</label>
+              <label>Resultado</label>
               <div class="valor">{{ p.sentenca|title if p.sentenca else '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>Grau/Instância atual</label>
+              <div class="valor">
+                {% if p.grau_instancia == 'primeira_instancia' %}Primeira Instância
+                {% elif p.grau_instancia == 'recurso' %}Recurso
+                {% elif p.grau_instancia == 'stj' %}STJ
+                {% elif p.grau_instancia == 'stf' %}STF
+                {% else %}—{% endif %}
+              </div>
             </div>
           </div>
           <div class="campo">

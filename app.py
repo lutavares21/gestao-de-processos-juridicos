@@ -50,6 +50,7 @@ def montar_processo_base(form):
         sentenca=form.get("sentenca"),
         status=form.get("status", "ativo"),
         risco=form.get("risco"),
+        grau_instancia=form.get("grau_instancia"),
         resumo=form.get("resumo"),
         valor_final=texto_para_numero(form.get("valor_final")),
         honorarios_advogado=texto_para_numero(form.get("honorarios_advogado")),
@@ -174,6 +175,7 @@ def processos_trabalhista():
         .all()
     )
     return render_template("processos_trabalhista.html", processos=processos)
+
 
 @app.route("/processo/<int:processo_id>")
 def processo_detalhe(processo_id):

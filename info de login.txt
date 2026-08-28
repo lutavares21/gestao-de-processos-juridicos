@@ -1,0 +1,6 @@
+https://github.com/lutavares21/gestao-de-processos-juridicos.git
+
+gestaodeprocessosjuridicos@gmail.com
+gestao123
+
+senha do pythonanywhere processosjuridicos 
