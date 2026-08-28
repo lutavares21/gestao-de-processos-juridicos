@@ -20,8 +20,8 @@
           <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
           <ul class="submenu">
             <li><a href="{{ url_for('cadastro_civel') }}">Processo Cível</a></li>
+            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
             <li><a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a></li>
-            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
             <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
           </ul>
         </div>
@@ -115,7 +115,7 @@
               <div class="valor">{{ p.dias_ativos ~ ' dias' if p.dias_ativos is not none else '—' }}</div>
             </div>
             <div class="campo">
-              <label>Data de arquivamento</label>
+              <label>Data do arquivamento</label>
               <div class="valor">{{ p.data_arquivamento.strftime('%d/%m/%Y') if p.data_arquivamento else '—' }}</div>
             </div>
           </div>
@@ -258,7 +258,7 @@
               <div class="valor">{{ 'R$ %.2f'|format(p.valor_causa)|replace('.', ',') if p.valor_causa is not none else '—' }}</div>
             </div>
             <div class="campo">
-              <label>Valor final</label>
+              <label>Valor final pago</label>
               <div class="valor">{{ 'R$ %.2f'|format(p.valor_final)|replace('.', ',') if p.valor_final is not none else '—' }}</div>
             </div>
             <div class="campo">

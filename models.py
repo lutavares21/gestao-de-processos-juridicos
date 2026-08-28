@@ -52,7 +52,7 @@ class Processo(db.Model):
     risco = db.Column(db.String(20))
     # 'possivel', 'provavel', 'remoto'
     grau_instancia = db.Column(db.String(30))
-    # 'primeira_instancia', 'recurso', 'stj', 'stf'
+    # 'trt', 'recurso', 'stj', 'stf'
 
     # --- Acompanhamento ---
     resumo = db.Column(db.Text)

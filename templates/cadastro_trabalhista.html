@@ -30,8 +30,8 @@
           <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
           <ul class="submenu">
             <li><a href="{{ url_for('processos_civel') }}">Processo Cível</a></li>
+            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
             <li><a href="{{ url_for('processos_trabalhista') }}">Processo Trabalhista</a></li>
-            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
             <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
           </ul>
         </div>
@@ -125,7 +125,7 @@
             </div>
             <div class="linha">
               <div class="campo campo-pequeno">
-                <label for="data_arquivamento">Data de arquivamento</label>
+                <label for="data_arquivamento">Data do arquivamento</label>
                 <input type="date" id="data_arquivamento" name="data_arquivamento"
                        onchange="calcularTempoTramitacao()">
               </div>
@@ -341,7 +341,7 @@
             <h2>Valores financeiros</h2>
             <div class="linha">
               <div class="campo">
-                <label for="valor_final_display">Valor final (R$)</label>
+                <label for="valor_final_display">Valor final pago(R$)</label>
                 <input type="text" inputmode="numeric" id="valor_final_display" placeholder="R$ 0,00"
                        data-alvo="valor_final" oninput="formatarDinheiro(this)">
                 <input type="hidden" id="valor_final" name="valor_final">
