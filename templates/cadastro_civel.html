@@ -87,7 +87,8 @@
             <div class="linha">
               <div class="campo">
                 <label>Autor(es)</label>
-                <div id="resumo_autores_identificacao" style="padding:9px 0 4px;font-size:14px;color:var(--texto-suave);font-style:italic;">—</div>
+                <div id="lista_autores" class="grupo-dinamico"></div>
+                <button type="button" class="btn btn-adicionar" onclick="adicionarParte('autor')">+ Adicionar autor</button>
               </div>
             </div>
           </div>
@@ -140,8 +141,7 @@
             <h2>Partes envolvidas</h2>
 
             <label>Autor(es)</label>
-            <div id="lista_autores" class="grupo-dinamico"></div>
-            <button type="button" class="btn btn-adicionar" onclick="adicionarParte('autor')">+ Adicionar autor</button>
+            <div id="resumo_autores_partes" style="padding:9px 0 4px;font-size:14px;color:var(--texto-suave);font-style:italic;">—</div>
 
             <div style="margin-top:18px;">
               <label>Advogado(s) do autor <span class="aviso-limite">(até 5)</span></label>
@@ -460,13 +460,13 @@
       container.appendChild(modelo);
     }
 
-    // Atualiza o resumo de autores mostrado na seção Identificação, com base
-    // no que estiver digitado na seção Partes envolvidas.
+    // Atualiza o resumo de autores mostrado na seção Partes envolvidas, com base
+    // no que estiver digitado na seção Identificação.
     function atualizarResumoAutores() {
       const nomes = Array.from(document.querySelectorAll('#lista_autores input[name="autor_nome"]'))
         .map((campo) => campo.value.trim())
         .filter(Boolean);
-      document.getElementById('resumo_autores_identificacao').textContent = nomes.length ? nomes.join(', ') : '—';
+      document.getElementById('resumo_autores_partes').textContent = nomes.length ? nomes.join(', ') : '—';
     }
 
     // Adiciona uma linha de nome (autor ou réu)
