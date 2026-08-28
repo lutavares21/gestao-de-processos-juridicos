@@ -79,9 +79,16 @@
                   <option value="">Selecione</option>
                   <option value="acao_civel">Ação Cível</option>
                   <option value="acao_trabalhista">Ação Trabalhista</option>
-                  <option value="cobranca_judicial">Cobrança Judicial</option>
                   <option value="cobranca_extrajudicial">Cobrança Extrajudicial</option>
+                  <option value="cobranca_judicial">Cobrança Judicial</option>
                 </select>
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label>Autor(es)</label>
+                <div id="lista_autores" class="grupo-dinamico"></div>
+                <button type="button" class="btn btn-adicionar" onclick="adicionarParte('autor')">+ Adicionar autor</button>
               </div>
             </div>
           </div>
@@ -96,21 +103,23 @@
                        onchange="calcularTempoTramitacao()">
               </div>
               <div class="campo">
-                <label for="valor_causa">Valor da causa (R$)</label>
-                <input type="number" step="0.01" id="valor_causa" name="valor_causa">
+                <label for="valor_causa_display">Valor da causa (R$)</label>
+                <input type="text" inputmode="numeric" id="valor_causa_display" placeholder="R$ 0,00"
+                       data-alvo="valor_causa" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="valor_causa" name="valor_causa">
               </div>
             </div>
             <div class="linha">
               <div class="campo">
-                <label for="data_audiencia_1">1ª audiência</label>
+                <label for="data_audiencia_1">Próxima audiência</label>
                 <input type="date" id="data_audiencia_1" name="data_audiencia_1">
               </div>
               <div class="campo">
-                <label for="data_audiencia_2">2ª audiência</label>
+                <label for="data_audiencia_2">Última audiência</label>
                 <input type="date" id="data_audiencia_2" name="data_audiencia_2">
               </div>
               <div class="campo">
-                <label for="data_audiencia_3">3ª audiência</label>
+                <label for="data_audiencia_3">Audiência inicial</label>
                 <input type="date" id="data_audiencia_3" name="data_audiencia_3">
               </div>
             </div>
@@ -132,8 +141,7 @@
             <h2>Partes envolvidas</h2>
 
             <label>Autor(es)</label>
-            <div id="lista_autores" class="grupo-dinamico"></div>
-            <button type="button" class="btn btn-adicionar" onclick="adicionarParte('autor')">+ Adicionar autor</button>
+            <div id="resumo_autores_partes" style="padding:9px 0 4px;font-size:14px;color:var(--texto-suave);font-style:italic;">—</div>
 
             <div style="margin-top:18px;">
               <label>Advogado(s) do autor <span class="aviso-limite">(até 5)</span></label>
@@ -173,11 +181,11 @@
                 <select id="escritorio" name="escritorio">
                   <option value="">Selecione</option>
                   <option value="Dr. Fernando Ximenes">Dr. Fernando Ximenes</option>
-                  <option value="Dra. Cláudia Mello">Dra. Cláudia Mello</option>
                   <option value="Dr. Luiz Antônio Correa">Dr. Luiz Antônio Correa</option>
                   <option value="Dr. Rolim">Dr. Rolim</option>
-                  <option value="Escritório Vra Advogados">Escritório Vra Advogados</option>
+                  <option value="Dra. Cláudia Mello">Dra. Cláudia Mello</option>
                   <option value="Escritório Dannemann">Escritório Dannemann</option>
+                  <option value="Escritório Vra Advogados">Escritório Vra Advogados</option>
                 </select>
               </div>
             </div>
@@ -203,7 +211,7 @@
             <h2>Resultado, status e risco</h2>
             <div class="linha">
               <div class="campo">
-                <label for="sentenca">Sentença</label>
+                <label for="sentenca">Resultado</label>
                 <select id="sentenca" name="sentenca">
                   <option value="">Selecione</option>
                   <option value="ganhamos">Ganhamos</option>
@@ -211,22 +219,32 @@
                 </select>
               </div>
               <div class="campo">
-                <label for="resultado">Resultado</label>
+                <label for="resultado">Sentença</label>
                 <select id="resultado" name="resultado">
                   <option value="">Selecione</option>
+                  <option value="improcedente">Improcedente</option>
                   <option value="procedente">Procedente</option>
                   <option value="procedente_parcial">Procedente parcial</option>
-                  <option value="improcedente">Improcedente</option>
                 </select>
               </div>
             </div>
             <div class="linha">
-              <div class="campo">
+              <div class="campo campo-pequeno">
                 <label for="status">Status</label>
                 <select id="status" name="status">
-                  <option value="ativo">Ativo</option>
-                  <option value="suspenso">Suspenso</option>
                   <option value="arquivado">Arquivado</option>
+                  <option value="ativo" selected>Ativo</option>
+                  <option value="suspenso">Suspenso</option>
+                </select>
+              </div>
+              <div class="campo">
+                <label for="grau_instancia">Grau/Instância atual</label>
+                <select id="grau_instancia" name="grau_instancia">
+                  <option value="">Selecione</option>
+                  <option value="primeira_instancia">Primeira Instância</option>
+                  <option value="recurso">Recurso</option>
+                  <option value="stj">STJ</option>
+                  <option value="stf">STF</option>
                 </select>
               </div>
             </div>
@@ -249,36 +267,39 @@
                 <label for="select_verba">Pedido / verba</label>
                 <select id="select_verba">
                   <option value="">Selecione</option>
-                  <option value="Saldo de salário">Saldo de salário</option>
-                  <option value="Diferenças salariais">Diferenças salariais</option>
-                  <option value="Aviso-prévio">Aviso-prévio</option>
                   <option value="13º salário proporcional">13º salário proporcional</option>
-                  <option value="Férias vencidas + 1/3">Férias vencidas + 1/3</option>
-                  <option value="Férias proporcionais + 1/3">Férias proporcionais + 1/3</option>
-                  <option value="Férias em Dobro + 1/3">Férias em Dobro + 1/3</option>
-                  <option value="Recolhimento do FGTS 8%">Recolhimento do FGTS 8%</option>
-                  <option value="FGTS (8%) não depositado">FGTS (8%) não depositado</option>
-                  <option value="Recolhimento FGTS - Multa de 40%">Recolhimento FGTS - Multa de 40%</option>
-                  <option value="Horas extras">Horas extras</option>
-                  <option value="Intervalo intrajornada">Intervalo intrajornada</option>
-                  <option value="Intervalo Interjornada">Intervalo Interjornada</option>
-                  <option value="Adicional noturno">Adicional noturno</option>
                   <option value="Adicional de insalubridade">Adicional de insalubridade</option>
                   <option value="Adicional de periculosidade">Adicional de periculosidade</option>
+                  <option value="Adicional noturno">Adicional noturno</option>
+                  <option value="Aviso-prévio">Aviso-prévio</option>
                   <option value="Comissões">Comissões</option>
-                  <option value="Prêmios">Prêmios</option>
-                  <option value="Multa do art. 477 da CLT">Multa do art. 477 da CLT</option>
+                  <option value="Diferenças salariais">Diferenças salariais</option>
+                  <option value="Equiparação salarial">Equiparação salarial</option>
+                  <option value="Férias em Dobro + 1/3">Férias em Dobro + 1/3</option>
+                  <option value="Férias proporcionais + 1/3">Férias proporcionais + 1/3</option>
+                  <option value="Férias vencidas + 1/3">Férias vencidas + 1/3</option>
+                  <option value="FGTS (8%) não depositado">FGTS (8%) não depositado</option>
+                  <option value="Honorários">Honorários</option>
+                  <option value="Horas extras">Horas extras</option>
+                  <option value="Indenização por Assédio Moral">Indenização por Assédio Moral</option>
+                  <option value="Indenização por danos morais">Indenização por danos morais</option>
+                  <option value="Intervalo Interjornada">Intervalo Interjornada</option>
+                  <option value="Intervalo intrajornada">Intervalo intrajornada</option>
                   <option value="Multa do art. 467 da CLT">Multa do art. 467 da CLT</option>
-                  <option value="Seguro-desemprego">Seguro-desemprego</option>
+                  <option value="Multa do art. 477 da CLT">Multa do art. 477 da CLT</option>
+                  <option value="Outros">Outros</option>
+                  <option value="Prêmios">Prêmios</option>
+                  <option value="Recolhimento do FGTS 8%">Recolhimento do FGTS 8%</option>
+                  <option value="Recolhimento FGTS - Multa de 40%">Recolhimento FGTS - Multa de 40%</option>
                   <option value="Reconhecimento de vínculo empregatício">Reconhecimento de vínculo empregatício</option>
                   <option value="Retificação/anotação da CTPS">Retificação/anotação da CTPS</option>
-                  <option value="Indenização por danos morais">Indenização por danos morais</option>
-                  <option value="Indenização por Assédio Moral">Indenização por Assédio Moral</option>
+                  <option value="Saldo de salário">Saldo de salário</option>
+                  <option value="Seguro-desemprego">Seguro-desemprego</option>
                 </select>
               </div>
               <div class="campo campo-pequeno">
-                <label for="valor_verba">Valor (R$)</label>
-                <input type="number" step="0.01" id="valor_verba">
+                <label for="valor_verba_display">Valor (R$)</label>
+                <input type="text" inputmode="numeric" id="valor_verba_display" placeholder="R$ 0,00" oninput="formatarDinheiro(this)">
               </div>
               <div class="campo" style="flex:0 0 auto;align-self:flex-end;margin-bottom:14px;">
                 <button type="button" class="btn btn-adicionar" onclick="adicionarVerba()">+ Adicionar novo</button>
@@ -320,30 +341,42 @@
             <h2>Valores financeiros</h2>
             <div class="linha">
               <div class="campo">
-                <label for="valor_final">Valor final (R$)</label>
-                <input type="number" step="0.01" id="valor_final" name="valor_final">
+                <label for="valor_final_display">Valor final (R$)</label>
+                <input type="text" inputmode="numeric" id="valor_final_display" placeholder="R$ 0,00"
+                       data-alvo="valor_final" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="valor_final" name="valor_final">
               </div>
               <div class="campo">
-                <label for="honorarios_advogado">Honorários de advogado (R$)</label>
-                <input type="number" step="0.01" id="honorarios_advogado" name="honorarios_advogado">
+                <label for="honorarios_advogado_display">Honorários de advogado (R$)</label>
+                <input type="text" inputmode="numeric" id="honorarios_advogado_display" placeholder="R$ 0,00"
+                       data-alvo="honorarios_advogado" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="honorarios_advogado" name="honorarios_advogado">
               </div>
             </div>
             <div class="linha">
               <div class="campo">
-                <label for="honorarios_periciais">Honorários periciais (R$)</label>
-                <input type="number" step="0.01" id="honorarios_periciais" name="honorarios_periciais">
+                <label for="honorarios_periciais_display">Honorários periciais (R$)</label>
+                <input type="text" inputmode="numeric" id="honorarios_periciais_display" placeholder="R$ 0,00"
+                       data-alvo="honorarios_periciais" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="honorarios_periciais" name="honorarios_periciais">
               </div>
               <div class="campo">
-                <label for="custas_processuais">Custas processuais (R$)</label>
-                <input type="number" step="0.01" id="custas_processuais" name="custas_processuais">
+                <label for="custas_processuais_display">Custas processuais (R$)</label>
+                <input type="text" inputmode="numeric" id="custas_processuais_display" placeholder="R$ 0,00"
+                       data-alvo="custas_processuais" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="custas_processuais" name="custas_processuais">
               </div>
               <div class="campo">
-                <label for="valor_recursal">Valor recursal (R$)</label>
-                <input type="number" step="0.01" id="valor_recursal" name="valor_recursal">
+                <label for="valor_recursal_display">Valor recursal (R$)</label>
+                <input type="text" inputmode="numeric" id="valor_recursal_display" placeholder="R$ 0,00"
+                       data-alvo="valor_recursal" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="valor_recursal" name="valor_recursal">
               </div>
               <div class="campo">
-                <label for="valor_alvara">Alvará (R$)</label>
-                <input type="number" step="0.01" id="valor_alvara" name="valor_alvara">
+                <label for="valor_alvara_display">Alvará (R$)</label>
+                <input type="text" inputmode="numeric" id="valor_alvara_display" placeholder="R$ 0,00"
+                       data-alvo="valor_alvara" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="valor_alvara" name="valor_alvara">
               </div>
               <div class="campo">
                 <label for="data_alvara">Data do alvará</label>
@@ -408,7 +441,8 @@
         <input type="text" name="pedido_verba" readonly>
       </div>
       <div class="campo campo-pequeno">
-        <input type="number" step="0.01" name="pedido_valor" class="valor-verba-linha" oninput="calcularTotalPedidos()">
+        <input type="text" class="valor-verba-linha" readonly>
+        <input type="hidden" name="pedido_valor">
       </div>
       <button type="button" class="btn btn-remover" onclick="this.parentElement.remove(); calcularTotalPedidos()">Remover</button>
     </div>
@@ -426,6 +460,32 @@
       if (digitos.length > 14) saida += '.' + digitos.substring(14, 16);
       if (digitos.length > 16) saida += '.' + digitos.substring(16, 20);
       input.value = saida;
+    }
+
+    // Formata automaticamente os campos de dinheiro no padrão contábil (R$ 1.234,56),
+    // enquanto guarda o valor numérico puro (1234.56) no campo escondido correspondente
+    // (quando houver um, via data-alvo).
+    function formatarDinheiro(campoTexto) {
+      const idAlvo = campoTexto.dataset.alvo;
+      const campoOculto = idAlvo ? document.getElementById(idAlvo) : null;
+      const digitos = campoTexto.value.replace(/\D/g, '');
+
+      if (!digitos) {
+        campoTexto.value = '';
+        if (campoOculto) campoOculto.value = '';
+        return;
+      }
+
+      const valor = parseInt(digitos, 10) / 100;
+      campoTexto.value = 'R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (campoOculto) campoOculto.value = valor.toFixed(2);
+    }
+
+    // Converte um texto já formatado como dinheiro (ex.: "R$ 1.234,56") em número puro (1234.56)
+    function paraNumero(textoFormatado) {
+      const digitos = (textoFormatado || '').replace(/\D/g, '');
+      if (!digitos) return 0;
+      return parseInt(digitos, 10) / 100;
     }
 
     // Calcula o tempo de tramitação: (arquivamento ou hoje) - distribuição, em dias
@@ -451,19 +511,25 @@
     // Adiciona uma linha de pedido/verba trabalhista, usando o que está selecionado no topo
     function adicionarVerba() {
       const select = document.getElementById('select_verba');
-      const inputValor = document.getElementById('valor_verba');
+      const inputValor = document.getElementById('valor_verba_display');
 
       if (!select.value) {
         alert('Selecione um pedido/verba antes de adicionar.');
         return;
       }
 
+      const valorNumerico = paraNumero(inputValor.value);
+
       const container = document.getElementById('lista_verbas');
       const modelo = document.getElementById('modelo_verba').content.cloneNode(true);
       const campoNome = modelo.querySelector('input[name="pedido_verba"]');
-      const campoValor = modelo.querySelector('input[name="pedido_valor"]');
+      const campoValorDisplay = modelo.querySelector('.valor-verba-linha');
+      const campoValorOculto = modelo.querySelector('input[name="pedido_valor"]');
+
       campoNome.value = select.value;
-      campoValor.value = inputValor.value || '';
+      campoValorDisplay.value = 'R$ ' + valorNumerico.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      campoValorOculto.value = valorNumerico.toFixed(2);
+
       container.appendChild(modelo);
 
       select.value = '';
@@ -473,7 +539,7 @@
 
     // Soma todos os valores dos pedidos/verbas já adicionados
     function calcularTotalPedidos() {
-      const valores = document.querySelectorAll('#lista_verbas .valor-verba-linha');
+      const valores = document.querySelectorAll('#lista_verbas input[name="pedido_valor"]');
       let total = 0;
       valores.forEach((campo) => {
         total += parseFloat(campo.value) || 0;
@@ -493,6 +559,15 @@
       const container = document.getElementById('lista_rateio_manual');
       const modelo = document.getElementById('modelo_rateio_manual').content.cloneNode(true);
       container.appendChild(modelo);
+    }
+
+    // Atualiza o resumo de autores mostrado na seção Partes envolvidas, com base
+    // no que estiver digitado na seção Identificação.
+    function atualizarResumoAutores() {
+      const nomes = Array.from(document.querySelectorAll('#lista_autores input[name="autor_nome"]'))
+        .map((campo) => campo.value.trim())
+        .filter(Boolean);
+      document.getElementById('resumo_autores_partes').textContent = nomes.length ? nomes.join(', ') : '—';
     }
 
     // Adiciona uma linha de nome (autor ou réu)
@@ -531,6 +606,11 @@
       adicionarAdvogado('autor');
       adicionarAdvogado('reu');
       adicionarMovimento();
+
+      // Mantém o resumo de autores em Identificação sempre sincronizado
+      const listaAutores = document.getElementById('lista_autores');
+      listaAutores.addEventListener('input', atualizarResumoAutores);
+      new MutationObserver(atualizarResumoAutores).observe(listaAutores, { childList: true });
     });
   </script>
 
