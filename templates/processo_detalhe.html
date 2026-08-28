@@ -235,8 +235,8 @@
             <div class="campo">
               <label>Grau/Instância atual</label>
               <div class="valor">
-                {% if p.grau_instancia == 'primeira_instancia' %}Primeira Instância
                 {% elif p.grau_instancia == 'recurso' %}Recurso
+                 {% if p.grau_instancia == 'trt' %}Recurso TRT
                 {% elif p.grau_instancia == 'stj' %}STJ
                 {% elif p.grau_instancia == 'stf' %}STF
                 {% else %}—{% endif %}
@@ -263,7 +263,7 @@
             </div>
             <div class="campo">
               <label>Valor recursal</label>
-              <div class="valor">{{ 'R$ %.2f'|format(p.valor_recursal)|replace('.', ',') if p.valor_recursal is not none else '—' }}</div>
+              <div class="valor">{{ 'R$ %.2f'|format(p.deposito_recursal)|replace('.', ',') if p.deposito_recursal is not none else '—' }}</div>
             </div>
           </div>
           <div class="linha">
