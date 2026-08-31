@@ -616,3 +616,17 @@ input[readonly] {
   color: var(--texto-suave);
   font-style: italic;
 }
+
+/* --- Selo colorido de status de cada pedido/verba trabalhista --- */
+.selo-pedido {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.selo-pedido.em_analise { background: #fbeecb; color: var(--risco-possivel); }   /* amarelo */
+.selo-pedido.deferido   { background: #f6dede; color: var(--risco-provavel); }  /* vermelho */
+.selo-pedido.indeferido { background: #e3f0e6; color: var(--risco-remoto); }    /* verde */

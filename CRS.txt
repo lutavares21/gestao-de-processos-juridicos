@@ -1,0 +1,30 @@
+CR CUSTO	Departamento                 
+1111     	Laboratorio                             
+211      	Diretoria Executiva                     
+220      	Departamento Financeiro                 
+234      	LOGISTICA                               
+237	        Licitação e Legalização
+242      	Marketing                               
+249      	PROGRAMA PARCERIA                       
+251      	RH/Depto.Pessoal                        
+253      	INTERACOUSTICS - DISTRIBUIDORES         
+254      	OTICON GOVERNO                                 
+261      	TI - INFORMATICA                        
+271      	Audiologia                              
+245      	CALL CENTER                             
+700      	MEXICO                                  
+501      	DISTRIBUIDORES                          
+281      	PRODUTOS E REGULATORIOS                 
+400      	OTICON MEDICAL                          
+402      	NEURELEC                                
+213      	TELEX LICENCA                                 
+258      	SONIC                                   
+273      	DIATEC                                  
+502      	SONIC DISTRIBUIDORES                    
+301      	PHILIPS                                 
+246      	HUB TELECONSULTA                        
+800      	EXPATRIADOS                             
+236      	SUPRIMENTOS                             
+302      	EXPANSAO                                
+601      	MARKETING B2B                           
+290      	BERNAFON

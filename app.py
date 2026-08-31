@@ -41,6 +41,9 @@ def montar_processo_base(form):
         data_distribuicao=texto_para_data(form.get("data_distribuicao")),
         valor_causa=texto_para_numero(form.get("valor_causa")),
         data_audiencia_1=texto_para_data(form.get("data_audiencia_1")),
+        audiencia_1_horario=form.get("audiencia_1_horario") or None,
+        audiencia_1_tipo=form.get("audiencia_1_tipo") or None,
+        audiencia_1_link=form.get("audiencia_1_link") or None,
         data_audiencia_2=texto_para_data(form.get("data_audiencia_2")),
         data_audiencia_3=texto_para_data(form.get("data_audiencia_3")),
         data_arquivamento=texto_para_data(form.get("data_arquivamento")),
@@ -143,12 +146,13 @@ def cadastro_trabalhista():
     preencher_partes_e_advogados(processo, form)
 
     # Pedidos/verbas trabalhistas (verba + valor, pareados pela posição)
-    verbas = form.getlist("pedido_verba")
+       verbas = form.getlist("pedido_verba")
     valores = form.getlist("pedido_valor")
-    for verba, valor in zip(verbas, valores):
+    statuses = form.getlist("pedido_status")
+    for verba, valor, status in zip(verbas, valores, statuses):
         if verba.strip():
             processo.pedidos_trabalhistas.append(
-                PedidoTrabalhista(verba=verba.strip(), valor=texto_para_numero(valor))
+                PedidoTrabalhista(verba=verba.strip(), valor=texto_para_numero(valor), status=status or "em_analise")
             )
 
     db.session.add(processo)

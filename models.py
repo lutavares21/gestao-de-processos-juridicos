@@ -34,6 +34,10 @@ class Processo(db.Model):
     data_distribuicao = db.Column(db.Date, nullable=False)
     valor_causa = db.Column(db.Numeric(14, 2))
     data_audiencia_1 = db.Column(db.Date)
+    audiencia_1_horario = db.Column(db.String(5))   # 'HH:MM'
+    audiencia_1_tipo = db.Column(db.String(20))
+    # 'presencial', 'telepresencial', 'videoconferencia', 'hibrida'
+    audiencia_1_link = db.Column(db.String(255))
     data_audiencia_2 = db.Column(db.Date)
     data_audiencia_3 = db.Column(db.Date)
     data_arquivamento = db.Column(db.Date)
@@ -52,7 +56,7 @@ class Processo(db.Model):
     risco = db.Column(db.String(20))
     # 'possivel', 'provavel', 'remoto'
     grau_instancia = db.Column(db.String(30))
-    # 'trt', 'recurso', 'stj', 'stf'
+    # 'primeira_instancia', 'segunda_instancia_trt', 'tst', 'stf', 'nao_informado'
 
     # --- Acompanhamento ---
     resumo = db.Column(db.Text)
@@ -147,6 +151,8 @@ class PedidoTrabalhista(db.Model):
     verba = db.Column(db.String(200), nullable=False)
     valor = db.Column(db.Numeric(14, 2))
 
+    status = db.Column(db.String(20), default="em_analise")
+    # 'em_analise', 'deferido', 'indeferido'
 
 class RateioCR(db.Model):
     """Quando o Centro de Resultados é 'rateio', lista os CRs que
