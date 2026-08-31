@@ -146,7 +146,7 @@ def cadastro_trabalhista():
     preencher_partes_e_advogados(processo, form)
 
     # Pedidos/verbas trabalhistas (verba + valor, pareados pela posição)
-       verbas = form.getlist("pedido_verba")
+    verbas = form.getlist("pedido_verba")
     valores = form.getlist("pedido_valor")
     statuses = form.getlist("pedido_status")
     for verba, valor, status in zip(verbas, valores, statuses):
