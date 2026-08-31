@@ -229,6 +229,7 @@ body {
 input[type="text"],
 input[type="date"],
 input[type="number"],
+input[type="time"],
 input[type="file"],
 select,
 textarea {
