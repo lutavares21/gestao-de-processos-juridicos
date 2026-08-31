@@ -434,10 +434,16 @@
                 <input type="hidden" id="valor_final" name="valor_final">
               </div>
               <div class="campo">
-                <label for="honorarios_advogado_display">Honorários de advogado (R$)</label>
+                <label for="honorarios_advogado_display">Honorários Advocatícios (R$)</label>
                 <input type="text" inputmode="numeric" id="honorarios_advogado_display" placeholder="R$ 0,00"
                        data-alvo="honorarios_advogado" oninput="formatarDinheiro(this)">
                 <input type="hidden" id="honorarios_advogado" name="honorarios_advogado">
+              </div>
+              <div class="campo">
+                <label for="economia_gerada_display">Economia Gerada (R$)</label>
+                <input type="text" inputmode="numeric" id="economia_gerada_display" placeholder="R$ 0,00"
+                       data-alvo="economia_gerada" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="economia_gerada" name="economia_gerada">
               </div>
             </div>
             <div class="linha">

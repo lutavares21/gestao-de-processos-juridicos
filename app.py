@@ -62,6 +62,7 @@ def montar_processo_base(form):
         deposito_recursal=texto_para_numero(form.get("deposito_recursal")),
         valor_alvara=texto_para_numero(form.get("valor_alvara")),
         data_alvara=texto_para_data(form.get("data_alvara")),
+        economia_gerada=texto_para_numero(form.get("economia_gerada")),
     )
 
 

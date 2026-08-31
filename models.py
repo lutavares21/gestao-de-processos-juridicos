@@ -65,6 +65,7 @@ class Processo(db.Model):
     # --- Valores financeiros ---
     valor_final = db.Column(db.Numeric(14, 2))
     honorarios_advogado = db.Column(db.Numeric(14, 2))
+    economia_gerada = db.Column(db.Numeric(14, 2))
     honorarios_periciais = db.Column(db.Numeric(14, 2))
     custas_processuais = db.Column(db.Numeric(14, 2))
     deposito_recursal = db.Column(db.Numeric(14, 2))
