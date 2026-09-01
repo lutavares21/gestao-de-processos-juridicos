@@ -562,6 +562,12 @@ input[readonly] {
   font-size: 14px;
 }
 
+.flash.flash-erro {
+  background: #f6dede;
+  border: 1px solid var(--risco-provavel);
+  color: #7a2e2e;
+}
+
 /* --- Página de detalhe do processo (somente leitura) --- */
 .campo .valor {
   padding: 9px 0 4px;

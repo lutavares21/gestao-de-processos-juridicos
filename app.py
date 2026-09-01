@@ -5,6 +5,7 @@ App Flask - Gestão de Processos Jurídicos
 
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for
+from sqlalchemy.exc import IntegrityError
 from models import db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR, PedidoCivel
 
 app = Flask(__name__)
@@ -117,6 +118,12 @@ def index():
     return render_template("inicio.html")
 
 
+def numero_processo_ja_existe(numero_processo):
+    """Verifica se já existe algum processo (cível ou trabalhista) cadastrado
+    com esse número. Usado para bloquear cadastros duplicados."""
+    return Processo.query.filter_by(numero_processo=numero_processo).first() is not None
+
+
 @app.route("/inicio")
 def inicio():
     return render_template("inicio.html")
@@ -129,6 +136,14 @@ def cadastro_civel():
         return render_template("cadastro_civel.html", sucesso=sucesso)
 
     form = request.form
+    numero_processo = form.get("numero_processo")
+
+    if numero_processo_ja_existe(numero_processo):
+        return render_template(
+            "cadastro_civel.html",
+            erro_numero_duplicado=numero_processo,
+        )
+
     processo = montar_processo_base(form)
     processo.origem_cadastro = "civel"
     preencher_partes_e_advogados(processo, form)
@@ -139,7 +154,11 @@ def cadastro_civel():
             processo.pedidos_civeis.append(PedidoCivel(descricao=descricao.strip()))
 
     db.session.add(processo)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return render_template("cadastro_civel.html", erro_numero_duplicado=numero_processo)
 
     return redirect(url_for("cadastro_civel", sucesso=1))
 
@@ -151,6 +170,14 @@ def cadastro_trabalhista():
         return render_template("cadastro_trabalhista.html", sucesso=sucesso)
 
     form = request.form
+    numero_processo = form.get("numero_processo")
+
+    if numero_processo_ja_existe(numero_processo):
+        return render_template(
+            "cadastro_trabalhista.html",
+            erro_numero_duplicado=numero_processo,
+        )
+
     processo = montar_processo_base(form)
     processo.origem_cadastro = "trabalhista"
     preencher_partes_e_advogados(processo, form)
@@ -166,7 +193,11 @@ def cadastro_trabalhista():
             )
 
     db.session.add(processo)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return render_template("cadastro_trabalhista.html", erro_numero_duplicado=numero_processo)
 
     return redirect(url_for("cadastro_trabalhista", sucesso=1))
 

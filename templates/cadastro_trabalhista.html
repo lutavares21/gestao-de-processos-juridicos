@@ -50,6 +50,10 @@
           <div class="flash">Processo cadastrado com sucesso.</div>
         {% endif %}
 
+        {% if erro_numero_duplicado %}
+          <div class="flash flash-erro">Já existe um processo cadastrado com o número <strong>{{ erro_numero_duplicado }}</strong>. Verifique o número e tente novamente.</div>
+        {% endif %}
+
         <form method="POST" action="{{ url_for('cadastro_trabalhista') }}" enctype="multipart/form-data">
 
           <!-- 1. IDENTIFICAÇÃO -->
@@ -125,7 +129,7 @@
                 <input type="time" id="audiencia_1_horario" name="audiencia_1_horario">
               </div>
               <div class="campo">
-                <label for="audiencia_1_tipo">Tipo</label>
+                <label for="audiencia_1_tipo">Modalidade da audiência</label>
                 <select id="audiencia_1_tipo" name="audiencia_1_tipo" onchange="alternarLinkAudiencia()">
                   <option value="">Selecione</option>
                   <option value="hibrida">Híbrida</option>
@@ -197,34 +201,34 @@
                 <select id="centro_resultado" name="centro_resultado" onchange="alternarRateio()">
                   <option value="">Selecione</option>
                   <option value="271">271 - Audiologia</option>
-                  <option value="290">290 - BERNAFON</option>
-                  <option value="245">245 - CALL CENTER</option>
+                  <option value="290">290 - Bernafon</option>
+                  <option value="245">245 - Call Center</option>
                   <option value="220">220 - Departamento Financeiro</option>
-                  <option value="273">273 - DIATEC</option>
+                  <option value="273">273 - Diatec</option>
                   <option value="211">211 - Diretoria Executiva</option>
-                  <option value="501">501 - DISTRIBUIDORES</option>
-                  <option value="302">302 - EXPANSAO</option>
-                  <option value="800">800 - EXPATRIADOS</option>
-                  <option value="246">246 - HUB TELECONSULTA</option>
-                  <option value="253">253 - INTERACOUSTICS - DISTRIBUIDORES</option>
-                  <option value="1111">1111 - Laboratorio</option>
+                  <option value="501">501 - Distribuidores</option>
+                  <option value="302">302 - Expansão</option>
+                  <option value="800">800 - Expatriados</option>
+                  <option value="246">246 - Hub Teleconsulta</option>
+                  <option value="253">253 - Interacoustics - Distribuidores</option>
+                  <option value="1111">1111 - Laboratório</option>
                   <option value="237">237 - Licitação e Legalização</option>
-                  <option value="234">234 - LOGISTICA</option>
+                  <option value="234">234 - Logística</option>
                   <option value="242">242 - Marketing</option>
-                  <option value="601">601 - MARKETING B2B</option>
-                  <option value="700">700 - MEXICO</option>
-                  <option value="402">402 - NEURELEC</option>
-                  <option value="254">254 - OTICON GOVERNO</option>
-                  <option value="400">400 - OTICON MEDICAL</option>
-                  <option value="301">301 - PHILIPS</option>
-                  <option value="281">281 - PRODUTOS E REGULATORIOS</option>
-                  <option value="249">249 - PROGRAMA PARCERIA</option>
+                  <option value="601">601 - Marketing B2B</option>
+                  <option value="700">700 - México</option>
+                  <option value="402">402 - Neurelec</option>
+                  <option value="254">254 - Oticon Governo</option>
+                  <option value="400">400 - Oticon Medical</option>
+                  <option value="301">301 - Philips</option>
+                  <option value="281">281 - Produtos e Regulatórios</option>
+                  <option value="249">249 - Programa Parceria</option>
                   <option value="251">251 - RH/Depto.Pessoal</option>
-                  <option value="258">258 - SONIC</option>
-                  <option value="502">502 - SONIC DISTRIBUIDORES</option>
-                  <option value="236">236 - SUPRIMENTOS</option>
-                  <option value="213">213 - TELEX LICENCA</option>
-                  <option value="261">261 - TI - INFORMATICA</option>
+                  <option value="258">258 - Sonic</option>
+                  <option value="502">502 - Sonic Distribuidores</option>
+                  <option value="236">236 - Suprimentos</option>
+                  <option value="213">213 - Telex Licença</option>
+                  <option value="261">261 - TI - Informática</option>
                   <option value="rateio">Rateio</option>
                 </select>
               </div>
@@ -249,34 +253,34 @@
 
               <div class="chip-risco" style="flex-wrap:wrap;margin-bottom:14px;">
                 <label><input type="checkbox" name="rateio_cr" value="271"> 271 - Audiologia</label>
-                <label><input type="checkbox" name="rateio_cr" value="290"> 290 - BERNAFON</label>
-                <label><input type="checkbox" name="rateio_cr" value="245"> 245 - CALL CENTER</label>
+                <label><input type="checkbox" name="rateio_cr" value="290"> 290 - Bernafon</label>
+                <label><input type="checkbox" name="rateio_cr" value="245"> 245 - Call Center</label>
                 <label><input type="checkbox" name="rateio_cr" value="220"> 220 - Departamento Financeiro</label>
-                <label><input type="checkbox" name="rateio_cr" value="273"> 273 - DIATEC</label>
+                <label><input type="checkbox" name="rateio_cr" value="273"> 273 - Diatec</label>
                 <label><input type="checkbox" name="rateio_cr" value="211"> 211 - Diretoria Executiva</label>
-                <label><input type="checkbox" name="rateio_cr" value="501"> 501 - DISTRIBUIDORES</label>
-                <label><input type="checkbox" name="rateio_cr" value="302"> 302 - EXPANSAO</label>
-                <label><input type="checkbox" name="rateio_cr" value="800"> 800 - EXPATRIADOS</label>
-                <label><input type="checkbox" name="rateio_cr" value="246"> 246 - HUB TELECONSULTA</label>
-                <label><input type="checkbox" name="rateio_cr" value="253"> 253 - INTERACOUSTICS - DISTRIBUIDORES</label>
-                <label><input type="checkbox" name="rateio_cr" value="1111"> 1111 - Laboratorio</label>
+                <label><input type="checkbox" name="rateio_cr" value="501"> 501 - Distribuidores</label>
+                <label><input type="checkbox" name="rateio_cr" value="302"> 302 - Expansão</label>
+                <label><input type="checkbox" name="rateio_cr" value="800"> 800 - Expatriados</label>
+                <label><input type="checkbox" name="rateio_cr" value="246"> 246 - Hub Teleconsulta</label>
+                <label><input type="checkbox" name="rateio_cr" value="253"> 253 - Interacoustics - Distribuidores</label>
+                <label><input type="checkbox" name="rateio_cr" value="1111"> 1111 - Laboratório</label>
                 <label><input type="checkbox" name="rateio_cr" value="237"> 237 - Licitação e Legalização</label>
-                <label><input type="checkbox" name="rateio_cr" value="234"> 234 - LOGISTICA</label>
+                <label><input type="checkbox" name="rateio_cr" value="234"> 234 - Logística</label>
                 <label><input type="checkbox" name="rateio_cr" value="242"> 242 - Marketing</label>
-                <label><input type="checkbox" name="rateio_cr" value="601"> 601 - MARKETING B2B</label>
-                <label><input type="checkbox" name="rateio_cr" value="700"> 700 - MEXICO</label>
-                <label><input type="checkbox" name="rateio_cr" value="402"> 402 - NEURELEC</label>
-                <label><input type="checkbox" name="rateio_cr" value="254"> 254 - OTICON GOVERNO</label>
-                <label><input type="checkbox" name="rateio_cr" value="400"> 400 - OTICON MEDICAL</label>
-                <label><input type="checkbox" name="rateio_cr" value="301"> 301 - PHILIPS</label>
-                <label><input type="checkbox" name="rateio_cr" value="281"> 281 - PRODUTOS E REGULATORIOS</label>
-                <label><input type="checkbox" name="rateio_cr" value="249"> 249 - PROGRAMA PARCERIA</label>
+                <label><input type="checkbox" name="rateio_cr" value="601"> 601 - Marketing B2B</label>
+                <label><input type="checkbox" name="rateio_cr" value="700"> 700 - México</label>
+                <label><input type="checkbox" name="rateio_cr" value="402"> 402 - Neurelec</label>
+                <label><input type="checkbox" name="rateio_cr" value="254"> 254 - Oticon Governo</label>
+                <label><input type="checkbox" name="rateio_cr" value="400"> 400 - Oticon Medical</label>
+                <label><input type="checkbox" name="rateio_cr" value="301"> 301 - Philips</label>
+                <label><input type="checkbox" name="rateio_cr" value="281"> 281 - Produtos e Regulatórios</label>
+                <label><input type="checkbox" name="rateio_cr" value="249"> 249 - Programa Parceria</label>
                 <label><input type="checkbox" name="rateio_cr" value="251"> 251 - RH/Depto.Pessoal</label>
-                <label><input type="checkbox" name="rateio_cr" value="258"> 258 - SONIC</label>
-                <label><input type="checkbox" name="rateio_cr" value="502"> 502 - SONIC DISTRIBUIDORES</label>
-                <label><input type="checkbox" name="rateio_cr" value="236"> 236 - SUPRIMENTOS</label>
-                <label><input type="checkbox" name="rateio_cr" value="213"> 213 - TELEX LICENCA</label>
-                <label><input type="checkbox" name="rateio_cr" value="261"> 261 - TI - INFORMATICA</label>
+                <label><input type="checkbox" name="rateio_cr" value="258"> 258 - Sonic</label>
+                <label><input type="checkbox" name="rateio_cr" value="502"> 502 - Sonic Distribuidores</label>
+                <label><input type="checkbox" name="rateio_cr" value="236"> 236 - Suprimentos</label>
+                <label><input type="checkbox" name="rateio_cr" value="213"> 213 - Telex Licença</label>
+                <label><input type="checkbox" name="rateio_cr" value="261"> 261 - TI - Informática</label>
               </div>
 
               <div id="lista_rateio_manual"></div>
