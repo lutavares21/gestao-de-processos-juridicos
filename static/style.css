@@ -628,6 +628,50 @@ input[readonly] {
   white-space: nowrap;
 }
 
-.selo-pedido.em_analise { background: #fbeecb; color: var(--risco-possivel); }   /* amarelo */
-.selo-pedido.deferido   { background: #f6dede; color: var(--risco-provavel); }  /* vermelho */
-.selo-pedido.indeferido { background: #e3f0e6; color: var(--risco-remoto); }    /* verde */
+.selo-pedido.em_analise { background: #fbeecb; color: var(--risco-possivel); }  /* amarelo */
+.selo-pedido.deferido   { background: #e3f0e6; color: var(--risco-remoto); }    /* verde */
+.selo-pedido.indeferido { background: #f6dede; color: var(--risco-provavel); }  /* vermelho */
+
+/* --- Cor de destaque do número do processo, conforme situação dos pedidos --- */
+.numero-processo-cor {
+  display: inline-block;
+  padding: 4px 9px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.numero-processo-cor.cor-verde    { background: #e3f0e6; color: var(--risco-remoto); }
+.numero-processo-cor.cor-amarelo  { background: #fbeecb; color: var(--risco-possivel); }
+.numero-processo-cor.cor-vermelho { background: #f6dede; color: var(--risco-provavel); }
+
+/* --- Legenda de cores no topo da página de listagem --- */
+.legenda-cores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: center;
+  background: var(--papel-cartao);
+  border: 1px solid var(--borda);
+  border-radius: 4px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--texto-suave);
+}
+
+.legenda-cores .item-legenda {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.legenda-cores .ponto-cor {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legenda-cores .ponto-cor.cor-verde    { background: var(--risco-remoto); }
+.legenda-cores .ponto-cor.cor-amarelo  { background: var(--risco-possivel); }
+.legenda-cores .ponto-cor.cor-vermelho { background: var(--risco-provavel); }

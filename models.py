@@ -48,9 +48,9 @@ class Processo(db.Model):
 
     # --- Resultado e status ---
     resultado = db.Column(db.String(30))
-    # 'procedente', 'procedente_parcial', 'improcedente'
+    # 'ganhamos', 'perdemos', 'acordo'
     sentenca = db.Column(db.String(20))
-    # 'ganhamos', 'perdemos'
+    # 'procedente', 'procedente_parcial', 'improcedente'
     status = db.Column(db.String(20), default="ativo")
     # 'ativo', 'arquivado', 'suspenso'
     risco = db.Column(db.String(20))
@@ -104,15 +104,35 @@ class Processo(db.Model):
         fim = self.data_arquivamento or date.today()
         return (fim - self.data_distribuicao).days
 
+    @property
+    def cor_pedidos(self):
+        """Cor de destaque do número do processo, com base na situação dos
+        pedidos/verbas trabalhistas (pior caso primeiro):
+        'vermelho' se algum pedido está indeferido, 'amarelo' se algum ainda
+        está em análise, 'verde' se todos estão deferidos. None se não há
+        pedidos cadastrados."""
+        if not self.pedidos_trabalhistas:
+            return None
+        situacoes = {pedido.status for pedido in self.pedidos_trabalhistas}
+        if "indeferido" in situacoes:
+            return "vermelho"
+        if "em_analise" in situacoes:
+            return "amarelo"
+        return "verde"
+
 
 class Parte(db.Model):
-    """Nome do autor ou réu. Um processo pode ter vários de cada lado."""
+    """Nome da parte envolvida no processo. Um processo pode ter várias de cada lado.
+    Os valores de 'tipo' dependem da origem do cadastro:
+    - processos cíveis (origem_cadastro='civel'): 'autor' / 'reu'
+    - processos trabalhistas (origem_cadastro='trabalhista'): 'reclamante' / 'reclamada'
+    """
     __tablename__ = "partes"
 
     id = db.Column(db.Integer, primary_key=True)
     processo_id = db.Column(db.Integer, db.ForeignKey("processos.id"), nullable=False)
 
-    tipo = db.Column(db.String(10), nullable=False)  # 'autor' ou 'reu'
+    tipo = db.Column(db.String(20), nullable=False)
     nome = db.Column(db.String(200), nullable=False)
 
 

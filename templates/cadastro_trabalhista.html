@@ -289,16 +289,17 @@
             <h2>Resultado, status e risco</h2>
             <div class="linha">
               <div class="campo">
-                <label for="sentenca">Resultado</label>
-                <select id="sentenca" name="sentenca">
+                <label for="resultado">Resultado</label>
+                <select id="resultado" name="resultado">
                   <option value="">Selecione</option>
+                  <option value="acordo">Acordo</option>
                   <option value="ganhamos">Ganhamos</option>
                   <option value="perdemos">Perdemos</option>
                 </select>
               </div>
               <div class="campo">
-                <label for="resultado">Sentença</label>
-                <select id="resultado" name="resultado">
+                <label for="sentenca">Sentença</label>
+                <select id="sentenca" name="sentenca">
                   <option value="">Selecione</option>
                   <option value="improcedente">Improcedente</option>
                   <option value="procedente">Procedente</option>
@@ -381,8 +382,8 @@
                 <input type="text" inputmode="numeric" id="valor_verba_display" placeholder="R$ 0,00" oninput="formatarDinheiro(this)">
               </div>
               <div class="campo campo-pequeno">
-                <label for="status_verba">Status</label>
-                <select id="status_verba">
+                <label for="situacao_verba">Situação</label>
+                <select id="situacao_verba">
                   <option value="deferido">Deferido</option>
                   <option value="em_analise" selected>Em análise</option>
                   <option value="indeferido">Indeferido</option>
@@ -612,7 +613,7 @@
     function adicionarVerba() {
       const select = document.getElementById('select_verba');
       const inputValor = document.getElementById('valor_verba_display');
-      const selectStatus = document.getElementById('status_verba');
+      const selectStatus = document.getElementById('situacao_verba');
 
       if (!select.value) {
         alert('Selecione um pedido/verba antes de adicionar.');

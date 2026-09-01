@@ -48,16 +48,33 @@
       <div class="container" style="max-width: 1200px;">
 
         {% if processos %}
+
+        <div class="legenda-cores">
+          <span><strong>Legenda — número do processo:</strong></span>
+          <span class="item-legenda"><span class="ponto-cor cor-verde"></span> Pedidos deferidos</span>
+          <span class="item-legenda"><span class="ponto-cor cor-amarelo"></span> Pedidos em análise</span>
+          <span class="item-legenda"><span class="ponto-cor cor-vermelho"></span> Algum pedido indeferido</span>
+        </div>
+
+        {% set graus_instancia = {
+          'primeira_instancia': '1ª Instância',
+          'segunda_instancia_trt': '2ª Instância - TRT',
+          'tst': 'TST',
+          'stf': 'STF',
+          'nao_informado': 'Não informado'
+        } %}
+
         <div class="tabela-wrap">
           <table class="tabela-processos">
             <thead>
               <tr>
                 <th>Número do processo</th>
-                <th>Tipo de ação</th>
-                <th>Autor(es)</th>
-                <th>Réu</th>
+                <th>Reclamante(s)</th>
+                <th>Reclamada</th>
                 <th>Status</th>
                 <th>Risco</th>
+                <th>Grau/Instância</th>
+                <th>Resultado</th>
                 <th>Tempo de tramitação</th>
                 <th>Valor da causa</th>
                 <th>Ações</th>
@@ -66,10 +83,15 @@
             <tbody>
               {% for p in processos %}
               <tr>
-                <td>{{ p.numero_processo }}</td>
-                <td>{{ p.tipo_acao|replace('_', ' ')|title }}</td>
-                <td>{{ p.partes|selectattr('tipo', 'equalto', 'autor')|map(attribute='nome')|join(', ') or '—' }}</td>
-                <td>{{ p.partes|selectattr('tipo', 'equalto', 'reu')|map(attribute='nome')|join(', ') or '—' }}</td>
+                <td>
+                  {% if p.cor_pedidos %}
+                    <span class="numero-processo-cor cor-{{ p.cor_pedidos }}">{{ p.numero_processo }}</span>
+                  {% else %}
+                    {{ p.numero_processo }}
+                  {% endif %}
+                </td>
+                <td>{{ p.partes|selectattr('tipo', 'equalto', 'reclamante')|map(attribute='nome')|join(', ') or '—' }}</td>
+                <td>{{ p.partes|selectattr('tipo', 'equalto', 'reclamada')|map(attribute='nome')|join(', ') or '—' }}</td>
                 <td><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></td>
                 <td>
                   {% if p.risco %}
@@ -78,6 +100,8 @@
                     —
                   {% endif %}
                 </td>
+                <td>{{ graus_instancia.get(p.grau_instancia, '—') }}</td>
+                <td>{{ p.resultado|title if p.resultado else '—' }}</td>
                 <td>{{ p.dias_ativos if p.dias_ativos is not none else '—' }}{{ ' dias' if p.dias_ativos is not none else '' }}</td>
                 <td>{{ 'R$ %.2f'|format(p.valor_causa)|replace('.', ',') if p.valor_causa is not none else '—' }}</td>
                 <td><a class="btn-detalhe" href="{{ url_for('processo_detalhe', processo_id=p.id) }}">Ver detalhes</a></td>

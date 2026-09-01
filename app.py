@@ -67,13 +67,22 @@ def montar_processo_base(form):
 
 
 def preencher_partes_e_advogados(processo, form):
-    """Preenche autores, réus, advogados, movimentos e rateio - comum a todas as páginas."""
+    """Preenche partes, advogados, movimentos e rateio - comum a todas as páginas.
+
+    O rótulo salvo em Parte.tipo depende da origem do cadastro: processos
+    trabalhistas usam 'reclamante'/'reclamada'; os demais (cível) usam
+    'autor'/'reu'."""
+    if processo.origem_cadastro == "trabalhista":
+        tipo_polo_ativo, tipo_polo_passivo = "reclamante", "reclamada"
+    else:
+        tipo_polo_ativo, tipo_polo_passivo = "autor", "reu"
+
     for nome in form.getlist("autor_nome"):
         if nome.strip():
-            processo.partes.append(Parte(tipo="autor", nome=nome.strip()))
+            processo.partes.append(Parte(tipo=tipo_polo_ativo, nome=nome.strip()))
     for nome in form.getlist("reu_nome"):
         if nome.strip():
-            processo.partes.append(Parte(tipo="reu", nome=nome.strip()))
+            processo.partes.append(Parte(tipo=tipo_polo_passivo, nome=nome.strip()))
 
     nomes_adv_autor = form.getlist("advogado_autor_nome")
     oabs_adv_autor = form.getlist("advogado_autor_oab")
