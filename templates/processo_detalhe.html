@@ -135,47 +135,50 @@
           </div>
         </div>
 
-        <!-- Partes -->
-        <div class="secao">
-          <h2>Partes</h2>
-          <div class="linha">
-            <div class="campo">
-              <label>Autor(es)</label>
-              {% set autores = p.partes|selectattr('tipo', 'equalto', 'autor')|list %}
-              {% if autores %}
-              <ul class="lista-itens">
-                {% for a in autores %}<li>{{ a.nome }}</li>{% endfor %}
-              </ul>
-              {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
-            </div>
-            <div class="campo">
-              <label>Réu(s)</label>
-              {% set reus = p.partes|selectattr('tipo', 'equalto', 'reu')|list %}
-              {% if reus %}
-              <ul class="lista-itens">
-                {% for r in reus %}<li>{{ r.nome }}</li>{% endfor %}
-              </ul>
-              {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
-            </div>
-          </div>
-        </div>
+        <!-- Partes e advogados -->
+        {% set eh_trabalhista = p.origem_cadastro == 'trabalhista' %}
+        {% set tipo_ativo = 'reclamante' if eh_trabalhista else 'autor' %}
+        {% set tipo_passivo = 'reclamada' if eh_trabalhista else 'reu' %}
+        {% set rotulo_ativo = 'Reclamante(s)' if eh_trabalhista else 'Autor(es)' %}
+        {% set rotulo_passivo = 'Reclamada' if eh_trabalhista else 'Réu(s)' %}
+        {% set nomes_ativo = p.partes|selectattr('tipo', 'equalto', tipo_ativo)|list %}
+        {% set nomes_passivo = p.partes|selectattr('tipo', 'equalto', tipo_passivo)|list %}
+        {% set adv_autor = p.advogados|selectattr('lado', 'equalto', 'autor')|list %}
+        {% set adv_reu = p.advogados|selectattr('lado', 'equalto', 'reu')|list %}
 
-        <!-- Advogados -->
-        <div class="secao">
-          <h2>Advogados</h2>
-          <div class="linha">
+        <div class="linha">
+          <div class="secao" style="flex:1 1 300px;">
+            <h2>{{ rotulo_ativo }}</h2>
             <div class="campo">
-              <label>Advogado(s) do autor</label>
-              {% set adv_autor = p.advogados|selectattr('lado', 'equalto', 'autor')|list %}
+              <label>Nome(s)</label>
+              {% if nomes_ativo %}
+              <ul class="lista-itens">
+                {% for a in nomes_ativo %}<li>{{ a.nome }}</li>{% endfor %}
+              </ul>
+              {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
+            </div>
+            <div class="campo">
+              <label>Advogado(s)</label>
               {% if adv_autor %}
               <ul class="lista-itens">
                 {% for a in adv_autor %}<li>{{ a.nome }}{{ ' — OAB ' ~ a.oab if a.oab else '' }}</li>{% endfor %}
               </ul>
               {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
             </div>
+          </div>
+
+          <div class="secao" style="flex:1 1 300px;">
+            <h2>{{ rotulo_passivo }}</h2>
             <div class="campo">
-              <label>Advogado(s) do réu</label>
-              {% set adv_reu = p.advogados|selectattr('lado', 'equalto', 'reu')|list %}
+              <label>Nome(s)</label>
+              {% if nomes_passivo %}
+              <ul class="lista-itens">
+                {% for r in nomes_passivo %}<li>{{ r.nome }}</li>{% endfor %}
+              </ul>
+              {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
+            </div>
+            <div class="campo">
+              <label>Advogado(s)</label>
               {% if adv_reu %}
               <ul class="lista-itens">
                 {% for a in adv_reu %}<li>{{ a.nome }}{{ ' — OAB ' ~ a.oab if a.oab else '' }}</li>{% endfor %}
