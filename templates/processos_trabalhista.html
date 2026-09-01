@@ -61,7 +61,7 @@
           <table class="tabela-processos">
             <thead>
               <tr>
-                <th style="text-align:right;">Número do processo</th>
+                <th>Número do processo</th>
                 <th>Reclamante(s)</th>
                 <th>Reclamada</th>
                 <th>Status</th>
@@ -76,7 +76,7 @@
             <tbody>
               {% for p in processos %}
               <tr>
-                <td style="text-align:right;">{{ p.numero_processo }}</td>
+                <td>{{ p.numero_processo }}</td>
                 <td>{{ p.partes|selectattr('tipo', 'equalto', 'reclamante')|map(attribute='nome')|join(', ') or '—' }}</td>
                 <td>{{ p.partes|selectattr('tipo', 'equalto', 'reclamada')|map(attribute='nome')|join(', ') or '—' }}</td>
                 <td><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></td>
