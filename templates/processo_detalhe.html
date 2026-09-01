@@ -225,20 +225,21 @@
           <h2>Resultado</h2>
           <div class="linha">
             <div class="campo">
-              <label>Sentença</label>
+              <label>Resultado</label>
               <div class="valor">{{ p.resultado|replace('_', ' ')|title if p.resultado else '—' }}</div>
             </div>
             <div class="campo">
-              <label>Resultado</label>
+              <label>Sentença</label>
               <div class="valor">{{ p.sentenca|title if p.sentenca else '—' }}</div>
             </div>
             <div class="campo">
               <label>Grau/Instância atual</label>
               <div class="valor">
-                {% elif p.grau_instancia == 'recurso' %}Recurso
-                 {% if p.grau_instancia == 'trt' %}Recurso TRT
-                {% elif p.grau_instancia == 'stj' %}STJ
+                {% if p.grau_instancia == 'primeira_instancia' %}1ª Instância
+                {% elif p.grau_instancia == 'segunda_instancia_trt' %}2ª Instância - Recurso TRT
+                {% elif p.grau_instancia == 'tst' %}TST
                 {% elif p.grau_instancia == 'stf' %}STF
+                {% elif p.grau_instancia == 'nao_informado' %}Não informado
                 {% else %}—{% endif %}
               </div>
             </div>
