@@ -49,13 +49,6 @@
 
         {% if processos %}
 
-        <div class="legenda-cores">
-          <span><strong>Legenda — número do processo:</strong></span>
-          <span class="item-legenda"><span class="ponto-cor cor-verde"></span> Pedidos deferidos</span>
-          <span class="item-legenda"><span class="ponto-cor cor-amarelo"></span> Pedidos em análise</span>
-          <span class="item-legenda"><span class="ponto-cor cor-vermelho"></span> Algum pedido indeferido</span>
-        </div>
-
         {% set graus_instancia = {
           'primeira_instancia': '1ª Instância',
           'segunda_instancia_trt': '2ª Instância - TRT',
@@ -83,27 +76,15 @@
             <tbody>
               {% for p in processos %}
               <tr>
-                <td>
-                  {% if p.cor_pedidos %}
-                    <span class="numero-processo-cor cor-{{ p.cor_pedidos }}">{{ p.numero_processo }}</span>
-                  {% else %}
-                    {{ p.numero_processo }}
-                  {% endif %}
-                </td>
+                <td>{{ p.numero_processo }}</td>
                 <td>{{ p.partes|selectattr('tipo', 'equalto', 'reclamante')|map(attribute='nome')|join(', ') or '—' }}</td>
                 <td>{{ p.partes|selectattr('tipo', 'equalto', 'reclamada')|map(attribute='nome')|join(', ') or '—' }}</td>
                 <td><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></td>
-                <td>
-                  {% if p.risco %}
-                    <span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>
-                  {% else %}
-                    —
-                  {% endif %}
-                </td>
+                <td>{{ p.risco|title if p.risco else '—' }}</td>
                 <td>{{ graus_instancia.get(p.grau_instancia, '—') }}</td>
                 <td>{{ p.resultado|title if p.resultado else '—' }}</td>
                 <td>{{ p.dias_ativos if p.dias_ativos is not none else '—' }}{{ ' dias' if p.dias_ativos is not none else '' }}</td>
-                <td>{{ 'R$ %.2f'|format(p.valor_causa)|replace('.', ',') if p.valor_causa is not none else '—' }}</td>
+                <td>{{ p.valor_causa|moeda }}</td>
                 <td><a class="btn-detalhe" href="{{ url_for('processo_detalhe', processo_id=p.id) }}">Ver detalhes</a></td>
               </tr>
               {% endfor %}
