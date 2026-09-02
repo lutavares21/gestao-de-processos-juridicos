@@ -90,7 +90,7 @@
                        placeholder="0000000-00.0000.0.00.0000"
                        maxlength="25" required value="{{ p.numero_processo }}"
                        readonly>
-                <p class="aviso-limite">Não pode ser alterado depois do cadastro.</p>
+                <p class="aviso-limite">Campo bloqueado para edição após o cadastro do processo.</p>
               </div>
               <div class="campo">
                 <label for="juizado">{{ 'Vara do Trabalho' if eh_trabalhista else 'Juizado' }}</label>
@@ -142,7 +142,7 @@
                   </div>
                   {% endfor %}
                 </div>
-                <p class="aviso-limite">{{ rotulo_ativo }} não pode ser alterado depois do cadastro.</p>
+                <p class="aviso-limite">Campo bloqueado para edição após o cadastro do processo.</p>
               </div>
             </div>
           </div>
@@ -249,7 +249,7 @@
               </div>
               {% endfor %}
             </div>
-            <p class="aviso-limite">{{ rotulo_passivo }} não pode ser alterad{{ 'a' if eh_trabalhista else 'o' }} depois do cadastro.</p>
+            <p class="aviso-limite">Campo bloqueado para edição após o cadastro do processo.</p>
 
             <div style="margin-top:18px;">
               <label>Advogado(s) d{{ 'a' if eh_trabalhista else 'o' }} {{ rotulo_adv_passivo }} <span class="aviso-limite">(até 5)</span></label>
@@ -791,4 +791,3 @@
 
 </body>
 </html>
-
