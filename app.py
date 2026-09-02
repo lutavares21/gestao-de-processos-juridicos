@@ -84,23 +84,29 @@ def montar_processo_base(form):
     return processo
 
 
-def preencher_partes_e_advogados(processo, form):
+def preencher_partes_e_advogados(processo, form, incluir_partes=True):
     """Preenche partes, advogados, movimentos e rateio - comum a todas as páginas.
 
     O rótulo salvo em Parte.tipo depende da origem do cadastro: processos
     trabalhistas usam 'reclamante'/'reclamada'; os demais (cível) usam
-    'autor'/'reu'."""
-    if processo.origem_cadastro == "trabalhista":
-        tipo_polo_ativo, tipo_polo_passivo = "reclamante", "reclamada"
-    else:
-        tipo_polo_ativo, tipo_polo_passivo = "autor", "reu"
+    'autor'/'reu'.
 
-    for nome in form.getlist("autor_nome"):
-        if nome.strip():
-            processo.partes.append(Parte(tipo=tipo_polo_ativo, nome=nome.strip()))
-    for nome in form.getlist("reu_nome"):
-        if nome.strip():
-            processo.partes.append(Parte(tipo=tipo_polo_passivo, nome=nome.strip()))
+    incluir_partes=False é usado na edição: o reclamante/autor e a
+    reclamada/réu não podem ser alterados depois do cadastro, então as
+    partes existentes do processo são preservadas e o conteúdo enviado
+    pelo formulário para autor_nome/reu_nome é ignorado."""
+    if incluir_partes:
+        if processo.origem_cadastro == "trabalhista":
+            tipo_polo_ativo, tipo_polo_passivo = "reclamante", "reclamada"
+        else:
+            tipo_polo_ativo, tipo_polo_passivo = "autor", "reu"
+
+        for nome in form.getlist("autor_nome"):
+            if nome.strip():
+                processo.partes.append(Parte(tipo=tipo_polo_ativo, nome=nome.strip()))
+        for nome in form.getlist("reu_nome"):
+            if nome.strip():
+                processo.partes.append(Parte(tipo=tipo_polo_passivo, nome=nome.strip()))
 
     nomes_adv_autor = form.getlist("advogado_autor_nome")
     oabs_adv_autor = form.getlist("advogado_autor_oab")
@@ -254,6 +260,7 @@ def processo_editar(processo_id):
 
     form = request.form
     numero_processo = form.get("numero_processo")
+    numero_processo_original = processo.numero_processo
 
     # Bloqueia número duplicado, ignorando o próprio processo que está sendo editado
     duplicado = Processo.query.filter(
@@ -264,15 +271,17 @@ def processo_editar(processo_id):
         return render_template("processo_editar.html", p=processo, erro_numero_duplicado=numero_processo)
 
     preencher_campos_processo(processo, form)
+    processo.numero_processo = numero_processo_original  # não pode ser alterado
 
-    # Substitui as listas relacionadas (partes, advogados, movimentos, rateio,
-    # pedidos) pelo que veio no formulário - mais simples e seguro do que
-    # tentar casar item a item quais foram editados/removidos/adicionados.
-    processo.partes = []
+    # Substitui advogados, movimentos e rateio pelo que veio no formulário -
+    # mais simples e seguro do que tentar casar item a item quais foram
+    # editados/removidos/adicionados. As partes (reclamante/autor e
+    # reclamada/réu) NÃO são substituídas: não podem ser alteradas depois
+    # do cadastro, então ficam como já estavam.
     processo.advogados = []
     processo.movimentos = []
     processo.rateio_crs = []
-    preencher_partes_e_advogados(processo, form)
+    preencher_partes_e_advogados(processo, form, incluir_partes=False)
 
     if processo.origem_cadastro == "trabalhista":
         processo.pedidos_trabalhistas = []
