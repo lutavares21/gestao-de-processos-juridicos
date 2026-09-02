@@ -9,6 +9,24 @@
 </head>
 <body>
 
+{% set tipos_acao = {
+  'acao_anulatoria': 'Ação Anulatória',
+  'acao_civil_publica': 'Ação Civil Pública',
+  'acao_consignacao_pagamento': 'Ação de Consignação em Pagamento',
+  'acao_cumprimento': 'Ação de Cumprimento',
+  'acao_rescisoria': 'Ação Rescisória',
+  'dissidio_coletivo': 'Dissídio Coletivo',
+  'inquerito_falta_grave': 'Inquérito para Apuração de Falta Grave',
+  'mandado_seguranca': 'Mandado de Segurança',
+  'outros': 'Outros',
+  'reclamacao_trabalhista': 'Reclamação Trabalhista',
+  'acao_civel': 'Ação Cível',
+  'acao_trabalhista': 'Ação Trabalhista',
+  'cobranca_extrajudicial': 'Cobrança Extrajudicial',
+  'cobranca_judicial': 'Cobrança Judicial'
+} %}
+{% set tipo_acao_texto = tipos_acao.get(p.tipo_acao, p.tipo_acao|replace('_', ' ')|title) %}
+
   <div class="layout">
 
     <aside class="menu-lateral">
@@ -42,7 +60,7 @@
     <div class="conteudo">
       <div class="cabecalho">
         <h1>Processo {{ p.numero_processo }}</h1>
-        <div class="subtitulo">{{ p.tipo_acao|replace('_', ' ')|title }} · Cadastrado em {{ p.data_cadastro.strftime('%d/%m/%Y') if p.data_cadastro else '—' }}</div>
+        <div class="subtitulo">{{ tipo_acao_texto }} · Cadastrado em {{ p.data_cadastro.strftime('%d/%m/%Y') if p.data_cadastro else '—' }}</div>
       </div>
 
       <div class="container" style="max-width: 1000px;">
@@ -59,7 +77,7 @@
             </div>
             <div class="campo">
               <label>Tipo de ação</label>
-              <div class="valor">{{ p.tipo_acao|replace('_', ' ')|title }}</div>
+              <div class="valor">{{ tipo_acao_texto }}</div>
             </div>
             <div class="campo">
               <label>Juizado</label>
