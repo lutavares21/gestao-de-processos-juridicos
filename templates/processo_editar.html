@@ -230,7 +230,7 @@
                   <div class="campo campo-pequeno">
                     <input type="text" name="advogado_autor_oab" value="{{ adv.oab or '' }}" placeholder="OAB">
                   </div>
-                  <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+                  <button type="button" class="btn btn-remover" onclick="confirmarRemocao(this)">Remover</button>
                 </div>
                 {% endfor %}
               </div>
@@ -262,7 +262,7 @@
                   <div class="campo campo-pequeno">
                     <input type="text" name="advogado_reu_oab" value="{{ adv.oab or '' }}" placeholder="OAB">
                   </div>
-                  <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+                  <button type="button" class="btn btn-remover" onclick="confirmarRemocao(this)">Remover</button>
                 </div>
                 {% endfor %}
               </div>
@@ -312,7 +312,7 @@
                   <div class="campo">
                     <input type="text" name="rateio_cr_manual" value="{{ r.centro_resultado }}" placeholder="Nome do CR">
                   </div>
-                  <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+                  <button type="button" class="btn btn-remover" onclick="confirmarRemocao(this)">Remover</button>
                 </div>
                 {% endfor %}
               </div>
@@ -421,7 +421,7 @@
                     <option value="indeferido" {% if ped.status == 'indeferido' %}selected{% endif %}>Indeferido</option>
                   </select>
                 </div>
-                <button type="button" class="btn btn-remover" onclick="this.parentElement.remove(); calcularTotalPedidos()">Remover</button>
+                <button type="button" class="btn btn-remover" onclick="confirmarRemocao(this, calcularTotalPedidos)">Remover</button>
               </div>
               {% endfor %}
             </div>
@@ -459,7 +459,7 @@
                 <div class="campo">
                   <input type="text" name="movimento_tipo" value="{{ m.tipo_movimento }}" placeholder="Ex.: juntada de petição">
                 </div>
-                <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+                <button type="button" class="btn btn-remover" onclick="confirmarRemocao(this)">Remover</button>
               </div>
               {% endfor %}
             </div>
@@ -551,7 +551,7 @@
       <div class="campo">
         <input type="text" name="__NOME__" placeholder="Nome completo">
       </div>
-      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+      <button type="button" class="btn btn-remover" onclick="confirmarRemocao(this)">Remover</button>
     </div>
   </template>
 
@@ -563,7 +563,7 @@
       <div class="campo campo-pequeno">
         <input type="text" name="__OAB__" placeholder="OAB">
       </div>
-      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+      <button type="button" class="btn btn-remover" onclick="confirmarRemocao(this)">Remover</button>
     </div>
   </template>
 
@@ -575,7 +575,7 @@
       <div class="campo">
         <input type="text" name="movimento_tipo" placeholder="Ex.: juntada de petição">
       </div>
-      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+      <button type="button" class="btn btn-remover" onclick="confirmarRemocao(this)">Remover</button>
     </div>
   </template>
 
@@ -584,7 +584,7 @@
       <div class="campo">
         <input type="text" name="rateio_cr_manual" placeholder="Nome do CR">
       </div>
-      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+      <button type="button" class="btn btn-remover" onclick="confirmarRemocao(this)">Remover</button>
     </div>
   </template>
 
@@ -604,7 +604,7 @@
           <option value="indeferido">Indeferido</option>
         </select>
       </div>
-      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove(); calcularTotalPedidos()">Remover</button>
+      <button type="button" class="btn btn-remover" onclick="confirmarRemocao(this, calcularTotalPedidos)">Remover</button>
     </div>
   </template>
 
@@ -666,6 +666,17 @@
       const diffMs = dataFim - dataDist;
       const dias = Math.round(diffMs / (1000 * 60 * 60 * 24));
       campo.value = (dias >= 0 ? dias : 0) + ' dias';
+    }
+
+    // Exige confirmação antes de remover um registro do formulário, já que a
+    // exclusão é permanente assim que o formulário for salvo.
+    function confirmarRemocao(botao, aposRemover) {
+      const confirmado = window.confirm(
+        'Esta ação removerá permanentemente o registro selecionado assim que o formulário for salvo, e não poderá ser desfeita. Deseja prosseguir?'
+      );
+      if (!confirmado) return;
+      botao.parentElement.remove();
+      if (typeof aposRemover === 'function') aposRemover();
     }
 
     // Textos de cada situação de pedido
