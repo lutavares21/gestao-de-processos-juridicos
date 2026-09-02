@@ -415,8 +415,11 @@
                   <input type="hidden" name="pedido_valor" value="{{ '%.2f'|format(ped.valor) if ped.valor is not none else '0.00' }}">
                 </div>
                 <div class="campo campo-pequeno" style="align-self:center;">
-                  <span class="selo-pedido {{ ped.status }}">{{ rotulos_status_pedido.get(ped.status, 'Em análise') }}</span>
-                  <input type="hidden" name="pedido_status" value="{{ ped.status or 'em_analise' }}">
+                  <select name="pedido_status" class="selo-pedido {{ ped.status or 'em_analise' }}" onchange="this.className = 'selo-pedido ' + this.value">
+                    <option value="em_analise" {% if not ped.status or ped.status == 'em_analise' %}selected{% endif %}>Em análise</option>
+                    <option value="deferido" {% if ped.status == 'deferido' %}selected{% endif %}>Deferido</option>
+                    <option value="indeferido" {% if ped.status == 'indeferido' %}selected{% endif %}>Indeferido</option>
+                  </select>
                 </div>
                 <button type="button" class="btn btn-remover" onclick="this.parentElement.remove(); calcularTotalPedidos()">Remover</button>
               </div>
@@ -595,8 +598,11 @@
         <input type="hidden" name="pedido_valor">
       </div>
       <div class="campo campo-pequeno" style="align-self:center;">
-        <span class="selo-pedido"></span>
-        <input type="hidden" name="pedido_status">
+        <select name="pedido_status" class="selo-pedido em_analise" onchange="this.className = 'selo-pedido ' + this.value">
+          <option value="em_analise" selected>Em análise</option>
+          <option value="deferido">Deferido</option>
+          <option value="indeferido">Indeferido</option>
+        </select>
       </div>
       <button type="button" class="btn btn-remover" onclick="this.parentElement.remove(); calcularTotalPedidos()">Remover</button>
     </div>
@@ -684,15 +690,13 @@
       const campoNome = modelo.querySelector('input[name="pedido_verba"]');
       const campoValorDisplay = modelo.querySelector('.valor-verba-linha');
       const campoValorOculto = modelo.querySelector('input[name="pedido_valor"]');
-      const campoStatusOculto = modelo.querySelector('input[name="pedido_status"]');
-      const seloStatus = modelo.querySelector('.selo-pedido');
+      const seletorStatus = modelo.querySelector('select[name="pedido_status"]');
 
       campoNome.value = select.value;
       campoValorDisplay.value = 'R$ ' + valorNumerico.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       campoValorOculto.value = valorNumerico.toFixed(2);
-      campoStatusOculto.value = statusEscolhido;
-      seloStatus.textContent = ROTULOS_STATUS_PEDIDO[statusEscolhido];
-      seloStatus.className = 'selo-pedido ' + statusEscolhido;
+      seletorStatus.value = statusEscolhido;
+      seletorStatus.className = 'selo-pedido ' + statusEscolhido;
 
       container.appendChild(modelo);
 
