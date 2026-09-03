@@ -49,13 +49,6 @@
 
         {% if processos %}
 
-        <div class="legenda-cores">
-          <span>Situação dos pedidos/verbas:</span>
-          <div class="item-legenda"><span class="ponto-cor cor-vermelho"></span> Há pedido(s) deferido(s) (empresa perdeu)</div>
-          <div class="item-legenda"><span class="ponto-cor cor-amarelo"></span> Pedido(s) em análise</div>
-          <div class="item-legenda"><span class="ponto-cor cor-verde"></span> Todos indeferidos (empresa venceu)</div>
-        </div>
-
         {% set graus_instancia = {
           'primeira_instancia': '1ª Instância',
           'segunda_instancia_trt': '2ª Instância - TRT',
