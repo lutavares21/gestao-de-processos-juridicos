@@ -16,38 +16,40 @@
       <div class="subtitulo">Gestão de Processos Jurídicos</div>
     </div>
 
-    <div class="inicio-blocos" style="padding-bottom: 4px;">
+    <div class="inicio-blocos">
 
-      <div class="bloco-inicio">
-        <h2>Novo cadastro</h2>
-        <div class="legenda-bloco">Cadastrar um processo novo</div>
-        <div class="links-bloco">
-          <a href="{{ url_for('cadastro_civel') }}">Processo Cível</a>
-          <a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a>
-          <a href="#" class="oculto-visual">Processos Licitatórios</a>
-          <a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a>
+      <div class="coluna-inicio">
+        <div class="bloco-inicio">
+          <h2>Novo cadastro</h2>
+          <div class="legenda-bloco">Cadastrar um processo novo</div>
+          <div class="links-bloco">
+            <a href="{{ url_for('cadastro_civel') }}">Processo Cível</a>
+            <a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a>
+            <a href="#" class="oculto-visual">Processos Licitatórios</a>
+            <a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a>
+          </div>
         </div>
       </div>
 
-      <div class="bloco-inicio">
-        <h2>Processos Cadastrados</h2>
-        <div class="legenda-bloco">Consultar os processos já lançados</div>
-        <div class="links-bloco">
-          <a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a>
-          <a href="#" class="oculto-visual">Processos Cível - Recuperação de Crédito</a>
-          <a href="#" class="oculto-visual">Processos Licitatórios</a>
-          <a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a>
+      <div class="coluna-inicio">
+        <div class="bloco-inicio">
+          <h2>Processos Cadastrados</h2>
+          <div class="legenda-bloco">Consultar os processos já lançados</div>
+          <div class="links-bloco">
+            <a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a>
+            <a href="#" class="oculto-visual">Processos Cível - Recuperação de Crédito</a>
+            <a href="#" class="oculto-visual">Processos Licitatórios</a>
+            <a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a>
+          </div>
+        </div>
+
+        <div class="bloco-inicio">
+          <div class="links-bloco">
+            <a href="{{ url_for('registro_processos') }}">Registro de Processos</a>
+          </div>
         </div>
       </div>
 
-    </div>
-
-    <div style="width:100%; max-width:920px; padding: 0 20px 60px;">
-      <div class="bloco-inicio">
-        <div class="links-bloco">
-          <a href="{{ url_for('registro_processos') }}">Registro de Processos</a>
-        </div>
-      </div>
     </div>
   </div>
 
