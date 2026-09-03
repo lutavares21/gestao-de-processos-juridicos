@@ -136,6 +136,17 @@ def preencher_partes_e_advogados(processo, form, incluir_partes=True):
                 processo.rateio_crs.append(RateioCR(centro_resultado=cr.strip()))
 
 
+@app.context_processor
+def injetar_contadores_menu():
+    """Disponibiliza as contagens de processos ativos (cível e trabalhista)
+    para o menu lateral, em todas as páginas, sem precisar passar isso
+    manualmente em cada rota."""
+    return dict(
+        contagem_civel_ativos=Processo.query.filter_by(origem_cadastro="civel", status="ativo").count(),
+        contagem_trabalhista_ativos=Processo.query.filter_by(origem_cadastro="trabalhista", status="ativo").count(),
+    )
+
+
 @app.route("/")
 def index():
     return render_template("inicio.html")
@@ -306,6 +317,34 @@ def processo_editar(processo_id):
         return render_template("processo_editar.html", p=processo, erro_numero_duplicado=numero_processo)
 
     return redirect(url_for("processo_detalhe", processo_id=processo.id))
+
+
+@app.route("/registro-processos")
+def registro_processos():
+    def contar(origem=None, status=None):
+        query = Processo.query
+        if origem:
+            query = query.filter_by(origem_cadastro=origem)
+        if status:
+            query = query.filter_by(status=status)
+        return query.count()
+
+    dados = {
+        "total": contar(),
+        "civel": {
+            "total": contar("civel"),
+            "ativo": contar("civel", "ativo"),
+            "arquivado": contar("civel", "arquivado"),
+            "suspenso": contar("civel", "suspenso"),
+        },
+        "trabalhista": {
+            "total": contar("trabalhista"),
+            "ativo": contar("trabalhista", "ativo"),
+            "arquivado": contar("trabalhista", "arquivado"),
+            "suspenso": contar("trabalhista", "suspenso"),
+        },
+    }
+    return render_template("registro_processos.html", dados=dados)
 
 
 if __name__ == "__main__":

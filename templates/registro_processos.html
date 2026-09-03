@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Processos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="layout">
+
+    <aside class="menu-lateral">
+      <div class="logo-menu">Gestão de Processos</div>
+      <nav>
+        <a href="{{ url_for('inicio') }}">Início</a>
+
+        <div class="item-com-submenu">
+          <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('cadastro_civel') }}">Processos Cível</a></li>
+            <li><a href="#" class="oculto-visual">Processos Cível - Recuperação de Crédito</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+            <li><a href="{{ url_for('cadastro_trabalhista') }}">Processos Trabalhista</a></li>
+          </ul>
+        </div>
+
+        <div class="item-com-submenu">
+          <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a></li>
+            <li><a href="#" class="oculto-visual">Processos Cível - Recuperação de Crédito</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+            <li><a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a></li>
+          </ul>
+        </div>
+
+        <a href="{{ url_for('registro_processos') }}" class="ativo">Registro de Processos</a>
+      </nav>
+    </aside>
+
+    <div class="conteudo">
+      <div class="cabecalho">
+        <h1>Registro de Processos</h1>
+        <div class="subtitulo">Contagem geral de todos os processos cadastrados</div>
+      </div>
+
+      <div class="container" style="max-width: 900px;">
+
+        <div class="secao" style="text-align:center;">
+          <h2 style="border-bottom:none;padding-bottom:0;">Total de processos cadastrados</h2>
+          <div style="font-family: var(--fonte-titulo); font-size: 48px; font-weight: 700; color: var(--tinta); margin-top: 4px;">
+            {{ dados.total }}
+          </div>
+        </div>
+
+        <div class="linha">
+          <div class="secao" style="flex:1 1 340px;">
+            <h2>Processos Cível</h2>
+            <div class="linha">
+              <div class="campo">
+                <label>Total</label>
+                <div class="valor" style="font-size:20px;font-weight:700;color:var(--tinta);">{{ dados.civel.total }}</div>
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label>Ativos</label>
+                <div class="valor"><span class="selo-status ativo">{{ dados.civel.ativo }}</span></div>
+              </div>
+              <div class="campo">
+                <label>Arquivados</label>
+                <div class="valor"><span class="selo-status arquivado">{{ dados.civel.arquivado }}</span></div>
+              </div>
+              <div class="campo">
+                <label>Suspensos</label>
+                <div class="valor"><span class="selo-status suspenso">{{ dados.civel.suspenso }}</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="secao" style="flex:1 1 340px;">
+            <h2>Processos Trabalhista</h2>
+            <div class="linha">
+              <div class="campo">
+                <label>Total</label>
+                <div class="valor" style="font-size:20px;font-weight:700;color:var(--tinta);">{{ dados.trabalhista.total }}</div>
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label>Ativos</label>
+                <div class="valor"><span class="selo-status ativo">{{ dados.trabalhista.ativo }}</span></div>
+              </div>
+              <div class="campo">
+                <label>Arquivados</label>
+                <div class="valor"><span class="selo-status arquivado">{{ dados.trabalhista.arquivado }}</span></div>
+              </div>
+              <div class="campo">
+                <label>Suspensos</label>
+                <div class="valor"><span class="selo-status suspenso">{{ dados.trabalhista.suspenso }}</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
