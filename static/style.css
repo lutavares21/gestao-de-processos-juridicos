@@ -553,7 +553,10 @@ input[readonly] {
 }
 
 .bloco-inicio .links-bloco a {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 10px 14px;
   background: var(--papel);
   border: 1px solid var(--borda);
@@ -562,6 +565,14 @@ input[readonly] {
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
+}
+
+.bloco-inicio .links-bloco .badge-ativos {
+  color: var(--texto-suave);
+}
+
+.bloco-inicio .links-bloco a:hover .badge-ativos {
+  color: #dce3f0;
 }
 
 .bloco-inicio .links-bloco a:hover {
