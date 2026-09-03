@@ -500,14 +500,8 @@ input[readonly] {
 .inicio-topo h1 {
   font-family: var(--fonte-titulo);
   color: #fff;
-  font-size: 28px;
+  font-size: 34px;
   margin: 0;
-}
-
-.inicio-topo .subtitulo {
-  color: #c9d2e3;
-  font-size: 14px;
-  margin-top: 6px;
 }
 
 .inicio-blocos {
@@ -544,13 +538,7 @@ input[readonly] {
   font-size: 17px;
   font-weight: 600;
   color: var(--tinta);
-  margin: 0 0 4px;
-}
-
-.bloco-inicio .legenda-bloco {
-  font-size: 12.5px;
-  color: var(--texto-suave);
-  margin-bottom: 16px;
+  margin: 0 0 16px;
 }
 
 .bloco-inicio .links-bloco {

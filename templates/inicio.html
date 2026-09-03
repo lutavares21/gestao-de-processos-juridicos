@@ -12,8 +12,7 @@
   <div class="pagina-inicio">
 
     <div class="inicio-topo">
-      <h1>Gestão de Processos</h1>
-      <div class="subtitulo">Gestão de Processos Jurídicos</div>
+      <h1>Gestão de Processos Jurídicos</h1>
     </div>
 
     <div class="inicio-blocos">
@@ -21,7 +20,6 @@
       <div class="coluna-inicio">
         <div class="bloco-inicio">
           <h2>Novo cadastro</h2>
-          <div class="legenda-bloco">Cadastrar um processo novo</div>
           <div class="links-bloco">
             <a href="{{ url_for('cadastro_civel') }}">Processo Cível</a>
             <a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a>
@@ -34,7 +32,6 @@
       <div class="coluna-inicio">
         <div class="bloco-inicio">
           <h2>Processos Cadastrados</h2>
-          <div class="legenda-bloco">Consultar os processos já lançados</div>
           <div class="links-bloco">
             <a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a>
             <a href="#" class="oculto-visual">Processos Cível - Recuperação de Crédito</a>
