@@ -26,6 +26,15 @@
   'cobranca_judicial': 'Cobrança Judicial'
 } %}
 {% set tipo_acao_texto = tipos_acao.get(p.tipo_acao, p.tipo_acao|replace('_', ' ')|title) %}
+{% set eh_trabalhista = p.origem_cadastro == 'trabalhista' %}
+{% set tipo_ativo = 'reclamante' if eh_trabalhista else 'autor' %}
+{% set tipo_passivo = 'reclamada' if eh_trabalhista else 'reu' %}
+{% set rotulo_ativo = 'Reclamante(s)' if eh_trabalhista else 'Autor(es)' %}
+{% set rotulo_passivo = 'Reclamada' if eh_trabalhista else 'Réu(s)' %}
+{% set nomes_ativo = p.partes|selectattr('tipo', 'equalto', tipo_ativo)|list %}
+{% set nomes_passivo = p.partes|selectattr('tipo', 'equalto', tipo_passivo)|list %}
+{% set adv_autor = p.advogados|selectattr('lado', 'equalto', 'autor')|list %}
+{% set adv_reu = p.advogados|selectattr('lado', 'equalto', 'reu')|list %}
 
   <div class="layout">
 
@@ -76,29 +85,34 @@
               <div class="valor">{{ p.numero_processo }}</div>
             </div>
             <div class="campo">
-              <label>Tipo de ação</label>
-              <div class="valor">{{ tipo_acao_texto }}</div>
-            </div>
-            <div class="campo">
-              <label>Juizado</label>
+              <label>{{ 'Vara do Trabalho' if eh_trabalhista else 'Juizado' }}</label>
               <div class="valor">{{ p.juizado or '—' }}</div>
-            </div>
-            <div class="campo">
-              <label>Comarca</label>
-              <div class="valor">{{ p.comarca or '—' }}</div>
             </div>
           </div>
           <div class="linha">
             <div class="campo">
-              <label>Status</label>
-              <div class="valor"><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></div>
+              <label>Comarca</label>
+              <div class="valor">{{ p.comarca or '—' }}</div>
             </div>
             <div class="campo">
-              <label>Risco</label>
-              <div class="valor">
-                {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif %}
-              </div>
+              <label>{{ 'Classe processual' if eh_trabalhista else 'Tipo de ação' }}</label>
+              <div class="valor">{{ tipo_acao_texto }}</div>
             </div>
+          </div>
+          <div class="campo">
+            <label>{{ rotulo_ativo }}</label>
+            {% if nomes_ativo %}
+            <ul class="lista-itens">
+              {% for a in nomes_ativo %}<li>{{ a.nome }}</li>{% endfor %}
+            </ul>
+            {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
+          </div>
+        </div>
+
+        <!-- Organização interna -->
+        <div class="secao">
+          <h2>Organização interna</h2>
+          <div class="linha">
             <div class="campo">
               <label>Centro de resultado</label>
               <div class="valor">{{ p.centro_resultado or '—' }}</div>
@@ -153,30 +167,11 @@
           </div>
         </div>
 
-        <!-- Partes e advogados -->
-        {% set eh_trabalhista = p.origem_cadastro == 'trabalhista' %}
-        {% set tipo_ativo = 'reclamante' if eh_trabalhista else 'autor' %}
-        {% set tipo_passivo = 'reclamada' if eh_trabalhista else 'reu' %}
-        {% set rotulo_ativo = 'Reclamante(s)' if eh_trabalhista else 'Autor(es)' %}
-        {% set rotulo_passivo = 'Reclamada' if eh_trabalhista else 'Réu(s)' %}
-        {% set nomes_ativo = p.partes|selectattr('tipo', 'equalto', tipo_ativo)|list %}
-        {% set nomes_passivo = p.partes|selectattr('tipo', 'equalto', tipo_passivo)|list %}
-        {% set adv_autor = p.advogados|selectattr('lado', 'equalto', 'autor')|list %}
-        {% set adv_reu = p.advogados|selectattr('lado', 'equalto', 'reu')|list %}
-
+        <!-- Advogados e parte contrária -->
         <div class="linha">
           <div class="secao" style="flex:1 1 300px;">
-            <h2>{{ rotulo_ativo }}</h2>
+            <h2>Advogado(s) d{{ 'o' if not eh_trabalhista else 'o' }} {{ 'Reclamante' if eh_trabalhista else 'Autor' }}</h2>
             <div class="campo">
-              <label>Nome(s)</label>
-              {% if nomes_ativo %}
-              <ul class="lista-itens">
-                {% for a in nomes_ativo %}<li>{{ a.nome }}</li>{% endfor %}
-              </ul>
-              {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
-            </div>
-            <div class="campo">
-              <label>Advogado(s)</label>
               {% if adv_autor %}
               <ul class="lista-itens">
                 {% for a in adv_autor %}<li>{{ a.nome }}{{ ' — OAB ' ~ a.oab if a.oab else '' }}</li>{% endfor %}
@@ -222,7 +217,16 @@
           {% if p.pedidos_trabalhistas %}
           <ul class="lista-itens">
             {% for ped in p.pedidos_trabalhistas %}
-            <li>{{ ped.verba }} — {{ 'R$ %.2f'|format(ped.valor)|replace('.', ',') if ped.valor is not none else '—' }}</li>
+            <li>
+              {{ ped.verba }} — {{ ped.valor|moeda }}
+              {% if ped.status == 'deferido' %}
+              <span class="selo-risco provavel">Deferido</span>
+              {% elif ped.status == 'indeferido' %}
+              <span class="selo-risco remoto">Indeferido</span>
+              {% else %}
+              <span class="selo-risco possivel">Em análise</span>
+              {% endif %}
+            </li>
             {% endfor %}
           </ul>
           {% else %}<div class="valor texto-vazio">Nenhuma verba lançada</div>{% endif %}
@@ -243,15 +247,21 @@
 
         <!-- Resultado -->
         <div class="secao">
-          <h2>Resultado</h2>
+          <h2>Resultado, status e risco</h2>
           <div class="linha">
+            <div class="campo">
+              <label>Sentença</label>
+              <div class="valor">{{ p.sentenca|title if p.sentenca else '—' }}</div>
+            </div>
             <div class="campo">
               <label>Resultado</label>
               <div class="valor">{{ p.resultado|replace('_', ' ')|title if p.resultado else '—' }}</div>
             </div>
+          </div>
+          <div class="linha">
             <div class="campo">
-              <label>Sentença</label>
-              <div class="valor">{{ p.sentenca|title if p.sentenca else '—' }}</div>
+              <label>Status</label>
+              <div class="valor"><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></div>
             </div>
             <div class="campo">
               <label>Grau/Instância atual</label>
@@ -266,6 +276,12 @@
             </div>
           </div>
           <div class="campo">
+            <label>Risco</label>
+            <div class="valor">
+              {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif %}
+            </div>
+          </div>
+          <div class="campo">
             <label>Resumo</label>
             <div class="valor">{{ p.resumo or '—' }}</div>
           </div>
@@ -277,35 +293,35 @@
           <div class="linha">
             <div class="campo">
               <label>Valor da causa</label>
-              <div class="valor">{{ 'R$ %.2f'|format(p.valor_causa)|replace('.', ',') if p.valor_causa is not none else '—' }}</div>
+              <div class="valor">{{ p.valor_causa|moeda }}</div>
             </div>
             <div class="campo">
               <label>Valor final pago</label>
-              <div class="valor">{{ 'R$ %.2f'|format(p.valor_final)|replace('.', ',') if p.valor_final is not none else '—' }}</div>
+              <div class="valor">{{ p.valor_final|moeda }}</div>
             </div>
             <div class="campo">
               <label>Valor recursal</label>
-              <div class="valor">{{ 'R$ %.2f'|format(p.deposito_recursal)|replace('.', ',') if p.deposito_recursal is not none else '—' }}</div>
+              <div class="valor">{{ p.deposito_recursal|moeda }}</div>
             </div>
           </div>
           <div class="linha">
             <div class="campo">
               <label>Honorários advocatícios</label>
-              <div class="valor">{{ 'R$ %.2f'|format(p.honorarios_advogado)|replace('.', ',') if p.honorarios_advogado is not none else '—' }}</div>
+              <div class="valor">{{ p.honorarios_advogado|moeda }}</div>
             </div>
             <div class="campo">
               <label>Honorários periciais</label>
-              <div class="valor">{{ 'R$ %.2f'|format(p.honorarios_periciais)|replace('.', ',') if p.honorarios_periciais is not none else '—' }}</div>
+              <div class="valor">{{ p.honorarios_periciais|moeda }}</div>
             </div>
             <div class="campo">
               <label>Custas processuais</label>
-              <div class="valor">{{ 'R$ %.2f'|format(p.custas_processuais)|replace('.', ',') if p.custas_processuais is not none else '—' }}</div>
+              <div class="valor">{{ p.custas_processuais|moeda }}</div>
             </div>
           </div>
           <div class="linha">
             <div class="campo">
               <label>Valor do alvará</label>
-              <div class="valor">{{ 'R$ %.2f'|format(p.valor_alvara)|replace('.', ',') if p.valor_alvara is not none else '—' }}</div>
+              <div class="valor">{{ p.valor_alvara|moeda }}</div>
             </div>
             <div class="campo">
               <label>Data do alvará</label>

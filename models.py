@@ -108,13 +108,14 @@ class Processo(db.Model):
     def cor_pedidos(self):
         """Cor de destaque do número do processo, com base na situação dos
         pedidos/verbas trabalhistas (pior caso primeiro):
-        'vermelho' se algum pedido está indeferido, 'amarelo' se algum ainda
-        está em análise, 'verde' se todos estão deferidos. None se não há
-        pedidos cadastrados."""
+        'vermelho' se algum pedido está deferido (reclamação julgada
+        procedente contra a empresa), 'amarelo' se algum ainda está em
+        análise, 'verde' se todos estão indeferidos (empresa venceu).
+        None se não há pedidos cadastrados."""
         if not self.pedidos_trabalhistas:
             return None
         situacoes = {pedido.status for pedido in self.pedidos_trabalhistas}
-        if "indeferido" in situacoes:
+        if "deferido" in situacoes:
             return "vermelho"
         if "em_analise" in situacoes:
             return "amarelo"
