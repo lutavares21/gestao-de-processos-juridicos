@@ -650,8 +650,8 @@ input[readonly] {
 }
 
 .selo-pedido.em_analise { background: #fbeecb; color: var(--risco-possivel); }  /* amarelo */
-.selo-pedido.deferido   { background: #e3f0e6; color: var(--risco-remoto); }    /* verde */
-.selo-pedido.indeferido { background: #f6dede; color: var(--risco-provavel); }  /* vermelho */
+.selo-pedido.deferido   { background: #f6dede; color: var(--risco-provavel); }  /* vermelho - reclamação julgada procedente contra a empresa */
+.selo-pedido.indeferido { background: #e3f0e6; color: var(--risco-remoto); }    /* verde - empresa venceu esse pedido */
 
 /* --- Cor de destaque do número do processo, conforme situação dos pedidos --- */
 .numero-processo-cor {

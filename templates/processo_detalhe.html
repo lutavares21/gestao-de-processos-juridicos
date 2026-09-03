@@ -219,13 +219,9 @@
             {% for ped in p.pedidos_trabalhistas %}
             <li>
               {{ ped.verba }} — {{ ped.valor|moeda }}
-              {% if ped.status == 'deferido' %}
-              <span class="selo-risco provavel">Deferido</span>
-              {% elif ped.status == 'indeferido' %}
-              <span class="selo-risco remoto">Indeferido</span>
-              {% else %}
-              <span class="selo-risco possivel">Em análise</span>
-              {% endif %}
+              <span class="selo-pedido {{ ped.status or 'em_analise' }}">
+                {% if ped.status == 'deferido' %}Deferido{% elif ped.status == 'indeferido' %}Indeferido{% else %}Em análise{% endif %}
+              </span>
             </li>
             {% endfor %}
           </ul>
