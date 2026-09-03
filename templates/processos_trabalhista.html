@@ -88,7 +88,17 @@
                 <td>{{ graus_instancia.get(p.grau_instancia, '—') }}</td>
                 <td>{{ p.resultado|title if p.resultado else '—' }}</td>
                 <td>{{ p.dias_ativos if p.dias_ativos is not none else '—' }}{{ ' dias' if p.dias_ativos is not none else '' }}</td>
-                <td style="text-align:right;">{{ p.valor_causa|moeda }}</td>
+                <td>
+                  {% if p.valor_causa is not none %}
+                  {% set texto_moeda = p.valor_causa|moeda %}
+                  <div style="display:flex; justify-content:space-between;">
+                    <span>{{ texto_moeda.split(' ')[0] }}</span>
+                    <span>{{ texto_moeda.split(' ', 1)[1] }}</span>
+                  </div>
+                  {% else %}
+                  <div style="text-align:right;">—</div>
+                  {% endif %}
+                </td>
                 <td>
                   <a class="btn-detalhe" href="{{ url_for('processo_detalhe', processo_id=p.id) }}">Ver detalhes</a>
                   <a class="btn-detalhe btn-editar" href="{{ url_for('processo_editar', processo_id=p.id) }}">Editar</a>

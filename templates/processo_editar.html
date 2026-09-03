@@ -330,7 +330,7 @@
                 <label for="resultado">Resultado</label>
                 <select id="resultado" name="resultado">
                   <option value="">Selecione</option>
-                  {% for valor, texto in [('acordo','Acordo'), ('ganhamos','Ganhamos'), ('perdemos','Perdemos')] %}
+                  {% for valor, texto in [('acordo','Acordo'), ('extinto_sem_resolucao_merito','Extinto Sem Resolução do Mérito'), ('ganhamos','Ganhamos'), ('perdemos','Perdemos')] %}
                   <option value="{{ valor }}" {% if p.resultado == valor %}selected{% endif %}>{{ texto }}</option>
                   {% endfor %}
                 </select>
@@ -339,7 +339,7 @@
                 <label for="sentenca">Sentença</label>
                 <select id="sentenca" name="sentenca">
                   <option value="">Selecione</option>
-                  {% for valor, texto in [('improcedente','Improcedente'), ('procedente','Procedente'), ('procedente_parcial','Procedente parcial'), ('extinto_sem_resolucao_merito','Extinto sem resolução do mérito')] %}
+                  {% for valor, texto in [('extinto_sem_resolucao_merito','Extinto sem resolução do mérito'), ('improcedente','Improcedente'), ('procedente','Procedente'), ('procedente_parcial','Procedente parcial')] %}
                   <option value="{{ valor }}" {% if p.sentenca == valor %}selected{% endif %}>{{ texto }}</option>
                   {% endfor %}
                 </select>
@@ -418,8 +418,8 @@
                 </div>
                 <div class="campo campo-pequeno" style="align-self:center;">
                   <select name="pedido_status" class="selo-pedido {{ ped.status or 'em_analise' }}" onchange="this.className = 'selo-pedido ' + this.value">
-                    <option value="em_analise" {% if not ped.status or ped.status == 'em_analise' %}selected{% endif %}>Em análise</option>
                     <option value="deferido" {% if ped.status == 'deferido' %}selected{% endif %}>Deferido</option>
+                    <option value="em_analise" {% if not ped.status or ped.status == 'em_analise' %}selected{% endif %}>Em análise</option>
                     <option value="indeferido" {% if ped.status == 'indeferido' %}selected{% endif %}>Indeferido</option>
                   </select>
                 </div>
@@ -601,8 +601,8 @@
       </div>
       <div class="campo campo-pequeno" style="align-self:center;">
         <select name="pedido_status" class="selo-pedido em_analise" onchange="this.className = 'selo-pedido ' + this.value">
-          <option value="em_analise" selected>Em análise</option>
           <option value="deferido">Deferido</option>
+          <option value="em_analise" selected>Em análise</option>
           <option value="indeferido">Indeferido</option>
         </select>
       </div>
