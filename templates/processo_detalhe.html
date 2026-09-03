@@ -170,8 +170,17 @@
         <!-- Advogados e parte contrária -->
         <div class="linha">
           <div class="secao" style="flex:1 1 300px;">
-            <h2>Advogado(s) d{{ 'o' if not eh_trabalhista else 'o' }} {{ 'Reclamante' if eh_trabalhista else 'Autor' }}</h2>
+            <h2>{{ rotulo_ativo }}</h2>
             <div class="campo">
+              <label>Nome(s)</label>
+              {% if nomes_ativo %}
+              <ul class="lista-itens">
+                {% for a in nomes_ativo %}<li>{{ a.nome }}</li>{% endfor %}
+              </ul>
+              {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
+            </div>
+            <div class="campo">
+              <label>Advogado(s)</label>
               {% if adv_autor %}
               <ul class="lista-itens">
                 {% for a in adv_autor %}<li>{{ a.nome }}{{ ' — OAB ' ~ a.oab if a.oab else '' }}</li>{% endfor %}
