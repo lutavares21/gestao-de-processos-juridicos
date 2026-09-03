@@ -76,13 +76,7 @@
             <tbody>
               {% for p in processos %}
               <tr>
-                <td>
-                  {% if p.cor_pedidos %}
-                  <span class="numero-processo-cor cor-{{ p.cor_pedidos }}">{{ p.numero_processo }}</span>
-                  {% else %}
-                  {{ p.numero_processo }}
-                  {% endif %}
-                </td>
+                <td>{{ p.numero_processo }}</td>
                 <td>{{ p.partes|selectattr('tipo', 'equalto', 'reclamante')|map(attribute='nome')|join(', ') or '—' }}</td>
                 <td>{{ p.partes|selectattr('tipo', 'equalto', 'reclamada')|map(attribute='nome')|join(', ') or '—' }}</td>
                 <td><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></td>
