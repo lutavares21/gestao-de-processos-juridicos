@@ -78,7 +78,7 @@
           <div class="flash flash-erro">Já existe um processo cadastrado com o número <strong>{{ erro_numero_duplicado }}</strong>. Verifique o número e tente novamente.</div>
         {% endif %}
 
-        <form method="POST" action="{{ url_for('processo_editar', processo_id=p.id) }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('processo_editar', processo_id=p.id) }}" enctype="multipart/form-data" onsubmit="return confirmarSalvarEdicao()">
 
           <!-- 1. IDENTIFICAÇÃO -->
           <div class="secao">
@@ -666,6 +666,14 @@
       const diffMs = dataFim - dataDist;
       const dias = Math.round(diffMs / (1000 * 60 * 60 * 24));
       campo.value = (dias >= 0 ? dias : 0) + ' dias';
+    }
+
+    // Exige confirmação antes de salvar as alterações do processo, já que a
+    // edição substitui os dados anteriores e não pode ser desfeita depois.
+    function confirmarSalvarEdicao() {
+      return window.confirm(
+        'Esta operação salvará as alterações realizadas neste processo de forma definitiva, substituindo os dados anteriormente registrados, e não poderá ser desfeita. Deseja confirmar o salvamento?'
+      );
     }
 
     // Exige confirmação antes de remover um registro do formulário, já que a
