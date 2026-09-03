@@ -165,6 +165,28 @@
               <div class="valor">{{ p.data_audiencia_3.strftime('%d/%m/%Y') if p.data_audiencia_3 else '—' }}</div>
             </div>
           </div>
+          <div class="linha">
+            <div class="campo campo-pequeno">
+              <label>Horário da audiência</label>
+              <div class="valor">{{ p.audiencia_1_horario or '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>Modalidade da audiência</label>
+              <div class="valor">
+                {% if p.audiencia_1_tipo == 'hibrida' %}Híbrida
+                {% elif p.audiencia_1_tipo == 'presencial' %}Presencial
+                {% elif p.audiencia_1_tipo == 'telepresencial' %}Telepresencial
+                {% elif p.audiencia_1_tipo == 'videoconferencia' %}Videoconferência
+                {% else %}—{% endif %}
+              </div>
+            </div>
+            <div class="campo">
+              <label>Link da audiência</label>
+              <div class="valor">
+                {% if p.audiencia_1_link %}<a href="{{ p.audiencia_1_link }}" target="_blank" rel="noopener">{{ p.audiencia_1_link }}</a>{% else %}—{% endif %}
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Advogados e parte contrária -->
