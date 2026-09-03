@@ -1,704 +1,110 @@
-/* -----------------------------------------------------------
-   Sistema de Gestão de Processos Jurídicos - Estilo Base
-   Paleta: tinta (azul-marinho escuro) + selo (vinho)
-   ----------------------------------------------------------- */
-
-:root {
-  --tinta: #1b2a4a;
-  --tinta-clara: #2e4470;
-  --selo: #7a2e3b;
-  --selo-claro: #9a3e4d;
-  --papel: #f7f6f3;
-  --papel-cartao: #ffffff;
-  --borda: #dcd8cf;
-  --texto: #262420;
-  --texto-suave: #4a463c;
-  --risco-remoto: #4a7c59;
-  --risco-possivel: #b8862b;
-  --risco-provavel: #a13d3d;
-  --azul-claro: #2f6690;
-
-  --fonte-titulo: "Source Serif 4", Georgia, serif;
-  --fonte-corpo: "Inter", -apple-system, sans-serif;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background: var(--papel);
-  color: var(--texto);
-  font-family: var(--fonte-corpo);
-  font-size: 15px;
-  line-height: 1.5;
-}
-
-.layout {
-  display: flex;
-  min-height: 100vh;
-}
-
-/* --- Menu lateral --- */
-.menu-lateral {
-  width: 232px;
-  flex-shrink: 0;
-  background: var(--tinta);
-  border-right: 4px solid var(--tinta-clara);
-  padding: 26px 0 20px;
-}
-
-.menu-lateral .logo-menu {
-  font-family: var(--fonte-titulo);
-  font-weight: 700;
-  color: #fff;
-  font-size: 16px;
-  padding: 0 24px 22px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #2c3f66;
-}
-
-.menu-lateral nav a {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #c9d2e3;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 11px 24px;
-  border-left: 3px solid transparent;
-}
-
-.menu-lateral nav a:hover {
-  background: #24365c;
-  color: #fff;
-}
-
-.menu-lateral nav a.ativo {
-  background: #24365c;
-  color: #fff;
-  border-left: 3px solid var(--selo-claro);
-  font-weight: 600;
-}
-
-.menu-lateral nav a.desabilitado {
-  color: #647192;
-  cursor: default;
-  pointer-events: none;
-}
-
-/* --- Item de menu com submenu (aparece ao passar o mouse) --- */
-.item-com-submenu {
-  position: relative;
-}
-
-.item-com-submenu > .rotulo-menu {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  color: #c9d2e3;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 11px 24px;
-  border-left: 3px solid transparent;
-  cursor: default;
-}
-
-.item-com-submenu:hover > .rotulo-menu,
-.item-com-submenu.ativo > .rotulo-menu {
-  background: #24365c;
-  color: #fff;
-}
-
-.item-com-submenu.ativo > .rotulo-menu {
-  border-left: 3px solid var(--selo-claro);
-  font-weight: 600;
-}
-
-.rotulo-menu .seta-submenu {
-  font-size: 11px;
-  opacity: 0.7;
-}
-
-.submenu {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  max-height: 0;
-  overflow: hidden;
-  background: #16233d;
-  transition: max-height 0.15s ease;
-}
-
-.item-com-submenu:hover .submenu {
-  max-height: 220px;
-}
-
-.submenu li a {
-  display: block;
-  padding: 9px 24px 9px 40px;
-  color: #a9b6d0;
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 500;
-  border-left: 3px solid transparent;
-}
-
-.submenu li a:hover {
-  background: #1e2f52;
-  color: #fff;
-  border-left: 3px solid var(--selo-claro);
-}
-
-/* --- Área de conteúdo --- */
-.conteudo {
-  flex: 1;
-  min-width: 0;
-}
-
-.cabecalho {
-  background: var(--papel);
-  padding: 26px 32px 20px;
-  border-bottom: 1px solid var(--borda);
-}
-
-.cabecalho h1 {
-  font-family: var(--fonte-titulo);
-  font-weight: 600;
-  font-size: 24px;
-  margin: 0;
-  color: var(--tinta);
-  letter-spacing: 0.01em;
-}
-
-.cabecalho .subtitulo {
-  font-size: 13px;
-  color: var(--texto-suave);
-  margin-top: 4px;
-}
-
-.container {
-  max-width: 880px;
-  margin: 0;
-  padding: 28px 32px 60px;
-}
-
-.secao {
-  background: var(--papel-cartao);
-  border: 1px solid var(--borda);
-  border-left: 4px solid var(--tinta);
-  border-radius: 4px;
-  padding: 24px 28px;
-  margin-bottom: 20px;
-}
-
-.secao h2 {
-  font-family: var(--fonte-titulo);
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--tinta);
-  margin: 0 0 18px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--borda);
-}
-
-.linha {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.campo {
-  flex: 1 1 200px;
-  margin-bottom: 14px;
-}
-
-.campo label {
-  display: block;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--texto-suave);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  margin-bottom: 5px;
-}
-
-input[type="text"],
-input[type="date"],
-input[type="number"],
-input[type="time"],
-input[type="file"],
-select,
-textarea {
-  width: 100%;
-  padding: 9px 11px;
-  border: 1px solid var(--borda);
-  border-radius: 3px;
-  font-family: var(--fonte-corpo);
-  font-size: 14px;
-  color: var(--texto);
-  background: #fff;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  outline: 2px solid var(--tinta-clara);
-  outline-offset: 1px;
-  border-color: var(--tinta-clara);
-}
-
-textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.grupo-dinamico .linha-repetida {
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-  margin-bottom: 10px;
-}
-
-.grupo-dinamico .linha-repetida .campo {
-  margin-bottom: 0;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 16px;
-  border: none;
-  border-radius: 3px;
-  font-family: var(--fonte-corpo);
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-adicionar {
-  background: transparent;
-  color: var(--tinta);
-  border: 1px solid var(--tinta);
-  padding: 7px 12px;
-  font-size: 13px;
-}
-
-.btn-adicionar:hover {
-  background: var(--tinta);
-  color: #fff;
-}
-
-.btn-remover {
-  background: transparent;
-  color: var(--selo);
-  border: 1px solid var(--selo-claro);
-  padding: 8px 10px;
-  font-size: 13px;
-  line-height: 1;
-}
-
-.btn-remover:hover {
-  background: var(--selo);
-  color: #fff;
-}
-
-.btn-salvar {
-  background: var(--selo);
-  color: #fff;
-  padding: 12px 28px;
-  font-size: 14.5px;
-  width: 100%;
-}
-
-.btn-salvar:hover {
-  background: var(--selo-claro);
-}
-
-.campo-grande {
-  flex: 3 1 260px;
-}
-
-.campo-pequeno {
-  flex: 1 1 110px;
-}
-
-input[readonly] {
-  background: #f0efe9;
-  color: var(--texto-suave);
-  font-weight: 600;
-}
-
-.grid-requerimentos {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px 24px;
-}
-
-.grid-requerimentos label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--texto);
-  text-transform: none;
-  cursor: pointer;
-}
-
-.grid-requerimentos input {
-  width: auto;
-}
-
-.aviso-limite {
-  font-size: 12px;
-  color: var(--texto-suave);
-  margin-top: 4px;
-}
-
-.oculto {
-  display: none !important;
-}
-
-.chip-risco {
-  display: inline-flex;
-  gap: 8px;
-}
-
-.chip-risco label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 12px;
-  border: 1px solid var(--borda);
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 500;
-  text-transform: none;
-  cursor: pointer;
-  color: var(--texto);
-}
-
-.chip-risco input {
-  width: auto;
-}
-
-.tabela-wrap {
-  background: var(--papel-cartao);
-  border: 1px solid var(--borda);
-  border-radius: 4px;
-  overflow-x: auto;
-}
-
-.tabela-processos {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13.5px;
-}
-
-.tabela-processos th {
-  text-align: left;
-  background: var(--tinta);
-  color: #fff;
-  padding: 11px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-}
-
-.tabela-processos td {
-  padding: 11px 14px;
-  border-bottom: 1px solid var(--borda);
-  vertical-align: top;
-}
-
-.tabela-processos tr:last-child td {
-  border-bottom: none;
-}
-
-.tabela-processos tr:hover td {
-  background: #f2f0ea;
-}
-
-.selo-status {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 11.5px;
-  font-weight: 600;
-}
-
-.selo-status.ativo { background: #e3f0e6; color: var(--risco-remoto); }
-.selo-status.arquivado { background: #e5e3dd; color: #625d51; }
-.selo-status.suspenso { background: #f6dede; color: var(--risco-provavel); }
-
-.selo-risco {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 11.5px;
-  font-weight: 600;
-}
-
-.selo-risco.remoto { background: #dceefb; color: var(--azul-claro); }
-.selo-risco.possivel { background: #fbeecb; color: var(--risco-possivel); }
-.selo-risco.provavel { background: #f6dede; color: var(--risco-provavel); }
-
-.estado-vazio {
-  padding: 40px 20px;
-  text-align: center;
-  color: var(--texto-suave);
-  font-size: 14px;
-}
-
-/* --- Página Início: menu central, sem barra lateral --- */
-.pagina-inicio {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.inicio-topo {
-  width: 100%;
-  background: var(--tinta);
-  border-bottom: 4px solid var(--tinta-clara);
-  padding: 36px 20px 30px;
-  text-align: center;
-}
-
-.inicio-topo h1 {
-  font-family: var(--fonte-titulo);
-  color: #fff;
-  font-size: 28px;
-  margin: 0;
-}
-
-.inicio-topo .subtitulo {
-  color: #c9d2e3;
-  font-size: 14px;
-  margin-top: 6px;
-}
-
-.inicio-blocos {
-  width: 100%;
-  max-width: 920px;
-  padding: 40px 20px 60px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 24px;
-}
-
-.bloco-inicio {
-  background: var(--papel-cartao);
-  border: 1px solid var(--borda);
-  border-top: 4px solid var(--tinta);
-  border-radius: 4px;
-  padding: 22px 24px 24px;
-}
-
-.bloco-inicio.desabilitado-bloco {
-  border-top-color: var(--borda);
-  opacity: 0.65;
-}
-
-.bloco-inicio h2 {
-  font-family: var(--fonte-titulo);
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--tinta);
-  margin: 0 0 4px;
-}
-
-.bloco-inicio .legenda-bloco {
-  font-size: 12.5px;
-  color: var(--texto-suave);
-  margin-bottom: 16px;
-}
-
-.bloco-inicio .links-bloco {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.bloco-inicio .links-bloco a {
-  display: block;
-  padding: 10px 14px;
-  background: var(--papel);
-  border: 1px solid var(--borda);
-  border-radius: 3px;
-  color: var(--texto);
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.bloco-inicio .links-bloco a:hover {
-  background: var(--tinta);
-  color: #fff;
-  border-color: var(--tinta);
-}
-
-.bloco-inicio .links-bloco a.link-desabilitado {
-  color: var(--texto-suave);
-  cursor: default;
-  pointer-events: none;
-}
-
-.flash {
-  background: #eaf4ec;
-  border: 1px solid var(--risco-remoto);
-  color: #2f5a3b;
-  padding: 12px 16px;
-  border-radius: 4px;
-  margin-bottom: 20px;
-  font-size: 14px;
-}
-
-.flash.flash-erro {
-  background: #f6dede;
-  border: 1px solid var(--risco-provavel);
-  color: #7a2e2e;
-}
-
-/* --- Página de detalhe do processo (somente leitura) --- */
-.campo .valor {
-  padding: 9px 0 4px;
-  font-size: 14px;
-  color: var(--texto);
-}
-
-.lista-itens {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.lista-itens li {
-  padding: 8px 0;
-  border-bottom: 1px solid var(--borda);
-  font-size: 14px;
-}
-
-.lista-itens li:last-child {
-  border-bottom: none;
-}
-
-.btn-detalhe {
-  display: block;
-  width: 92px;
-  padding: 6px 0;
-  background: var(--tinta);
-  color: #fff;
-  text-decoration: none;
-  text-align: center;
-  border-radius: 3px;
-  font-size: 12.5px;
-  font-weight: 600;
-}
-
-.btn-detalhe + .btn-detalhe {
-  margin-top: 6px;
-}
-
-.btn-detalhe:hover {
-  background: var(--tinta-clara);
-}
-
-.btn-editar {
-  background: var(--selo);
-}
-
-.btn-editar:hover {
-  background: var(--selo-claro);
-}
-
-.link-voltar {
-  display: inline-block;
-  margin-bottom: 16px;
-  color: var(--tinta);
-  text-decoration: none;
-  font-size: 13.5px;
-  font-weight: 600;
-}
-
-.link-voltar:hover {
-  text-decoration: underline;
-}
-
-.texto-vazio {
-  color: var(--texto-suave);
-  font-style: italic;
-}
-
-/* --- Selo colorido de status de cada pedido/verba trabalhista --- */
-.selo-pedido {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 11.5px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.selo-pedido.em_analise { background: #fbeecb; color: var(--risco-possivel); }  /* amarelo */
-.selo-pedido.deferido   { background: #f6dede; color: var(--risco-provavel); }  /* vermelho - reclamação julgada procedente contra a empresa */
-.selo-pedido.indeferido { background: #e3f0e6; color: var(--risco-remoto); }    /* verde - empresa venceu esse pedido */
-
-/* --- Cor de destaque do número do processo, conforme situação dos pedidos --- */
-.numero-processo-cor {
-  display: inline-block;
-  padding: 4px 9px;
-  border-radius: 4px;
-  font-weight: 600;
-}
-
-.numero-processo-cor.cor-verde    { background: #e3f0e6; color: var(--risco-remoto); }
-.numero-processo-cor.cor-amarelo  { background: #fbeecb; color: var(--risco-possivel); }
-.numero-processo-cor.cor-vermelho { background: #f6dede; color: var(--risco-provavel); }
-
-/* --- Legenda de cores no topo da página de listagem --- */
-.legenda-cores {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px;
-  align-items: center;
-  background: var(--papel-cartao);
-  border: 1px solid var(--borda);
-  border-radius: 4px;
-  padding: 10px 16px;
-  margin-bottom: 16px;
-  font-size: 13px;
-  color: var(--texto-suave);
-}
-
-.legenda-cores .item-legenda {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.legenda-cores .ponto-cor {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.legenda-cores .ponto-cor.cor-verde    { background: var(--risco-remoto); }
-.legenda-cores .ponto-cor.cor-amarelo  { background: var(--risco-possivel); }
-.legenda-cores .ponto-cor.cor-vermelho { background: var(--risco-provavel); }
-
-.flash-erro {
-  background: #f6dede;
-  border-color: var(--risco-provavel);
-  color: var(--risco-provavel);
-}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Processos Cadastrados - Trabalhista</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="layout">
+
+    <aside class="menu-lateral">
+      <div class="logo-menu">Gestão de Processos</div>
+      <nav>
+        <a href="{{ url_for('inicio') }}">Início</a>
+
+        <div class="item-com-submenu">
+          <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('cadastro_civel') }}">Processo Cível</a></li>
+            <li><a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a></li>
+            <li><a href="#" class="oculto-visual">Processo Licitatórios</a></li>
+            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
+          </ul>
+        </div>
+
+        <div class="item-com-submenu ativo">
+          <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('processos_civel') }}">Processo Cível</a></li>
+            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+            <li><a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista</a></li>
+          </ul>
+        </div>
+
+      </nav>
+    </aside>
+
+    <div class="conteudo">
+      <div class="cabecalho">
+        <h1>Processos Cadastrados - Trabalhista</h1>
+        <div class="subtitulo">Gestão de Processos Jurídicos</div>
+      </div>
+
+      <div class="container" style="max-width: 1200px;">
+
+        {% if processos %}
+
+        {% set graus_instancia = {
+          'primeira_instancia': '1ª Instância',
+          'segunda_instancia_trt': '2ª Instância - TRT',
+          'tst': 'TST',
+          'stf': 'STF',
+          'nao_informado': 'Não informado'
+        } %}
+
+        <div class="tabela-wrap">
+          <table class="tabela-processos">
+            <thead>
+              <tr>
+                <th>Número do processo</th>
+                <th>Reclamante(s)</th>
+                <th>Reclamada</th>
+                <th>Status</th>
+                <th>Risco</th>
+                <th>Grau/Instância</th>
+                <th>Resultado</th>
+                <th>Tempo de tramitação</th>
+                <th>Valor da causa</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in processos %}
+              <tr>
+                <td>{{ p.numero_processo }}</td>
+                <td>{{ p.partes|selectattr('tipo', 'equalto', 'reclamante')|map(attribute='nome')|join(', ') or '—' }}</td>
+                <td>{{ p.partes|selectattr('tipo', 'equalto', 'reclamada')|map(attribute='nome')|join(', ') or '—' }}</td>
+                <td><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></td>
+                <td>
+                  {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif %}
+                </td>
+                <td>{{ graus_instancia.get(p.grau_instancia, '—') }}</td>
+                <td>{{ p.resultado|title if p.resultado else '—' }}</td>
+                <td>{{ p.dias_ativos if p.dias_ativos is not none else '—' }}{{ ' dias' if p.dias_ativos is not none else '' }}</td>
+                <td style="text-align:right;">{{ p.valor_causa|moeda }}</td>
+                <td>
+                  <a class="btn-detalhe" href="{{ url_for('processo_detalhe', processo_id=p.id) }}">Ver detalhes</a>
+                  <a class="btn-detalhe btn-editar" href="{{ url_for('processo_editar', processo_id=p.id) }}">Editar</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="tabela-wrap">
+          <div class="estado-vazio">Nenhum processo trabalhista cadastrado ainda. <a href="{{ url_for('cadastro_trabalhista') }}">Cadastrar o primeiro</a>.</div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
