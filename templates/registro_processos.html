@@ -141,6 +141,11 @@
 
     .dash-vazio{ color: var(--dash-cinza-texto); font-size: 13.5px; padding: 12px 0; }
 
+    /* Wrapper com altura fixa - obrigatório pro Chart.js saber o tamanho
+       disponível e desenhar corretamente (sem isso, o gráfico fica em branco) */
+    .dash-chart-wrap{ position: relative; height: 260px; width: 100%; }
+    .dash-chart-wrap.pequeno{ height: 200px; }
+
     /* Matriz de risco */
     .dash-matriz{ width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: center; }
     .dash-matriz th{
@@ -307,7 +312,7 @@
                 <div class="valor">{{ dados.risco.remoto.valor|moeda }}</div>
               </div>
             </div>
-            <canvas id="graficoRisco" height="160"></canvas>
+            <div class="dash-chart-wrap pequeno"><canvas id="graficoRisco"></canvas></div>
 
             <div style="margin-top:22px;">
               <table class="dash-matriz">
@@ -337,7 +342,7 @@
 
           <div class="dash-painel">
             <div class="dash-secao-titulo">Resultado dos encerrados</div>
-            <canvas id="graficoResultado" height="220"></canvas>
+            <div class="dash-chart-wrap"><canvas id="graficoResultado"></canvas></div>
           </div>
 
         </div>
@@ -347,12 +352,12 @@
 
           <div class="dash-painel">
             <div class="dash-secao-titulo">Ativo x Arquivado x Suspenso</div>
-            <canvas id="graficoStatus" height="200"></canvas>
+            <div class="dash-chart-wrap"><canvas id="graficoStatus"></canvas></div>
           </div>
 
           <div class="dash-painel">
             <div class="dash-secao-titulo">Novos processos distribuídos - últimos 12 meses</div>
-            <canvas id="graficoEvolucao" height="200"></canvas>
+            <div class="dash-chart-wrap"><canvas id="graficoEvolucao"></canvas></div>
           </div>
 
         </div>
@@ -362,7 +367,7 @@
 
           <div class="dash-painel">
             <div class="dash-secao-titulo">Provisionado x Gasto x Economizado</div>
-            <canvas id="graficoFinanceiro" height="200"></canvas>
+            <div class="dash-chart-wrap"><canvas id="graficoFinanceiro"></canvas></div>
           </div>
 
           <div class="dash-painel">
@@ -424,6 +429,8 @@
       },
       options: {
         indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: { x: { ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') } } }
       }
@@ -442,7 +449,7 @@
             backgroundColor: [paletaVerde, paletaAmarelo, paletaGold, paletaVermelho],
           }]
         },
-        options: { plugins: { legend: { position: 'bottom' } } }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
       });
     } else {
       document.getElementById('graficoResultado').replaceWith(
@@ -474,6 +481,8 @@
         ]
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { position: 'bottom' } },
         scales: { x: { stacked: true }, y: { stacked: true, ticks: { precision: 0 } } }
       }
@@ -495,6 +504,8 @@
         }]
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: { y: { ticks: { precision: 0 } } }
       }
@@ -516,6 +527,8 @@
         }]
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: { y: { ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') } } }
       }
