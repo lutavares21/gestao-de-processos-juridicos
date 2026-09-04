@@ -234,6 +234,24 @@ body {
   flex-wrap: wrap;
 }
 
+/* --- Linhas do filtro de pesquisa: grade fixa de 4 colunas iguais --- */
+.linha-filtro {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.linha-filtro .campo {
+  flex: unset;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .linha-filtro {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .campo {
   flex: 1 1 200px;
   margin-bottom: 14px;

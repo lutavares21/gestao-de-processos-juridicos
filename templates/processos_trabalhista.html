@@ -76,7 +76,7 @@
         <div class="secao" style="margin-bottom:16px;">
           <h2>Pesquisa Processual</h2>
           <form method="GET" action="{{ url_for('processos_trabalhista') }}">
-            <div class="linha">
+            <div class="linha linha-filtro">
               <div class="campo">
                 <label for="f_numero">Número do processo</label>
                 <input type="text" id="f_numero" name="numero_processo" value="{{ filtros.get('numero_processo', '') }}" placeholder="0000000-00.0000.0.00.0000" maxlength="25" oninput="mascararNumeroProcesso(this)">
@@ -96,7 +96,7 @@
             </div>
 
             <div id="filtros_avancados" class="oculto">
-              <div class="linha">
+              <div class="linha linha-filtro">
                 <div class="campo">
                   <label for="f_uf">UF</label>
                   <select id="f_uf" name="uf">
@@ -106,7 +106,7 @@
                     {% endfor %}
                   </select>
                 </div>
-                <div class="campo campo-grande">
+                <div class="campo">
                   <label for="f_classe">Classe processual</label>
                   <select id="f_classe" name="tipo_acao">
                     <option value="">Todas</option>
@@ -141,7 +141,7 @@
                 </div>
               </div>
 
-              <div class="linha">
+              <div class="linha linha-filtro">
                 <div class="campo">
                   <label for="f_grau">Grau/Instância</label>
                   <select id="f_grau" name="grau_instancia">
@@ -182,8 +182,8 @@
                 </div>
               </div>
 
-              <div class="linha">
-                <div class="campo campo-grande">
+              <div class="linha linha-filtro">
+                <div class="campo">
                   <label for="f_cr">Centro de Resultados (CR)</label>
                   <select id="f_cr" name="centro_resultado">
                     <option value="">Todos</option>
@@ -201,7 +201,7 @@
                     {% endfor %}
                   </select>
                 </div>
-                <div class="campo campo-grande">
+                <div class="campo">
                   <label for="f_escritorio">Escritório</label>
                   <select id="f_escritorio" name="escritorio">
                     <option value="">Todos</option>
