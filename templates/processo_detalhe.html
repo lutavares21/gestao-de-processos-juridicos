@@ -253,10 +253,6 @@
           </div>
           <div class="linha">
             <div class="campo">
-              <label>Status</label>
-              <div class="valor"><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></div>
-            </div>
-            <div class="campo">
               <label>Grau/Instância atual</label>
               <div class="valor">
                 {% if p.grau_instancia == 'primeira_instancia' %}1ª Instância
@@ -268,10 +264,16 @@
               </div>
             </div>
           </div>
-          <div class="campo">
-            <label>Risco</label>
-            <div class="valor">
-              {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif %}
+          <div class="linha">
+            <div class="campo campo-pequeno">
+              <label>Status</label>
+              <div class="valor"><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></div>
+            </div>
+            <div class="campo campo-pequeno">
+              <label>Risco</label>
+              <div class="valor">
+                {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif %}
+              </div>
             </div>
           </div>
         </div>
