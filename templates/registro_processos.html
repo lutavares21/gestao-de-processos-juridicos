@@ -203,8 +203,8 @@
         <div class="item-com-submenu">
           <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
           <ul class="submenu">
-            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
             <li><a href="{{ url_for('cadastro_civel') }}">Processos Cível</a></li>
+            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
             <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
             <li><a href="{{ url_for('cadastro_trabalhista') }}">Processos Trabalhista</a></li>
           </ul>
@@ -213,8 +213,8 @@
         <div class="item-com-submenu">
           <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
           <ul class="submenu">
-            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
             <li><a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a></li>
+            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
             <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
             <li><a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a></li>
           </ul>
