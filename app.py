@@ -249,12 +249,79 @@ def processos_civel():
 
 @app.route("/processos/trabalhista")
 def processos_trabalhista():
-    processos = (
-        Processo.query.filter_by(origem_cadastro="trabalhista")
-        .order_by(Processo.data_cadastro.desc())
-        .all()
+    query = Processo.query.filter_by(origem_cadastro="trabalhista")
+    f = request.args
+
+    numero_processo = f.get("numero_processo", "").strip()
+    parte = f.get("parte", "").strip()
+    juizado = f.get("juizado", "").strip()
+    comarca = f.get("comarca", "").strip()
+    uf = f.get("uf", "").strip()
+    tipo_acao = f.get("tipo_acao", "").strip()
+    centro_resultado = f.get("centro_resultado", "").strip()
+    escritorio = f.get("escritorio", "").strip()
+    resultado = f.get("resultado", "").strip()
+    sentenca = f.get("sentenca", "").strip()
+    status = f.get("status", "").strip()
+    risco = f.get("risco", "").strip()
+    grau_instancia = f.get("grau_instancia", "").strip()
+    pedido_status = f.get("pedido_status", "").strip()
+    data_distribuicao_de = f.get("data_distribuicao_de", "").strip()
+    data_distribuicao_ate = f.get("data_distribuicao_ate", "").strip()
+
+    if numero_processo:
+        query = query.filter(Processo.numero_processo.ilike(f"%{numero_processo}%"))
+    if parte:
+        query = query.filter(Processo.partes.any(Parte.nome.ilike(f"%{parte}%")))
+    if juizado:
+        query = query.filter(Processo.juizado.ilike(f"%{juizado}%"))
+    if comarca:
+        query = query.filter(Processo.comarca.ilike(f"%{comarca}%"))
+    if uf:
+        query = query.filter(Processo.uf == uf)
+    if tipo_acao:
+        query = query.filter(Processo.tipo_acao == tipo_acao)
+    if centro_resultado:
+        query = query.filter(Processo.centro_resultado == centro_resultado)
+    if escritorio:
+        query = query.filter(Processo.escritorio == escritorio)
+    if resultado:
+        query = query.filter(Processo.resultado == resultado)
+    if sentenca:
+        query = query.filter(Processo.sentenca == sentenca)
+    if status:
+        query = query.filter(Processo.status == status)
+    if risco:
+        query = query.filter(Processo.risco == risco)
+    if grau_instancia:
+        query = query.filter(Processo.grau_instancia == grau_instancia)
+    if pedido_status:
+        query = query.filter(Processo.pedidos_trabalhistas.any(PedidoTrabalhista.status == pedido_status))
+    if data_distribuicao_de:
+        data_de = texto_para_data(data_distribuicao_de)
+        if data_de:
+            query = query.filter(Processo.data_distribuicao >= data_de)
+    if data_distribuicao_ate:
+        data_ate = texto_para_data(data_distribuicao_ate)
+        if data_ate:
+            query = query.filter(Processo.data_distribuicao <= data_ate)
+
+    processos = query.order_by(Processo.data_cadastro.desc()).all()
+
+    campos_filtro = [
+        "numero_processo", "parte", "juizado", "comarca", "uf", "tipo_acao",
+        "centro_resultado", "escritorio", "resultado", "sentenca", "status",
+        "risco", "grau_instancia", "pedido_status",
+        "data_distribuicao_de", "data_distribuicao_ate",
+    ]
+    filtros_ativos = any(f.get(c, "").strip() for c in campos_filtro)
+
+    return render_template(
+        "processos_trabalhista.html",
+        processos=processos,
+        filtros=f,
+        filtros_ativos=filtros_ativos,
     )
-    return render_template("processos_trabalhista.html", processos=processos)
 
 
 @app.route("/processo/<int:processo_id>")

@@ -49,8 +49,6 @@
 
       <div class="container" style="max-width: 1200px;">
 
-        {% if processos %}
-
         <div style="display:flex; flex-wrap:wrap; gap:18px; align-items:center; background:var(--papel-cartao); border:1px solid var(--borda); border-radius:4px; padding:10px 16px; margin-bottom:16px; font-size:13px; color:var(--texto-suave);">
           <span><strong>Risco:</strong></span>
           <span style="display:flex; align-items:center; gap:7px;">
@@ -75,6 +73,165 @@
           'nao_informado': 'Não informado'
         } %}
 
+        <div class="secao" style="margin-bottom:16px;">
+          <h2>Buscar processos</h2>
+          <form method="GET" action="{{ url_for('processos_trabalhista') }}">
+            <div class="linha">
+              <div class="campo">
+                <label for="f_numero">Número do processo</label>
+                <input type="text" id="f_numero" name="numero_processo" value="{{ filtros.get('numero_processo', '') }}" placeholder="Buscar por número">
+              </div>
+              <div class="campo">
+                <label for="f_parte">Reclamante ou Reclamada</label>
+                <input type="text" id="f_parte" name="parte" value="{{ filtros.get('parte', '') }}" placeholder="Nome da parte">
+              </div>
+              <div class="campo">
+                <label for="f_juizado">Vara do Trabalho</label>
+                <input type="text" id="f_juizado" name="juizado" value="{{ filtros.get('juizado', '') }}">
+              </div>
+              <div class="campo">
+                <label for="f_comarca">Comarca</label>
+                <input type="text" id="f_comarca" name="comarca" value="{{ filtros.get('comarca', '') }}">
+              </div>
+            </div>
+
+            <div id="filtros_avancados" class="{{ '' if filtros_ativos else 'oculto' }}">
+              <div class="linha">
+                <div class="campo">
+                  <label for="f_uf">UF</label>
+                  <select id="f_uf" name="uf">
+                    <option value="">Todas</option>
+                    {% for sigla in ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'] %}
+                    <option value="{{ sigla }}" {% if filtros.get('uf') == sigla %}selected{% endif %}>{{ sigla }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="campo campo-grande">
+                  <label for="f_classe">Classe processual</label>
+                  <select id="f_classe" name="tipo_acao">
+                    <option value="">Todas</option>
+                    {% for valor, texto in [
+                      ('acao_anulatoria','Ação Anulatória'), ('acao_civil_publica','Ação Civil Pública'),
+                      ('acao_consignacao_pagamento','Ação de Consignação em Pagamento'), ('acao_cumprimento','Ação de Cumprimento'),
+                      ('acao_rescisoria','Ação Rescisória'), ('dissidio_coletivo','Dissídio Coletivo'),
+                      ('inquerito_falta_grave','Inquérito para Apuração de Falta Grave'), ('mandado_seguranca','Mandado de Segurança'),
+                      ('outros','Outros'), ('reclamacao_trabalhista','Reclamação Trabalhista')
+                    ] %}
+                    <option value="{{ valor }}" {% if filtros.get('tipo_acao') == valor %}selected{% endif %}>{{ texto }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="campo">
+                  <label for="f_status">Status</label>
+                  <select id="f_status" name="status">
+                    <option value="">Todos</option>
+                    <option value="arquivado" {% if filtros.get('status') == 'arquivado' %}selected{% endif %}>Arquivado</option>
+                    <option value="ativo" {% if filtros.get('status') == 'ativo' %}selected{% endif %}>Ativo</option>
+                    <option value="suspenso" {% if filtros.get('status') == 'suspenso' %}selected{% endif %}>Suspenso</option>
+                  </select>
+                </div>
+                <div class="campo">
+                  <label for="f_risco">Risco</label>
+                  <select id="f_risco" name="risco">
+                    <option value="">Todos</option>
+                    <option value="possivel" {% if filtros.get('risco') == 'possivel' %}selected{% endif %}>Possível</option>
+                    <option value="provavel" {% if filtros.get('risco') == 'provavel' %}selected{% endif %}>Provável</option>
+                    <option value="remoto" {% if filtros.get('risco') == 'remoto' %}selected{% endif %}>Remoto</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="linha">
+                <div class="campo">
+                  <label for="f_grau">Grau/Instância</label>
+                  <select id="f_grau" name="grau_instancia">
+                    <option value="">Todos</option>
+                    {% for valor, texto in graus_instancia.items() %}
+                    <option value="{{ valor }}" {% if filtros.get('grau_instancia') == valor %}selected{% endif %}>{{ texto }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="campo">
+                  <label for="f_resultado">Resultado</label>
+                  <select id="f_resultado" name="resultado">
+                    <option value="">Todos</option>
+                    <option value="acordo" {% if filtros.get('resultado') == 'acordo' %}selected{% endif %}>Acordo</option>
+                    <option value="extinto_sem_resolucao_merito" {% if filtros.get('resultado') == 'extinto_sem_resolucao_merito' %}selected{% endif %}>Extinto Sem Resolução do Mérito</option>
+                    <option value="ganhamos" {% if filtros.get('resultado') == 'ganhamos' %}selected{% endif %}>Ganhamos</option>
+                    <option value="perdemos" {% if filtros.get('resultado') == 'perdemos' %}selected{% endif %}>Perdemos</option>
+                  </select>
+                </div>
+                <div class="campo">
+                  <label for="f_sentenca">Sentença</label>
+                  <select id="f_sentenca" name="sentenca">
+                    <option value="">Todas</option>
+                    <option value="extinto_sem_resolucao_merito" {% if filtros.get('sentenca') == 'extinto_sem_resolucao_merito' %}selected{% endif %}>Extinto sem resolução do mérito</option>
+                    <option value="improcedente" {% if filtros.get('sentenca') == 'improcedente' %}selected{% endif %}>Improcedente</option>
+                    <option value="procedente" {% if filtros.get('sentenca') == 'procedente' %}selected{% endif %}>Procedente</option>
+                    <option value="procedente_parcial" {% if filtros.get('sentenca') == 'procedente_parcial' %}selected{% endif %}>Procedente parcial</option>
+                  </select>
+                </div>
+                <div class="campo">
+                  <label for="f_pedido_status">Situação dos pedidos</label>
+                  <select id="f_pedido_status" name="pedido_status">
+                    <option value="">Todas</option>
+                    <option value="deferido" {% if filtros.get('pedido_status') == 'deferido' %}selected{% endif %}>Deferido</option>
+                    <option value="em_analise" {% if filtros.get('pedido_status') == 'em_analise' %}selected{% endif %}>Em análise</option>
+                    <option value="indeferido" {% if filtros.get('pedido_status') == 'indeferido' %}selected{% endif %}>Indeferido</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="linha">
+                <div class="campo campo-grande">
+                  <label for="f_cr">Centro de Resultados (CR)</label>
+                  <select id="f_cr" name="centro_resultado">
+                    <option value="">Todos</option>
+                    {% for codigo, nome in [
+                      ('271','Audiologia'), ('290','Bernafon'), ('245','Call Center'), ('220','Departamento Financeiro'),
+                      ('273','Diatec'), ('211','Diretoria Executiva'), ('501','Distribuidores'), ('302','Expansão'),
+                      ('800','Expatriados'), ('246','Hub Teleconsulta'), ('253','Interacoustics - Distribuidores'),
+                      ('1111','Laboratório'), ('237','Licitação e Legalização'), ('234','Logística'), ('242','Marketing'),
+                      ('601','Marketing B2B'), ('700','México'), ('402','Neurelec'), ('254','Oticon Governo'),
+                      ('400','Oticon Medical'), ('301','Philips'), ('281','Produtos e Regulatórios'), ('249','Programa Parceria'),
+                      ('251','RH/Depto.Pessoal'), ('258','Sonic'), ('502','Sonic Distribuidores'), ('236','Suprimentos'),
+                      ('213','Telex Licença'), ('261','TI - Informática')
+                    ] %}
+                    <option value="{{ codigo }}" {% if filtros.get('centro_resultado') == codigo %}selected{% endif %}>{{ codigo }} - {{ nome }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="campo campo-grande">
+                  <label for="f_escritorio">Escritório</label>
+                  <select id="f_escritorio" name="escritorio">
+                    <option value="">Todos</option>
+                    {% for nome in ['Dr. Fernando Ximenes', 'Dr. Luiz Antônio Correa', 'Dr. Rolim', 'Dra. Cláudia Mello', 'Escritório Dannemann', 'Escritório Vra Advogados'] %}
+                    <option value="{{ nome }}" {% if filtros.get('escritorio') == nome %}selected{% endif %}>{{ nome }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="campo">
+                  <label for="f_dist_de">Distribuição de</label>
+                  <input type="date" id="f_dist_de" name="data_distribuicao_de" value="{{ filtros.get('data_distribuicao_de', '') }}">
+                </div>
+                <div class="campo">
+                  <label for="f_dist_ate">Distribuição até</label>
+                  <input type="date" id="f_dist_ate" name="data_distribuicao_ate" value="{{ filtros.get('data_distribuicao_ate', '') }}">
+                </div>
+              </div>
+            </div>
+
+            <div class="linha" style="align-items:center;">
+              <button type="button" class="btn btn-adicionar" onclick="document.getElementById('filtros_avancados').classList.toggle('oculto')">Filtros avançados ▾</button>
+              <button type="submit" class="btn btn-salvar" style="width:auto;padding:9px 22px;">Buscar</button>
+              {% if filtros_ativos %}
+              <a href="{{ url_for('processos_trabalhista') }}" class="link-voltar" style="margin:0;">✕ Limpar filtros</a>
+              {% endif %}
+            </div>
+          </form>
+        </div>
+
+        {% if processos %}
         <div class="scroll-topo" id="scrollTopo"><div id="scrollTopoInterno"></div></div>
 
         <div class="tabela-wrap" id="tabelaWrap">
@@ -128,7 +285,13 @@
         </div>
         {% else %}
         <div class="tabela-wrap">
-          <div class="estado-vazio">Nenhum processo trabalhista cadastrado ainda. <a href="{{ url_for('cadastro_trabalhista') }}">Cadastrar o primeiro</a>.</div>
+          <div class="estado-vazio">
+            {% if filtros_ativos %}
+            Nenhum processo encontrado com esses filtros. <a href="{{ url_for('processos_trabalhista') }}">Limpar filtros</a>.
+            {% else %}
+            Nenhum processo trabalhista cadastrado ainda. <a href="{{ url_for('cadastro_trabalhista') }}">Cadastrar o primeiro</a>.
+            {% endif %}
+          </div>
         </div>
         {% endif %}
 
