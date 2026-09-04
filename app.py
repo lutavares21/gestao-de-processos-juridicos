@@ -3,12 +3,13 @@
 App Flask - Gestão de Processos Jurídicos
 """
 
-from datetime import datetime
+from datetime import datetime, date
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import (
     LoginManager, login_user, logout_user, login_required, current_user,
 )
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 from werkzeug.security import check_password_hash
 from models import db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR, PedidoCivel, Usuario
 
@@ -443,29 +444,146 @@ def processo_editar(processo_id):
 @app.route("/registro-processos")
 @login_required
 def registro_processos():
-    def contar(origem=None, status=None):
+
+    def contar(**filtros):
+        """Conta processos que batem com os filtros dados.
+        Ex: contar(origem_cadastro='civel', status='ativo')"""
         query = Processo.query
-        if origem:
-            query = query.filter_by(origem_cadastro=origem)
-        if status:
-            query = query.filter_by(status=status)
+        for campo, valor in filtros.items():
+            query = query.filter(getattr(Processo, campo) == valor)
         return query.count()
 
+    def somar(coluna, **filtros):
+        """Soma uma coluna numérica (ex: Processo.valor_causa) para os
+        processos que batem com os filtros dados. Nunca retorna None."""
+        query = db.session.query(func.coalesce(func.sum(coluna), 0))
+        for campo, valor in filtros.items():
+            query = query.filter(getattr(Processo, campo) == valor)
+        return float(query.scalar() or 0)
+
+    # ------------------------------------------------------------------
+    # 1. VISÃO GERAL (cível x trabalhista x status)
+    # ------------------------------------------------------------------
     dados = {
         "total": contar(),
         "civel": {
-            "total": contar("civel"),
-            "ativo": contar("civel", "ativo"),
-            "arquivado": contar("civel", "arquivado"),
-            "suspenso": contar("civel", "suspenso"),
+            "total": contar(origem_cadastro="civel"),
+            "ativo": contar(origem_cadastro="civel", status="ativo"),
+            "arquivado": contar(origem_cadastro="civel", status="arquivado"),
+            "suspenso": contar(origem_cadastro="civel", status="suspenso"),
         },
         "trabalhista": {
-            "total": contar("trabalhista"),
-            "ativo": contar("trabalhista", "ativo"),
-            "arquivado": contar("trabalhista", "arquivado"),
-            "suspenso": contar("trabalhista", "suspenso"),
+            "total": contar(origem_cadastro="trabalhista"),
+            "ativo": contar(origem_cadastro="trabalhista", status="ativo"),
+            "arquivado": contar(origem_cadastro="trabalhista", status="arquivado"),
+            "suspenso": contar(origem_cadastro="trabalhista", status="suspenso"),
         },
     }
+
+    # ------------------------------------------------------------------
+    # 2. FINANCEIRO
+    #    Provisionado = valor da causa dos processos ATIVOS (exposição em
+    #                    aberto - o que ainda pode ser desembolsado).
+    #    Gasto         = tudo que já efetivamente saiu do caixa: valor final
+    #                    pago + honorários (advogado/perícia) + custas +
+    #                    depósito recursal.
+    #    Economizado   = soma do campo "economia_gerada".
+    #    Ajuste essa régua livremente se a definição da diretoria for outra.
+    # ------------------------------------------------------------------
+    provisionado = somar(Processo.valor_causa, status="ativo")
+    valor_pago_total = somar(Processo.valor_final)
+    gasto = (
+        valor_pago_total
+        + somar(Processo.honorarios_advogado)
+        + somar(Processo.honorarios_periciais)
+        + somar(Processo.custas_processuais)
+        + somar(Processo.deposito_recursal)
+    )
+    economizado = somar(Processo.economia_gerada)
+
+    dados["financeiro"] = {
+        "provisionado": provisionado,
+        "gasto": gasto,
+        "economizado": economizado,
+        "valor_causa_total": somar(Processo.valor_causa),
+        "valor_pago_total": valor_pago_total,
+    }
+
+    # ------------------------------------------------------------------
+    # 3. RISCO - exposição em aberto (só processos ativos) por nível de risco
+    # ------------------------------------------------------------------
+    dados["risco"] = {
+        nivel: {
+            "qtd": contar(status="ativo", risco=nivel),
+            "valor": somar(Processo.valor_causa, status="ativo", risco=nivel),
+        }
+        for nivel in ["possivel", "provavel", "remoto"]
+    }
+    dados["risco_sem_classificacao"] = contar(status="ativo", risco=None)
+
+    # ------------------------------------------------------------------
+    # 4. RESULTADO - processos já com desfecho (ganhamos/perdemos/acordo)
+    # ------------------------------------------------------------------
+    dados["resultado"] = {
+        chave: {
+            "qtd": contar(resultado=chave),
+            "valor": somar(Processo.valor_final, resultado=chave),
+        }
+        for chave in ["ganhamos", "perdemos", "acordo"]
+    }
+    total_com_desfecho = sum(v["qtd"] for v in dados["resultado"].values())
+    dados["taxa_exito"] = (
+        round(100 * dados["resultado"]["ganhamos"]["qtd"] / total_com_desfecho, 1)
+        if total_com_desfecho
+        else None
+    )
+
+    # ------------------------------------------------------------------
+    # 5. TOP CENTROS DE RESULTADO por exposição em aberto
+    # ------------------------------------------------------------------
+    top_cr = (
+        db.session.query(
+            Processo.centro_resultado,
+            func.count(Processo.id),
+            func.coalesce(func.sum(Processo.valor_causa), 0),
+        )
+        .filter(Processo.status == "ativo", Processo.centro_resultado.isnot(None))
+        .group_by(Processo.centro_resultado)
+        .order_by(func.sum(Processo.valor_causa).desc())
+        .limit(6)
+        .all()
+    )
+    dados["top_centros_resultado"] = [
+        {"nome": nome, "qtd": qtd, "valor": float(valor or 0)}
+        for nome, qtd, valor in top_cr
+    ]
+
+    # ------------------------------------------------------------------
+    # 6. EVOLUÇÃO MENSAL - novos processos distribuídos nos últimos 12 meses
+    # ------------------------------------------------------------------
+    hoje = date.today()
+    meses_alvo = []
+    ano, mes = hoje.year, hoje.month
+    for _ in range(12):
+        meses_alvo.append((ano, mes))
+        mes -= 1
+        if mes == 0:
+            mes = 12
+            ano -= 1
+    meses_alvo.reverse()
+
+    nomes_mes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+                 "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+
+    evolucao = []
+    for ano, mes in meses_alvo:
+        qtd = Processo.query.filter(
+            func.extract("year", Processo.data_distribuicao) == ano,
+            func.extract("month", Processo.data_distribuicao) == mes,
+        ).count()
+        evolucao.append({"label": f"{nomes_mes[mes - 1]}/{str(ano)[2:]}", "qtd": qtd})
+    dados["evolucao_mensal"] = evolucao
+
     return render_template("registro_processos.html", dados=dados)
 
 

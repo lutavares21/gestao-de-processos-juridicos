@@ -2,10 +2,147 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Registro de Processos</title>
+  <title>Registro de Processos - Visão Executiva</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+  <style>
+    /* ---- Estilos exclusivos do dashboard executivo ---- */
+    :root{
+      --dash-navy: #16233d;
+      --dash-navy-2: #1f3358;
+      --dash-gold: #b7924b;
+      --dash-verde: #1f8a5f;
+      --dash-vermelho: #b3402f;
+      --dash-amarelo: #c08a1e;
+      --dash-cinza-texto: #5b6472;
+      --dash-borda: #e4e7ec;
+      --dash-fundo-card: #ffffff;
+    }
+
+    .dash-header{
+      background: linear-gradient(135deg, var(--dash-navy) 0%, var(--dash-navy-2) 100%);
+      border-radius: 16px;
+      padding: 32px 36px;
+      color: #fff;
+      margin-bottom: 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .dash-header h1{
+      font-family: var(--fonte-titulo, 'Source Serif 4', serif);
+      font-size: 30px;
+      margin: 0 0 6px 0;
+      letter-spacing: 0.2px;
+    }
+    .dash-header .dash-subtitulo{
+      color: #c7d0e0;
+      font-size: 14px;
+    }
+    .dash-header .dash-data{
+      font-size: 13px;
+      color: var(--dash-gold);
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .dash-grid-kpi{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .dash-kpi{
+      background: var(--dash-fundo-card);
+      border: 1px solid var(--dash-borda);
+      border-radius: 14px;
+      padding: 20px 22px;
+      box-shadow: 0 1px 3px rgba(16,24,40,0.04);
+    }
+    .dash-kpi .dash-kpi-label{
+      font-size: 12.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--dash-cinza-texto);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .dash-kpi .dash-kpi-valor{
+      font-family: var(--fonte-titulo, 'Source Serif 4', serif);
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--dash-navy);
+    }
+    .dash-kpi .dash-kpi-nota{
+      font-size: 12px;
+      color: var(--dash-cinza-texto);
+      margin-top: 4px;
+    }
+    .dash-kpi.destaque-ouro .dash-kpi-valor{ color: var(--dash-gold); }
+    .dash-kpi.destaque-verde .dash-kpi-valor{ color: var(--dash-verde); }
+    .dash-kpi.destaque-vermelho .dash-kpi-valor{ color: var(--dash-vermelho); }
+
+    .dash-secao-titulo{
+      font-family: var(--fonte-titulo, 'Source Serif 4', serif);
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--dash-navy);
+      margin: 0 0 16px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--dash-borda);
+    }
+
+    .dash-painel{
+      background: var(--dash-fundo-card);
+      border: 1px solid var(--dash-borda);
+      border-radius: 14px;
+      padding: 24px 26px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(16,24,40,0.04);
+    }
+
+    .dash-row{
+      display: grid;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .dash-row.duas-colunas{ grid-template-columns: 1.3fr 1fr; }
+    .dash-row.tres-colunas{ grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 980px){
+      .dash-row.duas-colunas, .dash-row.tres-colunas{ grid-template-columns: 1fr; }
+    }
+
+    .dash-risco-cards{ display: flex; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+    .dash-risco-card{
+      flex: 1 1 140px;
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: #fff;
+    }
+    .dash-risco-card .rotulo{ font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.9; }
+    .dash-risco-card .qtd{ font-size: 24px; font-weight: 700; font-family: var(--fonte-titulo, 'Source Serif 4', serif); margin: 4px 0 2px 0; }
+    .dash-risco-card .valor{ font-size: 13px; opacity: 0.95; }
+    .dash-risco-card.provavel{ background: var(--dash-vermelho); }
+    .dash-risco-card.possivel{ background: var(--dash-amarelo); }
+    .dash-risco-card.remoto{ background: var(--dash-verde); }
+
+    .dash-tabela{ width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .dash-tabela th{
+      text-align: left; padding: 8px 10px; color: var(--dash-cinza-texto);
+      text-transform: uppercase; font-size: 11px; letter-spacing: 0.4px;
+      border-bottom: 1px solid var(--dash-borda);
+    }
+    .dash-tabela td{ padding: 10px 10px; border-bottom: 1px solid var(--dash-borda); color: var(--dash-navy); }
+    .dash-tabela tr:last-child td{ border-bottom: none; }
+
+    .dash-vazio{ color: var(--dash-cinza-texto); font-size: 13.5px; padding: 12px 0; }
+
+    canvas{ max-width: 100%; }
+  </style>
 </head>
 <body>
 
@@ -41,73 +178,267 @@
     </aside>
 
     <div class="conteudo">
-      <div class="cabecalho">
-        <h1>Registro de Processos</h1>
-        <div class="subtitulo">Contagem geral de todos os processos cadastrados</div>
-      </div>
+      <div class="container" style="max-width: 1280px;">
 
-      <div class="container" style="max-width: 900px;">
+        <!-- CABEÇALHO EXECUTIVO -->
+        <div class="dash-header">
+          <div>
+            <h1>Registro de Processos</h1>
+            <div class="dash-subtitulo">Visão consolidada para a Diretoria · {{ dados.total }} processos no total</div>
+          </div>
+          <div class="dash-data">Atualizado em {{ dados_gerados_em if dados_gerados_em is defined else '' }}</div>
+        </div>
 
-        <div class="secao" style="text-align:center;">
-          <h2 style="border-bottom:none;padding-bottom:0;">Total de processos cadastrados</h2>
-          <div style="font-family: var(--fonte-titulo); font-size: 48px; font-weight: 700; color: var(--tinta); margin-top: 4px;">
-            {{ dados.total }}
+        <!-- KPIs PRINCIPAIS -->
+        <div class="dash-grid-kpi">
+          <div class="dash-kpi">
+            <div class="dash-kpi-label">Total de processos</div>
+            <div class="dash-kpi-valor">{{ dados.total }}</div>
+            <div class="dash-kpi-nota">{{ dados.civel.total }} cível · {{ dados.trabalhista.total }} trabalhista</div>
+          </div>
+          <div class="dash-kpi">
+            <div class="dash-kpi-label">Ativos</div>
+            <div class="dash-kpi-valor">{{ dados.civel.ativo + dados.trabalhista.ativo }}</div>
+            <div class="dash-kpi-nota">Em tramitação</div>
+          </div>
+          <div class="dash-kpi">
+            <div class="dash-kpi-label">Arquivados</div>
+            <div class="dash-kpi-valor">{{ dados.civel.arquivado + dados.trabalhista.arquivado }}</div>
+            <div class="dash-kpi-nota">Encerrados</div>
+          </div>
+          <div class="dash-kpi destaque-ouro">
+            <div class="dash-kpi-label">Exposição em aberto</div>
+            <div class="dash-kpi-valor">{{ dados.financeiro.provisionado|moeda }}</div>
+            <div class="dash-kpi-nota">Valor da causa · processos ativos</div>
+          </div>
+          <div class="dash-kpi destaque-vermelho">
+            <div class="dash-kpi-label">Gasto realizado</div>
+            <div class="dash-kpi-valor">{{ dados.financeiro.gasto|moeda }}</div>
+            <div class="dash-kpi-nota">Pago + honorários + custas + depósito</div>
+          </div>
+          <div class="dash-kpi destaque-verde">
+            <div class="dash-kpi-label">Economia gerada</div>
+            <div class="dash-kpi-valor">{{ dados.financeiro.economizado|moeda }}</div>
+            <div class="dash-kpi-nota">Acumulado</div>
+          </div>
+          <div class="dash-kpi">
+            <div class="dash-kpi-label">Taxa de êxito</div>
+            <div class="dash-kpi-valor">{{ (dados.taxa_exito ~ '%') if dados.taxa_exito is not none else '—' }}</div>
+            <div class="dash-kpi-nota">Entre processos com desfecho</div>
           </div>
         </div>
 
-        <div class="linha">
-          <div class="secao" style="flex:1 1 340px;">
-            <h2>Processos Cível</h2>
-            <div class="linha">
-              <div class="campo">
-                <label>Total</label>
-                <div class="valor" style="font-size:20px;font-weight:700;color:var(--tinta);">{{ dados.civel.total }}</div>
+        <!-- RISCO + RESULTADO -->
+        <div class="dash-row duas-colunas">
+
+          <div class="dash-painel">
+            <div class="dash-secao-titulo">Exposição por nível de risco (processos ativos)</div>
+            <div class="dash-risco-cards">
+              <div class="dash-risco-card provavel">
+                <div class="rotulo">Provável</div>
+                <div class="qtd">{{ dados.risco.provavel.qtd }}</div>
+                <div class="valor">{{ dados.risco.provavel.valor|moeda }}</div>
+              </div>
+              <div class="dash-risco-card possivel">
+                <div class="rotulo">Possível</div>
+                <div class="qtd">{{ dados.risco.possivel.qtd }}</div>
+                <div class="valor">{{ dados.risco.possivel.valor|moeda }}</div>
+              </div>
+              <div class="dash-risco-card remoto">
+                <div class="rotulo">Remoto</div>
+                <div class="qtd">{{ dados.risco.remoto.qtd }}</div>
+                <div class="valor">{{ dados.risco.remoto.valor|moeda }}</div>
               </div>
             </div>
-            <div class="linha">
-              <div class="campo">
-                <label>Ativos</label>
-                <div class="valor"><span class="selo-status ativo">{{ dados.civel.ativo }}</span></div>
-              </div>
-              <div class="campo">
-                <label>Arquivados</label>
-                <div class="valor"><span class="selo-status arquivado">{{ dados.civel.arquivado }}</span></div>
-              </div>
-              <div class="campo">
-                <label>Suspensos</label>
-                <div class="valor"><span class="selo-status suspenso">{{ dados.civel.suspenso }}</span></div>
-              </div>
-            </div>
+            <canvas id="graficoRisco" height="160"></canvas>
           </div>
 
-          <div class="secao" style="flex:1 1 340px;">
-            <h2>Processos Trabalhista</h2>
-            <div class="linha">
-              <div class="campo">
-                <label>Total</label>
-                <div class="valor" style="font-size:20px;font-weight:700;color:var(--tinta);">{{ dados.trabalhista.total }}</div>
-              </div>
-            </div>
-            <div class="linha">
-              <div class="campo">
-                <label>Ativos</label>
-                <div class="valor"><span class="selo-status ativo">{{ dados.trabalhista.ativo }}</span></div>
-              </div>
-              <div class="campo">
-                <label>Arquivados</label>
-                <div class="valor"><span class="selo-status arquivado">{{ dados.trabalhista.arquivado }}</span></div>
-              </div>
-              <div class="campo">
-                <label>Suspensos</label>
-                <div class="valor"><span class="selo-status suspenso">{{ dados.trabalhista.suspenso }}</span></div>
-              </div>
-            </div>
+          <div class="dash-painel">
+            <div class="dash-secao-titulo">Resultado dos processos encerrados</div>
+            <canvas id="graficoResultado" height="220"></canvas>
           </div>
+
+        </div>
+
+        <!-- STATUS + EVOLUÇÃO -->
+        <div class="dash-row duas-colunas">
+
+          <div class="dash-painel">
+            <div class="dash-secao-titulo">Ativo x Arquivado x Suspenso</div>
+            <canvas id="graficoStatus" height="200"></canvas>
+          </div>
+
+          <div class="dash-painel">
+            <div class="dash-secao-titulo">Novos processos distribuídos - últimos 12 meses</div>
+            <canvas id="graficoEvolucao" height="200"></canvas>
+          </div>
+
+        </div>
+
+        <!-- FINANCEIRO + TOP CR -->
+        <div class="dash-row duas-colunas">
+
+          <div class="dash-painel">
+            <div class="dash-secao-titulo">Provisionado x Gasto x Economizado</div>
+            <canvas id="graficoFinanceiro" height="200"></canvas>
+          </div>
+
+          <div class="dash-painel">
+            <div class="dash-secao-titulo">Exposição por Centro de Resultado</div>
+            {% if dados.top_centros_resultado %}
+            <table class="dash-tabela">
+              <thead>
+                <tr><th>Centro de resultado</th><th>Processos ativos</th><th>Valor da causa</th></tr>
+              </thead>
+              <tbody>
+                {% for item in dados.top_centros_resultado %}
+                <tr>
+                  <td>{{ item.nome }}</td>
+                  <td>{{ item.qtd }}</td>
+                  <td>{{ item.valor|moeda }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <div class="dash-vazio">Nenhum centro de resultado informado nos processos ativos.</div>
+            {% endif %}
+          </div>
+
         </div>
 
       </div>
     </div>
   </div>
+
+  <script>
+    const dadosDashboard = {{ dados|tojson }};
+
+    const paletaNavy = "#16233d";
+    const paletaGold = "#b7924b";
+    const paletaVerde = "#1f8a5f";
+    const paletaVermelho = "#b3402f";
+    const paletaAmarelo = "#c08a1e";
+    const paletaCinza = "#8a93a3";
+
+    Chart.defaults.font.family = "Inter, sans-serif";
+    Chart.defaults.color = "#5b6472";
+
+    // Risco - barras horizontais (valor de exposição)
+    new Chart(document.getElementById('graficoRisco'), {
+      type: 'bar',
+      data: {
+        labels: ['Provável', 'Possível', 'Remoto'],
+        datasets: [{
+          label: 'Exposição (R$)',
+          data: [
+            dadosDashboard.risco.provavel.valor,
+            dadosDashboard.risco.possivel.valor,
+            dadosDashboard.risco.remoto.valor,
+          ],
+          backgroundColor: [paletaVermelho, paletaAmarelo, paletaVerde],
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: { x: { ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') } } }
+      }
+    });
+
+    // Resultado - donut
+    const resultado = dadosDashboard.resultado;
+    const totalResultado = resultado.ganhamos.qtd + resultado.perdemos.qtd + resultado.acordo.qtd;
+    if (totalResultado > 0) {
+      new Chart(document.getElementById('graficoResultado'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Ganhamos', 'Perdemos', 'Acordo'],
+          datasets: [{
+            data: [resultado.ganhamos.qtd, resultado.perdemos.qtd, resultado.acordo.qtd],
+            backgroundColor: [paletaVerde, paletaVermelho, paletaGold],
+          }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+      });
+    } else {
+      document.getElementById('graficoResultado').replaceWith(
+        Object.assign(document.createElement('div'), {
+          className: 'dash-vazio',
+          innerText: 'Nenhum processo com resultado registrado ainda.'
+        })
+      );
+    }
+
+    // Status - barras empilhadas (cível x trabalhista)
+    new Chart(document.getElementById('graficoStatus'), {
+      type: 'bar',
+      data: {
+        labels: ['Ativo', 'Arquivado', 'Suspenso'],
+        datasets: [
+          {
+            label: 'Cível',
+            data: [dadosDashboard.civel.ativo, dadosDashboard.civel.arquivado, dadosDashboard.civel.suspenso],
+            backgroundColor: paletaNavy,
+            borderRadius: 6,
+          },
+          {
+            label: 'Trabalhista',
+            data: [dadosDashboard.trabalhista.ativo, dadosDashboard.trabalhista.arquivado, dadosDashboard.trabalhista.suspenso],
+            backgroundColor: paletaGold,
+            borderRadius: 6,
+          },
+        ]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom' } },
+        scales: { x: { stacked: true }, y: { stacked: true, ticks: { precision: 0 } } }
+      }
+    });
+
+    // Evolução mensal - linha
+    new Chart(document.getElementById('graficoEvolucao'), {
+      type: 'line',
+      data: {
+        labels: dadosDashboard.evolucao_mensal.map(m => m.label),
+        datasets: [{
+          label: 'Novos processos',
+          data: dadosDashboard.evolucao_mensal.map(m => m.qtd),
+          borderColor: paletaNavy,
+          backgroundColor: 'rgba(22,35,61,0.08)',
+          fill: true,
+          tension: 0.3,
+          pointBackgroundColor: paletaGold,
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { ticks: { precision: 0 } } }
+      }
+    });
+
+    // Financeiro - barras
+    new Chart(document.getElementById('graficoFinanceiro'), {
+      type: 'bar',
+      data: {
+        labels: ['Provisionado', 'Gasto', 'Economizado'],
+        datasets: [{
+          data: [
+            dadosDashboard.financeiro.provisionado,
+            dadosDashboard.financeiro.gasto,
+            dadosDashboard.financeiro.economizado,
+          ],
+          backgroundColor: [paletaGold, paletaVermelho, paletaVerde],
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') } } }
+      }
+    });
+  </script>
 
 </body>
 </html>
