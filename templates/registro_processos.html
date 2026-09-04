@@ -141,6 +141,48 @@
 
     .dash-vazio{ color: var(--dash-cinza-texto); font-size: 13.5px; padding: 12px 0; }
 
+    /* Matriz de risco */
+    .dash-matriz{ width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: center; }
+    .dash-matriz th{
+      padding: 8px 6px; color: var(--dash-cinza-texto); font-weight: 600;
+      text-transform: uppercase; font-size: 11px; letter-spacing: 0.4px;
+      border-bottom: 1px solid var(--dash-borda);
+    }
+    .dash-matriz td{ padding: 10px 6px; border-bottom: 1px solid var(--dash-borda); }
+    .dash-matriz td:first-child, .dash-matriz th:first-child{ text-align: left; font-weight: 600; color: var(--dash-navy); }
+    .dash-matriz tr:last-child td{ border-bottom: none; }
+    .dash-celula-risco{
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 32px; height: 32px; border-radius: 8px; font-weight: 700;
+      font-size: 13px; color: #fff;
+    }
+    .dash-celula-risco.vazia{ background: #eef0f3; color: var(--dash-cinza-texto); font-weight: 500; }
+
+    /* Painel de alerta da diretoria */
+    .dash-alerta{
+      background: #fdf3f1;
+      border: 1px solid #f1c9c0;
+      border-left: 5px solid var(--dash-vermelho);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .dash-alerta .dash-alerta-titulo{
+      font-family: var(--fonte-titulo, 'Source Serif 4', serif);
+      font-size: 17px; font-weight: 700; color: var(--dash-vermelho);
+      margin: 0 0 4px 0; display: flex; align-items: center; gap: 8px;
+    }
+    .dash-alerta .dash-alerta-subtitulo{ font-size: 13px; color: var(--dash-cinza-texto); margin-bottom: 14px; }
+    .dash-alerta-linha{
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid #f1c9c0;
+      font-size: 13.5px;
+    }
+    .dash-alerta-linha:last-child{ border-bottom: none; }
+    .dash-alerta-linha .num{ font-weight: 700; color: var(--dash-navy); min-width: 90px; }
+    .dash-alerta-linha .motivo{ color: var(--dash-cinza-texto); flex: 1; padding: 0 12px; }
+    .dash-alerta-linha .val{ font-weight: 700; color: var(--dash-vermelho); }
+
     canvas{ max-width: 100%; }
   </style>
 </head>
@@ -189,6 +231,21 @@
           <div class="dash-data">Atualizado em {{ dados_gerados_em if dados_gerados_em is defined else '' }}</div>
         </div>
 
+        <!-- ATENÇÃO DA DIRETORIA -->
+        {% if dados.atencao_diretoria %}
+        <div class="dash-alerta">
+          <div class="dash-alerta-titulo">⚠ Atenção da Diretoria</div>
+          <div class="dash-alerta-subtitulo">Processos ativos com risco provável de perda, por maior exposição financeira</div>
+          {% for a in dados.atencao_diretoria %}
+          <div class="dash-alerta-linha">
+            <span class="num">{{ a.numero_processo }}</span>
+            <span class="motivo">{{ a.motivo }}</span>
+            <span class="val">{{ a.valor_causa|moeda }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
         <!-- KPIs PRINCIPAIS -->
         <div class="dash-grid-kpi">
           <div class="dash-kpi">
@@ -224,7 +281,7 @@
           <div class="dash-kpi">
             <div class="dash-kpi-label">Taxa de êxito</div>
             <div class="dash-kpi-valor">{{ (dados.taxa_exito ~ '%') if dados.taxa_exito is not none else '—' }}</div>
-            <div class="dash-kpi-nota">Entre processos com desfecho</div>
+            <div class="dash-kpi-nota">Vitórias + parciais / encerrados</div>
           </div>
         </div>
 
@@ -251,10 +308,35 @@
               </div>
             </div>
             <canvas id="graficoRisco" height="160"></canvas>
+
+            <div style="margin-top:22px;">
+              <table class="dash-matriz">
+                <thead>
+                  <tr><th>Risco \ Impacto</th><th>Baixo</th><th>Médio</th><th>Alto</th></tr>
+                </thead>
+                <tbody>
+                  {% for nivel, rotulo, cor in [('provavel','Provável','#b3402f'), ('possivel','Possível','#c08a1e'), ('remoto','Remoto','#1f8a5f')] %}
+                  <tr>
+                    <td>{{ rotulo }}</td>
+                    {% for coluna in ['baixo','medio','alto'] %}
+                    <td>
+                      {% set qtd = dados.matriz_risco[nivel][coluna] %}
+                      {% if qtd > 0 %}
+                      <span class="dash-celula-risco" style="background: {{ cor }};">{{ qtd }}</span>
+                      {% else %}
+                      <span class="dash-celula-risco vazia">—</span>
+                      {% endif %}
+                    </td>
+                    {% endfor %}
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div class="dash-painel">
-            <div class="dash-secao-titulo">Resultado dos processos encerrados</div>
+            <div class="dash-secao-titulo">Resultado dos encerrados</div>
             <canvas id="graficoResultado" height="220"></canvas>
           </div>
 
@@ -347,17 +429,17 @@
       }
     });
 
-    // Resultado - donut
-    const resultado = dadosDashboard.resultado;
-    const totalResultado = resultado.ganhamos.qtd + resultado.perdemos.qtd + resultado.acordo.qtd;
+    // Resultado - donut (4 categorias)
+    const resultadoDet = dadosDashboard.resultado_detalhado;
+    const totalResultado = resultadoDet.vitorias + resultadoDet.parciais + resultadoDet.acordos + resultadoDet.derrotas;
     if (totalResultado > 0) {
       new Chart(document.getElementById('graficoResultado'), {
         type: 'doughnut',
         data: {
-          labels: ['Ganhamos', 'Perdemos', 'Acordo'],
+          labels: ['Vitórias', 'Parciais', 'Acordos', 'Derrotas'],
           datasets: [{
-            data: [resultado.ganhamos.qtd, resultado.perdemos.qtd, resultado.acordo.qtd],
-            backgroundColor: [paletaVerde, paletaVermelho, paletaGold],
+            data: [resultadoDet.vitorias, resultadoDet.parciais, resultadoDet.acordos, resultadoDet.derrotas],
+            backgroundColor: [paletaVerde, paletaAmarelo, paletaGold, paletaVermelho],
           }]
         },
         options: { plugins: { legend: { position: 'bottom' } } }
