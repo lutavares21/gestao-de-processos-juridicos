@@ -252,12 +252,6 @@
               <label>Sentença</label>
               <div class="valor">{{ p.sentenca|replace('_', ' ')|title if p.sentenca else '—' }}</div>
             </div>
-          </div>
-          <div class="linha">
-            <div class="campo campo-pequeno">
-              <label>Status</label>
-              <div class="valor valor-sem-caixa"><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></div>
-            </div>
             <div class="campo">
               <label>Grau/Instância atual</label>
               <div class="valor">
@@ -268,6 +262,10 @@
                 {% elif p.grau_instancia == 'nao_informado' %}Não informado
                 {% else %}—{% endif %}
               </div>
+            </div>
+            <div class="campo campo-pequeno">
+              <label>Status</label>
+              <div class="valor valor-sem-caixa"><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></div>
             </div>
             <div class="campo campo-pequeno">
               <label>Risco</label>
