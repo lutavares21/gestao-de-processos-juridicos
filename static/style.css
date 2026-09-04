@@ -542,6 +542,10 @@ input[readonly] {
   width: 100%;
 }
 
+.caixa-login .bloco-inicio h2 {
+  text-align: center;
+}
+
 .caixa-login .btn-salvar {
   margin-top: 8px;
 }
