@@ -221,13 +221,13 @@
               </div>
             </div>
 
-            <div class="linha" style="align-items:center;">
-              <button type="button" class="btn btn-adicionar" onclick="document.getElementById('filtros_avancados').classList.toggle('oculto')">Filtros avançados ▾</button>
-              <button type="submit" class="btn btn-salvar" style="width:auto;padding:9px 22px;">Buscar</button>
-              {% if filtros_ativos %}
-              <a href="{{ url_for('processos_trabalhista') }}" class="link-voltar" style="margin:0;">✕ Limpar filtros</a>
-              {% endif %}
-            </div>
+            <button type="button" class="btn btn-adicionar" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="document.getElementById('filtros_avancados').classList.toggle('oculto')">Filtros avançados ▾</button>
+
+            <button type="submit" class="btn btn-salvar">Buscar</button>
+
+            {% if filtros_ativos %}
+            <a href="{{ url_for('processos_trabalhista') }}" class="link-voltar" style="margin-top:10px;">✕ Limpar filtros</a>
+            {% endif %}
           </form>
         </div>
 
