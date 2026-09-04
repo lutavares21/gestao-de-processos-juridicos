@@ -51,6 +51,22 @@
 
         {% if processos %}
 
+        <div style="display:flex; flex-wrap:wrap; gap:18px; align-items:center; background:var(--papel-cartao); border:1px solid var(--borda); border-radius:4px; padding:10px 16px; margin-bottom:16px; font-size:13px; color:var(--texto-suave);">
+          <span><strong>Risco:</strong></span>
+          <span style="display:flex; align-items:center; gap:7px;">
+            <span style="width:11px; height:11px; border-radius:50%; display:inline-block; background:var(--risco-provavel);"></span>
+            Provável — acima de 50%
+          </span>
+          <span style="display:flex; align-items:center; gap:7px;">
+            <span style="width:11px; height:11px; border-radius:50%; display:inline-block; background:var(--risco-possivel);"></span>
+            Possível — 35% a 50%
+          </span>
+          <span style="display:flex; align-items:center; gap:7px;">
+            <span style="width:11px; height:11px; border-radius:50%; display:inline-block; background:var(--risco-remoto);"></span>
+            Remoto — abaixo de 35%
+          </span>
+        </div>
+
         {% set graus_instancia = {
           'primeira_instancia': '1ª Instância',
           'segunda_instancia_trt': '2ª Instância - TRT',
