@@ -252,6 +252,10 @@
             </div>
           </div>
           <div class="linha">
+            <div class="campo campo-pequeno">
+              <label>Status</label>
+              <div class="valor"><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></div>
+            </div>
             <div class="campo">
               <label>Grau/Instância atual</label>
               <div class="valor">
@@ -262,12 +266,6 @@
                 {% elif p.grau_instancia == 'nao_informado' %}Não informado
                 {% else %}—{% endif %}
               </div>
-            </div>
-          </div>
-          <div class="linha">
-            <div class="campo campo-pequeno">
-              <label>Status</label>
-              <div class="valor"><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></div>
             </div>
             <div class="campo campo-pequeno">
               <label>Risco</label>
