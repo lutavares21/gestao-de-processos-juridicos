@@ -600,15 +600,29 @@ input[readonly] {
 
 /* --- Página de detalhe do processo (somente leitura) --- */
 .campo .valor {
-  padding: 9px 0 4px;
+  padding: 9px 11px;
+  min-height: 38px;
   font-size: 14px;
   color: var(--texto);
+  background: #f0efe9;
+  border: 1px solid var(--borda);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  word-break: break-word;
+}
+
+.campo .valor.texto-vazio {
+  color: var(--texto-suave);
 }
 
 .lista-itens {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 11px;
+  background: #f0efe9;
+  border: 1px solid var(--borda);
+  border-radius: 3px;
 }
 
 .lista-itens li {
