@@ -418,6 +418,17 @@ input[readonly] {
   overflow-x: auto;
 }
 
+.scroll-topo {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 16px;
+  margin-bottom: 6px;
+}
+
+.scroll-topo > div {
+  height: 1px;
+}
+
 .tabela-processos {
   width: 100%;
   border-collapse: collapse;

@@ -75,7 +75,9 @@
           'nao_informado': 'Não informado'
         } %}
 
-        <div class="tabela-wrap">
+        <div class="scroll-topo" id="scrollTopo"><div id="scrollTopoInterno"></div></div>
+
+        <div class="tabela-wrap" id="tabelaWrap">
           <table class="tabela-processos">
             <thead>
               <tr>
@@ -133,6 +135,35 @@
       </div>
     </div>
   </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const topo = document.getElementById('scrollTopo');
+      const interno = document.getElementById('scrollTopoInterno');
+      const wrap = document.getElementById('tabelaWrap');
+      const tabela = wrap ? wrap.querySelector('table') : null;
+      if (!topo || !interno || !wrap || !tabela) return;
+
+      function sincronizarLargura() {
+        interno.style.width = tabela.scrollWidth + 'px';
+      }
+      sincronizarLargura();
+      window.addEventListener('resize', sincronizarLargura);
+
+      let sincronizando = false;
+      topo.addEventListener('scroll', () => {
+        if (sincronizando) return;
+        sincronizando = true;
+        wrap.scrollLeft = topo.scrollLeft;
+        sincronizando = false;
+      });
+      wrap.addEventListener('scroll', () => {
+        if (sincronizando) return;
+        sincronizando = true;
+        topo.scrollLeft = wrap.scrollLeft;
+        sincronizando = false;
+      });
+    });
+  </script>
 
 </body>
 </html>
