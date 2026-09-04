@@ -6,7 +6,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <style>
     /* ---- Estilos exclusivos do dashboard executivo ---- */
     :root{
@@ -408,9 +408,14 @@
     const paletaAmarelo = "#c08a1e";
     const paletaCinza = "#8a93a3";
 
+    if (typeof Chart === "undefined") {
+      console.error("Chart.js não carregou - verifique a conexão com o CDN.");
+    } else {
+
     Chart.defaults.font.family = "Inter, sans-serif";
     Chart.defaults.color = "#5b6472";
 
+    try {
     // Risco - barras horizontais (valor de exposição)
     new Chart(document.getElementById('graficoRisco'), {
       type: 'bar',
@@ -435,8 +440,10 @@
         scales: { x: { ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') } } }
       }
     });
+    } catch (e) { console.error("Erro no gráfico de risco:", e); }
 
     // Resultado - donut (4 categorias)
+    try {
     const resultadoDet = dadosDashboard.resultado_detalhado;
     const totalResultado = resultadoDet.vitorias + resultadoDet.parciais + resultadoDet.acordos + resultadoDet.derrotas;
     if (totalResultado > 0) {
@@ -459,8 +466,10 @@
         })
       );
     }
+    } catch (e) { console.error("Erro no gráfico de resultado:", e); }
 
     // Status - barras empilhadas (cível x trabalhista)
+    try {
     new Chart(document.getElementById('graficoStatus'), {
       type: 'bar',
       data: {
@@ -487,8 +496,10 @@
         scales: { x: { stacked: true }, y: { stacked: true, ticks: { precision: 0 } } }
       }
     });
+    } catch (e) { console.error("Erro no gráfico de status:", e); }
 
     // Evolução mensal - linha
+    try {
     new Chart(document.getElementById('graficoEvolucao'), {
       type: 'line',
       data: {
@@ -510,8 +521,10 @@
         scales: { y: { ticks: { precision: 0 } } }
       }
     });
+    } catch (e) { console.error("Erro no gráfico de evolução:", e); }
 
     // Financeiro - barras
+    try {
     new Chart(document.getElementById('graficoFinanceiro'), {
       type: 'bar',
       data: {
@@ -533,6 +546,9 @@
         scales: { y: { ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') } } }
       }
     });
+    } catch (e) { console.error("Erro no gráfico financeiro:", e); }
+
+    } // fim do if (typeof Chart !== "undefined")
   </script>
 
 </body>
