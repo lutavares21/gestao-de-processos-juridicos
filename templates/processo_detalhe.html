@@ -152,24 +152,24 @@
             </div>
           </div>
           <div class="linha">
-            <div class="campo">
+            <div class="campo campo-pequeno">
               <label>Próxima audiência</label>
               <div class="valor">{{ p.data_audiencia_1.strftime('%d/%m/%Y') if p.data_audiencia_1 else '—' }}</div>
             </div>
-            <div class="campo">
+            <div class="campo campo-pequeno">
+              <label>Horário da audiência</label>
+              <div class="valor">{{ p.audiencia_1_horario or '—' }}</div>
+            </div>
+            <div class="campo campo-pequeno">
               <label>Última audiência</label>
               <div class="valor">{{ p.data_audiencia_2.strftime('%d/%m/%Y') if p.data_audiencia_2 else '—' }}</div>
             </div>
-            <div class="campo">
+            <div class="campo campo-pequeno">
               <label>Audiência inicial</label>
               <div class="valor">{{ p.data_audiencia_3.strftime('%d/%m/%Y') if p.data_audiencia_3 else '—' }}</div>
             </div>
           </div>
           <div class="linha">
-            <div class="campo campo-pequeno">
-              <label>Horário da audiência</label>
-              <div class="valor">{{ p.audiencia_1_horario or '—' }}</div>
-            </div>
             <div class="campo">
               <label>Modalidade da audiência</label>
               <div class="valor">
@@ -180,8 +180,6 @@
                 {% else %}—{% endif %}
               </div>
             </div>
-          </div>
-          <div class="linha">
             <div class="campo">
               <label>Link da audiência</label>
               <div class="valor">
