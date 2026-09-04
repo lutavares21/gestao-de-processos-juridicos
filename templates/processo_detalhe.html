@@ -256,7 +256,7 @@
           <div class="linha">
             <div class="campo campo-pequeno">
               <label>Status</label>
-              <div class="valor"><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></div>
+              <div class="valor valor-sem-caixa"><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></div>
             </div>
             <div class="campo">
               <label>Grau/Instância atual</label>
@@ -271,7 +271,7 @@
             </div>
             <div class="campo campo-pequeno">
               <label>Risco</label>
-              <div class="valor">
+              <div class="valor valor-sem-caixa">
                 {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif %}
               </div>
             </div>
