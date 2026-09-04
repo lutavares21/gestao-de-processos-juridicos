@@ -31,6 +31,8 @@
 {% set tipo_passivo = 'reclamada' if eh_trabalhista else 'reu' %}
 {% set rotulo_ativo = 'Reclamante(s)' if eh_trabalhista else 'Autor(es)' %}
 {% set rotulo_passivo = 'Reclamada' if eh_trabalhista else 'Réu(s)' %}
+{% set rotulo_adv_ativo = 'Advogado(s) do reclamante' if eh_trabalhista else 'Advogado(s) do autor' %}
+{% set rotulo_adv_passivo = 'Advogado(s) da reclamada' if eh_trabalhista else 'Advogado(s) do réu' %}
 {% set nomes_ativo = p.partes|selectattr('tipo', 'equalto', tipo_ativo)|list %}
 {% set nomes_passivo = p.partes|selectattr('tipo', 'equalto', tipo_passivo)|list %}
 {% set adv_autor = p.advogados|selectattr('lado', 'equalto', 'autor')|list %}
@@ -76,7 +78,7 @@
 
         <a class="link-voltar" href="{{ url_for('processos_civel') if p.origem_cadastro == 'civel' else url_for('processos_trabalhista') }}">← Voltar para a listagem</a>
 
-        <!-- Identificação -->
+        <!-- 1. IDENTIFICAÇÃO -->
         <div class="secao">
           <h2>Identificação</h2>
           <div class="linha">
@@ -109,46 +111,25 @@
           </div>
         </div>
 
-        <!-- Organização interna -->
+        <!-- 2. DATAS DE DISTRIBUIÇÃO, AUDIÊNCIAS, ARQUIVAMENTO E VALOR DA CAUSA -->
         <div class="secao">
-          <h2>Organização interna</h2>
-          <div class="linha">
-            <div class="campo">
-              <label>Centro de resultado</label>
-              <div class="valor">{{ p.centro_resultado or '—' }}</div>
-            </div>
-            <div class="campo">
-              <label>Escritório</label>
-              <div class="valor">{{ p.escritorio or '—' }}</div>
-            </div>
-          </div>
-          {% if p.centro_resultado == 'rateio' and p.rateio_crs %}
-          <div class="campo">
-            <label>Rateio entre os CRs</label>
-            <ul class="lista-itens">
-              {% for r in p.rateio_crs %}
-              <li>{{ r.centro_resultado }}</li>
-              {% endfor %}
-            </ul>
-          </div>
-          {% endif %}
-        </div>
-
-        <!-- Datas e audiências -->
-        <div class="secao">
-          <h2>Datas e audiências</h2>
+          <h2>Datas de Distribuição, Audiências, Arquivamento e Valor da Causa</h2>
           <div class="linha">
             <div class="campo">
               <label>Data de distribuição</label>
               <div class="valor">{{ p.data_distribuicao.strftime('%d/%m/%Y') if p.data_distribuicao else '—' }}</div>
             </div>
             <div class="campo">
-              <label>Tempo de tramitação</label>
-              <div class="valor">{{ p.dias_ativos ~ ' dias' if p.dias_ativos is not none else '—' }}</div>
+              <label>Valor da causa</label>
+              <div class="valor">{{ p.valor_causa|moeda }}</div>
             </div>
             <div class="campo">
               <label>Data do arquivamento</label>
               <div class="valor">{{ p.data_arquivamento.strftime('%d/%m/%Y') if p.data_arquivamento else '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>Tempo de tramitação</label>
+              <div class="valor">{{ p.dias_ativos ~ ' dias' if p.dias_ativos is not none else '—' }}</div>
             </div>
           </div>
           <div class="linha">
@@ -189,100 +170,85 @@
           </div>
         </div>
 
-        <!-- Advogados e parte contrária -->
-        <div class="linha">
-          <div class="secao" style="flex:1 1 300px;">
-            <h2>{{ rotulo_ativo }}</h2>
-            <div class="campo">
-              <label>Nome(s)</label>
-              {% if nomes_ativo %}
-              <ul class="lista-itens">
-                {% for a in nomes_ativo %}<li>{{ a.nome }}</li>{% endfor %}
-              </ul>
-              {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
-            </div>
-            <div class="campo">
-              <label>Advogado(s)</label>
-              {% if adv_autor %}
-              <ul class="lista-itens">
-                {% for a in adv_autor %}<li>{{ a.nome }}{{ ' — OAB ' ~ a.oab if a.oab else '' }}</li>{% endfor %}
-              </ul>
-              {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
-            </div>
+        <!-- 3. PARTES ENVOLVIDAS -->
+        <div class="secao">
+          <h2>Partes envolvidas</h2>
+
+          <div class="campo">
+            <label>{{ rotulo_ativo }}</label>
+            {% if nomes_ativo %}
+            <ul class="lista-itens">
+              {% for a in nomes_ativo %}<li>{{ a.nome }}</li>{% endfor %}
+            </ul>
+            {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
           </div>
 
-          <div class="secao" style="flex:1 1 300px;">
-            <h2>{{ rotulo_passivo }}</h2>
-            <div class="campo">
-              <label>Nome(s)</label>
-              {% if nomes_passivo %}
-              <ul class="lista-itens">
-                {% for r in nomes_passivo %}<li>{{ r.nome }}</li>{% endfor %}
-              </ul>
-              {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
-            </div>
-            <div class="campo">
-              <label>Advogado(s)</label>
-              {% if adv_reu %}
-              <ul class="lista-itens">
-                {% for a in adv_reu %}<li>{{ a.nome }}{{ ' — OAB ' ~ a.oab if a.oab else '' }}</li>{% endfor %}
-              </ul>
-              {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
-            </div>
+          <div class="campo" style="margin-top:18px;">
+            <label>{{ rotulo_adv_ativo }}</label>
+            {% if adv_autor %}
+            <ul class="lista-itens">
+              {% for a in adv_autor %}<li>{{ a.nome }}{{ ' — OAB ' ~ a.oab if a.oab else '' }}</li>{% endfor %}
+            </ul>
+            {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--borda);margin:22px 0;">
+
+          <div class="campo">
+            <label>{{ rotulo_passivo }}</label>
+            {% if nomes_passivo %}
+            <ul class="lista-itens">
+              {% for r in nomes_passivo %}<li>{{ r.nome }}</li>{% endfor %}
+            </ul>
+            {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
+          </div>
+
+          <div class="campo" style="margin-top:18px;">
+            <label>{{ rotulo_adv_passivo }}</label>
+            {% if adv_reu %}
+            <ul class="lista-itens">
+              {% for a in adv_reu %}<li>{{ a.nome }}{{ ' — OAB ' ~ a.oab if a.oab else '' }}</li>{% endfor %}
+            </ul>
+            {% else %}<div class="valor texto-vazio">Nenhum informado</div>{% endif %}
           </div>
         </div>
 
-        <!-- Pedidos: cível ou trabalhista, conforme origem -->
-        {% if p.origem_cadastro == 'civel' %}
+        <!-- 4. ORGANIZAÇÃO INTERNA -->
         <div class="secao">
-          <h2>Pedidos e requerimentos</h2>
-          {% if p.pedidos_civeis %}
-          <ul class="lista-itens">
-            {% for ped in p.pedidos_civeis %}<li>{{ ped.descricao }}</li>{% endfor %}
-          </ul>
-          {% else %}<div class="valor texto-vazio">Nenhum pedido marcado</div>{% endif %}
-        </div>
-        {% elif p.origem_cadastro == 'trabalhista' %}
-        <div class="secao">
-          <h2>Pedidos / verbas trabalhistas</h2>
-          {% if p.pedidos_trabalhistas %}
-          <ul class="lista-itens">
-            {% for ped in p.pedidos_trabalhistas %}
-            <li>
-              {{ ped.verba }} — {{ ped.valor|moeda }}
-              <span class="selo-pedido {{ ped.status or 'em_analise' }}">
-                {% if ped.status == 'deferido' %}Deferido{% elif ped.status == 'indeferido' %}Indeferido{% else %}Em análise{% endif %}
-              </span>
-            </li>
-            {% endfor %}
-          </ul>
-          {% else %}<div class="valor texto-vazio">Nenhuma verba lançada</div>{% endif %}
-        </div>
-        {% endif %}
-
-        <!-- Movimentos -->
-        <div class="secao">
-          <h2>Movimentações</h2>
-          {% if p.movimentos %}
-          <ul class="lista-itens">
-            {% for m in p.movimentos|sort(attribute='data_movimento') %}
-            <li>{{ m.data_movimento.strftime('%d/%m/%Y') if m.data_movimento else '—' }} — {{ m.tipo_movimento }}</li>
-            {% endfor %}
-          </ul>
-          {% else %}<div class="valor texto-vazio">Nenhuma movimentação registrada</div>{% endif %}
+          <h2>Organização interna</h2>
+          <div class="linha">
+            <div class="campo">
+              <label>Centro de resultado</label>
+              <div class="valor">{{ p.centro_resultado or '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>Escritório</label>
+              <div class="valor">{{ p.escritorio or '—' }}</div>
+            </div>
+          </div>
+          {% if p.centro_resultado == 'rateio' and p.rateio_crs %}
+          <div class="campo">
+            <label>Rateio entre os CRs</label>
+            <ul class="lista-itens">
+              {% for r in p.rateio_crs %}
+              <li>{{ r.centro_resultado }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
         </div>
 
-        <!-- Resultado -->
+        <!-- 5. RESULTADO, STATUS E RISCO -->
         <div class="secao">
           <h2>Resultado, status e risco</h2>
           <div class="linha">
             <div class="campo">
-              <label>Sentença</label>
-              <div class="valor">{{ p.sentenca|title if p.sentenca else '—' }}</div>
-            </div>
-            <div class="campo">
               <label>Resultado</label>
               <div class="valor">{{ p.resultado|replace('_', ' ')|title if p.resultado else '—' }}</div>
+            </div>
+            <div class="campo">
+              <label>Sentença</label>
+              <div class="valor">{{ p.sentenca|replace('_', ' ')|title if p.sentenca else '—' }}</div>
             </div>
           </div>
           <div class="linha">
@@ -308,34 +274,80 @@
               {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif %}
             </div>
           </div>
+        </div>
+
+        <!-- 6. PEDIDOS E REQUERIMENTOS -->
+        {% if p.origem_cadastro == 'civel' %}
+        <div class="secao">
+          <h2>Pedidos e requerimentos</h2>
+          {% if p.pedidos_civeis %}
+          <ul class="lista-itens">
+            {% for ped in p.pedidos_civeis %}<li>{{ ped.descricao }}</li>{% endfor %}
+          </ul>
+          {% else %}<div class="valor texto-vazio">Nenhum pedido marcado</div>{% endif %}
+        </div>
+        {% elif p.origem_cadastro == 'trabalhista' %}
+        <div class="secao">
+          <h2>Pedidos e requerimentos</h2>
+          {% if p.pedidos_trabalhistas %}
+          <ul class="lista-itens">
+            {% for ped in p.pedidos_trabalhistas %}
+            <li>
+              {{ ped.verba }} — {{ ped.valor|moeda }}
+              <span class="selo-pedido {{ ped.status or 'em_analise' }}">
+                {% if ped.status == 'deferido' %}Deferido{% elif ped.status == 'indeferido' %}Indeferido{% else %}Em análise{% endif %}
+              </span>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}<div class="valor texto-vazio">Nenhuma verba lançada</div>{% endif %}
+        </div>
+        {% endif %}
+
+        <!-- 7. ACOMPANHAMENTO -->
+        <div class="secao">
+          <h2>Acompanhamento</h2>
+
+          <label>Últimos movimentos</label>
+          {% if p.movimentos %}
+          <ul class="lista-itens">
+            {% for m in p.movimentos|sort(attribute='data_movimento') %}
+            <li>{{ m.data_movimento.strftime('%d/%m/%Y') if m.data_movimento else '—' }} — {{ m.tipo_movimento }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}<div class="valor texto-vazio">Nenhuma movimentação registrada</div>{% endif %}
+
+          <div class="campo" style="margin-top:18px;">
+            <label>Resumo do processo</label>
+            <div class="valor" style="min-height:80px;align-items:flex-start;">{{ p.resumo or '—' }}</div>
+          </div>
+
           <div class="campo">
-            <label>Resumo</label>
-            <div class="valor">{{ p.resumo or '—' }}</div>
+            <label>Relatório importado</label>
+            <div class="valor">
+              {% if p.arquivo_relatorio %}{{ p.arquivo_relatorio.split('/')[-1] }}{% else %}—{% endif %}
+            </div>
           </div>
         </div>
 
-        <!-- Financeiro -->
+        <!-- 8. VALORES FINANCEIROS -->
         <div class="secao">
-          <h2>Financeiro</h2>
+          <h2>Valores financeiros</h2>
           <div class="linha">
-            <div class="campo">
-              <label>Valor da causa</label>
-              <div class="valor">{{ p.valor_causa|moeda }}</div>
-            </div>
             <div class="campo">
               <label>Valor final pago</label>
               <div class="valor">{{ p.valor_final|moeda }}</div>
             </div>
             <div class="campo">
-              <label>Valor recursal</label>
-              <div class="valor">{{ p.deposito_recursal|moeda }}</div>
-            </div>
-          </div>
-          <div class="linha">
-            <div class="campo">
               <label>Honorários advocatícios</label>
               <div class="valor">{{ p.honorarios_advogado|moeda }}</div>
             </div>
+            <div class="campo">
+              <label>Economia gerada</label>
+              <div class="valor">{{ p.economia_gerada|moeda }}</div>
+            </div>
+          </div>
+          <div class="linha">
             <div class="campo">
               <label>Honorários periciais</label>
               <div class="valor">{{ p.honorarios_periciais|moeda }}</div>
@@ -344,8 +356,10 @@
               <label>Custas processuais</label>
               <div class="valor">{{ p.custas_processuais|moeda }}</div>
             </div>
-          </div>
-          <div class="linha">
+            <div class="campo">
+              <label>Depósito recursal</label>
+              <div class="valor">{{ p.deposito_recursal|moeda }}</div>
+            </div>
             <div class="campo">
               <label>Valor do alvará</label>
               <div class="valor">{{ p.valor_alvara|moeda }}</div>
