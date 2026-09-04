@@ -235,7 +235,7 @@
         {% if dados.atencao_diretoria %}
         <div class="dash-alerta">
           <div class="dash-alerta-titulo">⚠ Atenção</div>
-          <div class="dash-alerta-subtitulo">Processos ativos com risco provável de perda, por maior exposição financeira</div>
+          <div class="dash-alerta-subtitulo">Processos ativos com risco provável de perda.</div>
           {% for a in dados.atencao_diretoria %}
           <div class="dash-alerta-linha">
             <span class="num">{{ a.numero_processo }}</span>
@@ -312,7 +312,7 @@
             <div style="margin-top:22px;">
               <table class="dash-matriz">
                 <thead>
-                  <tr><th>Risco \ Impacto</th><th>Baixo</th><th>Médio</th><th>Alto</th></tr>
+                  <tr><th>Risco</th><th>Baixo</th><th>Médio</th><th>Alto</th></tr>
                 </thead>
                 <tbody>
                   {% for nivel, rotulo, cor in [('provavel','Provável','#b3402f'), ('possivel','Possível','#c08a1e'), ('remoto','Remoto','#1f8a5f')] %}
