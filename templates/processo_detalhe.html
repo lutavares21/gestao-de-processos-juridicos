@@ -265,14 +265,18 @@
                 {% else %}—{% endif %}
               </div>
             </div>
-            <div class="campo campo-pequeno">
-              <label>Status</label>
-              <div class="valor valor-sem-caixa"><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></div>
-            </div>
-            <div class="campo campo-pequeno">
-              <label>Risco</label>
-              <div class="valor valor-sem-caixa">
-                {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif %}
+            <div class="campo">
+              <div style="display:flex; gap:28px;">
+                <div>
+                  <label>Status</label>
+                  <div class="valor valor-sem-caixa"><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></div>
+                </div>
+                <div>
+                  <label>Risco</label>
+                  <div class="valor valor-sem-caixa">
+                    {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif %}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
