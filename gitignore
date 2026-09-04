@@ -1,0 +1,17 @@
+# Banco de dados local (não deve ir para o repositório)
+instance/
+*.db
+
+# Script com a senha do primeiro usuário - nunca deve ir para o GitHub
+seed_usuario.py
+
+# Arquivos temporários do Python
+__pycache__/
+*.pyc
+
+# Ambiente virtual, se você criar um
+venv/
+env/
+
+# Configurações do VS Code (opcional manter fora do repositório)
+.vscode/

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Gestão de Processos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="pagina-inicio">
+
+    <div class="inicio-topo">
+      <h1>Gestão de Processos Jurídicos</h1>
+    </div>
+
+    <div class="caixa-login">
+      <div class="bloco-inicio">
+        <h2>Entrar</h2>
+
+        {% if erro_login %}
+        <div class="flash flash-erro">Usuário ou senha incorretos.</div>
+        {% endif %}
+
+        {% if get_flashed_messages() %}
+        <div class="flash flash-erro">{{ get_flashed_messages()[0] }}</div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('login') }}">
+          <div class="campo">
+            <label for="usuario">Usuário</label>
+            <input type="text" id="usuario" name="usuario" required autofocus>
+          </div>
+          <div class="campo">
+            <label for="senha">Senha</label>
+            <input type="password" id="senha" name="senha" required>
+          </div>
+          <button type="submit" class="btn btn-salvar">Entrar</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
