@@ -79,7 +79,7 @@
             <div class="linha">
               <div class="campo">
                 <label for="f_numero">Número do processo</label>
-                <input type="text" id="f_numero" name="numero_processo" value="{{ filtros.get('numero_processo', '') }}" placeholder="Buscar por número">
+                <input type="text" id="f_numero" name="numero_processo" value="{{ filtros.get('numero_processo', '') }}" placeholder="0000000-00.0000.0.00.0000" maxlength="25" oninput="mascararNumeroProcesso(this)">
               </div>
               <div class="campo">
                 <label for="f_parte">Reclamante ou Reclamada</label>
@@ -95,7 +95,7 @@
               </div>
             </div>
 
-            <div id="filtros_avancados" class="{{ '' if filtros_ativos else 'oculto' }}">
+            <div id="filtros_avancados" class="oculto">
               <div class="linha">
                 <div class="campo">
                   <label for="f_uf">UF</label>
@@ -299,6 +299,19 @@
     </div>
   </div>
   <script>
+    // Aplica a máscara 0000000-00.0000.0.00.0000 (padrão CNJ) conforme o usuário digita
+    function mascararNumeroProcesso(input) {
+      let digitos = input.value.replace(/\D/g, '').slice(0, 20);
+      let saida = '';
+      if (digitos.length > 0) saida = digitos.substring(0, 7);
+      if (digitos.length > 7) saida += '-' + digitos.substring(7, 9);
+      if (digitos.length > 9) saida += '.' + digitos.substring(9, 13);
+      if (digitos.length > 13) saida += '.' + digitos.substring(13, 14);
+      if (digitos.length > 14) saida += '.' + digitos.substring(14, 16);
+      if (digitos.length > 16) saida += '.' + digitos.substring(16, 20);
+      input.value = saida;
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       const topo = document.getElementById('scrollTopo');
       const interno = document.getElementById('scrollTopoInterno');
