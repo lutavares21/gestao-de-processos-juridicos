@@ -104,6 +104,15 @@
                 <label for="comarca">Comarca</label>
                 <input type="text" id="comarca" name="comarca" value="{{ p.comarca or '' }}">
               </div>
+              <div class="campo campo-pequeno">
+                <label for="uf">UF</label>
+                <select id="uf" name="uf">
+                  <option value="">Selecione</option>
+                  {% for sigla in ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'] %}
+                  <option value="{{ sigla }}" {% if p.uf == sigla %}selected{% endif %}>{{ sigla }}</option>
+                  {% endfor %}
+                </select>
+              </div>
               <div class="campo">
                 <label for="tipo_acao">{{ 'Classe processual' if eh_trabalhista else 'Tipo de ação' }}</label>
                 {% if eh_trabalhista %}

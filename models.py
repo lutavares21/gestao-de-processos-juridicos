@@ -25,6 +25,7 @@ class Processo(db.Model):
     numero_processo = db.Column(db.String(50), nullable=False, unique=True)
     juizado = db.Column(db.String(120))
     comarca = db.Column(db.String(120))
+    uf = db.Column(db.String(2))
     tipo_acao = db.Column(db.String(50), nullable=False)
     # Valores possíveis para tipo_acao:
     # 'trabalhista', 'civel', 'juizado_especial_civel', 'tributario',

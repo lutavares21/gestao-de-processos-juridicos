@@ -99,6 +99,10 @@
               <div class="valor">{{ p.comarca or '—' }}</div>
             </div>
             <div class="campo">
+              <label>UF</label>
+              <div class="valor">{{ p.uf or '—' }}</div>
+            </div>
+            <div class="campo">
               <label>{{ 'Classe processual' if eh_trabalhista else 'Tipo de ação' }}</label>
               <div class="valor">{{ tipo_acao_texto }}</div>
             </div>

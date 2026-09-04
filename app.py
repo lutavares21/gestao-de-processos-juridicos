@@ -49,6 +49,7 @@ def preencher_campos_processo(processo, form):
     processo.numero_processo = form.get("numero_processo")
     processo.juizado = form.get("juizado")
     processo.comarca = form.get("comarca")
+    processo.uf = form.get("uf")
     processo.tipo_acao = form.get("tipo_acao")
     processo.data_distribuicao = texto_para_data(form.get("data_distribuicao"))
     processo.valor_causa = texto_para_numero(form.get("valor_causa"))
