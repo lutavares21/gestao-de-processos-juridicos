@@ -13,6 +13,9 @@
 
     <div class="inicio-topo">
       <h1>Gestão de Processos Jurídicos</h1>
+      <div class="topo-usuario">
+        Olá, {{ current_user.nome }} · <a href="{{ url_for('logout') }}">Sair</a>
+      </div>
     </div>
 
     <div class="inicio-blocos">

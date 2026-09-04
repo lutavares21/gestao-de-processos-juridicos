@@ -7,8 +7,20 @@ Cada classe abaixo representa uma tabela do banco de dados.
 
 from datetime import date
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 
 db = SQLAlchemy()
+
+
+class Usuario(db.Model, UserMixin):
+    """Usuário com acesso ao sistema. A senha nunca é guardada em texto
+    puro - só o hash dela (gerado com werkzeug.security)."""
+    __tablename__ = "usuarios"
+
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(120), nullable=False)
+    usuario = db.Column(db.String(60), nullable=False, unique=True)  # login
+    senha_hash = db.Column(db.String(255), nullable=False)
 
 
 class Processo(db.Model):

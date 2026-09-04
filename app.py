@@ -4,18 +4,35 @@ App Flask - Gestão de Processos Jurídicos
 """
 
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_login import (
+    LoginManager, login_user, logout_user, login_required, current_user,
+)
 from sqlalchemy.exc import IntegrityError
-from models import db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR, PedidoCivel
+from werkzeug.security import check_password_hash
+from models import db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR, PedidoCivel, Usuario
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///processos.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# Chave usada para proteger a sessão de login. Em algum momento vale trocar
+# por uma variável de ambiente, mas por enquanto um valor fixo já funciona.
+app.config["SECRET_KEY"] = "troque-esta-chave-por-uma-string-aleatoria-depois"
 
 db.init_app(app)
 
 with app.app_context():
     db.create_all()
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+login_manager.login_message = "Faça login para acessar o sistema."
+
+
+@login_manager.user_loader
+def carregar_usuario(usuario_id):
+    return db.session.get(Usuario, int(usuario_id))
 
 
 @app.template_filter("moeda")
@@ -27,6 +44,34 @@ def formatar_moeda(valor):
     texto = f"{float(valor):,.2f}"
     texto = texto.replace(",", "_").replace(".", ",").replace("_", ".")
     return f"R$ {texto}"
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+
+    if request.method == "GET":
+        return render_template("login.html")
+
+    usuario_login = request.form.get("usuario", "").strip()
+    senha = request.form.get("senha", "")
+
+    usuario = Usuario.query.filter_by(usuario=usuario_login).first()
+
+    if usuario and check_password_hash(usuario.senha_hash, senha):
+        login_user(usuario)
+        proxima = request.args.get("next")
+        return redirect(proxima or url_for("index"))
+
+    return render_template("login.html", erro_login=True)
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("login"))
 
 
 def texto_para_data(valor):
@@ -149,6 +194,7 @@ def injetar_contadores_menu():
 
 
 @app.route("/")
+@login_required
 def index():
     return render_template("inicio.html")
 
@@ -160,11 +206,13 @@ def numero_processo_ja_existe(numero_processo):
 
 
 @app.route("/inicio")
+@login_required
 def inicio():
     return render_template("inicio.html")
 
 
 @app.route("/cadastro/civel", methods=["GET", "POST"])
+@login_required
 def cadastro_civel():
     if request.method == "GET":
         sucesso = request.args.get("sucesso") == "1"
@@ -199,6 +247,7 @@ def cadastro_civel():
 
 
 @app.route("/cadastro/trabalhista", methods=["GET", "POST"])
+@login_required
 def cadastro_trabalhista():
     if request.method == "GET":
         sucesso = request.args.get("sucesso") == "1"
@@ -238,6 +287,7 @@ def cadastro_trabalhista():
 
 
 @app.route("/processos/civel")
+@login_required
 def processos_civel():
     processos = (
         Processo.query.filter_by(origem_cadastro="civel")
@@ -248,6 +298,7 @@ def processos_civel():
 
 
 @app.route("/processos/trabalhista")
+@login_required
 def processos_trabalhista():
     query = Processo.query.filter_by(origem_cadastro="trabalhista")
     f = request.args
@@ -325,12 +376,14 @@ def processos_trabalhista():
 
 
 @app.route("/processo/<int:processo_id>")
+@login_required
 def processo_detalhe(processo_id):
     processo = Processo.query.get_or_404(processo_id)
     return render_template("processo_detalhe.html", p=processo)
 
 
 @app.route("/processo/<int:processo_id>/editar", methods=["GET", "POST"])
+@login_required
 def processo_editar(processo_id):
     processo = Processo.query.get_or_404(processo_id)
 
@@ -388,6 +441,7 @@ def processo_editar(processo_id):
 
 
 @app.route("/registro-processos")
+@login_required
 def registro_processos():
     def contar(origem=None, status=None):
         query = Processo.query
