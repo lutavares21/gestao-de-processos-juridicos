@@ -522,8 +522,28 @@ def registro_processos():
     dados["risco_sem_classificacao"] = contar(status="ativo", risco=None)
 
     # ------------------------------------------------------------------
-    # 4. RESULTADO - processos já com desfecho (ganhamos/perdemos/acordo)
+    # 4. RESULTADO - processos já com desfecho, em 4 categorias:
+    #    Vitórias = resultado "ganhamos" e sentença não é parcial
+    #    Parciais = sentença "procedente_parcial"
+    #    Acordos  = resultado "acordo"
+    #    Derrotas = resultado "perdemos"
+    #    Ajuste essa régua se a definição da diretoria for outra.
     # ------------------------------------------------------------------
+    vitorias_qtd = Processo.query.filter(
+        Processo.resultado == "ganhamos", Processo.sentenca != "procedente_parcial"
+    ).count()
+    parciais_qtd = Processo.query.filter(Processo.sentenca == "procedente_parcial").count()
+    acordos_qtd = contar(resultado="acordo")
+    derrotas_qtd = contar(resultado="perdemos")
+
+    dados["resultado_detalhado"] = {
+        "vitorias": vitorias_qtd,
+        "parciais": parciais_qtd,
+        "acordos": acordos_qtd,
+        "derrotas": derrotas_qtd,
+    }
+
+    # Mantido para o gráfico financeiro por resultado (usa o campo "resultado" bruto)
     dados["resultado"] = {
         chave: {
             "qtd": contar(resultado=chave),
@@ -531,12 +551,58 @@ def registro_processos():
         }
         for chave in ["ganhamos", "perdemos", "acordo"]
     }
-    total_com_desfecho = sum(v["qtd"] for v in dados["resultado"].values())
+    total_com_desfecho = vitorias_qtd + parciais_qtd + acordos_qtd + derrotas_qtd
     dados["taxa_exito"] = (
-        round(100 * dados["resultado"]["ganhamos"]["qtd"] / total_com_desfecho, 1)
+        round(100 * (vitorias_qtd + parciais_qtd) / total_com_desfecho, 1)
         if total_com_desfecho
         else None
     )
+
+    # ------------------------------------------------------------------
+    # 4b. MATRIZ DE RISCO - Provável/Possível/Remoto x Baixo/Médio/Alto
+    #     impacto, calculado pelo valor da causa (só processos ativos).
+    #     Faixas: Baixo < R$50k · Médio R$50k-200k · Alto > R$200k
+    # ------------------------------------------------------------------
+    def faixa_impacto(valor):
+        valor = float(valor or 0)
+        if valor < 50_000:
+            return "baixo"
+        if valor < 200_000:
+            return "medio"
+        return "alto"
+
+    matriz = {nivel: {"baixo": 0, "medio": 0, "alto": 0} for nivel in ["provavel", "possivel", "remoto"]}
+    ativos = Processo.query.filter_by(status="ativo").all()
+    for p in ativos:
+        if p.risco in matriz:
+            matriz[p.risco][faixa_impacto(p.valor_causa)] += 1
+    dados["matriz_risco"] = matriz
+
+    # ------------------------------------------------------------------
+    # 4c. ATENÇÃO DA DIRETORIA - top 5 processos ativos de risco provável,
+    #     ordenados pela maior exposição financeira.
+    # ------------------------------------------------------------------
+    alertas_processos = (
+        Processo.query.filter_by(status="ativo", risco="provavel")
+        .order_by(Processo.valor_causa.desc())
+        .limit(5)
+        .all()
+    )
+    alertas = []
+    for p in alertas_processos:
+        motivo = None
+        if p.pedidos_trabalhistas:
+            motivo = max(p.pedidos_trabalhistas, key=lambda x: float(x.valor or 0)).verba
+        elif p.pedidos_civeis:
+            motivo = p.pedidos_civeis[0].descricao
+        if not motivo:
+            motivo = (p.tipo_acao or "").replace("_", " ").title() or "—"
+        alertas.append({
+            "numero_processo": p.numero_processo,
+            "valor_causa": float(p.valor_causa or 0),
+            "motivo": motivo,
+        })
+    dados["atencao_diretoria"] = alertas
 
     # ------------------------------------------------------------------
     # 5. TOP CENTROS DE RESULTADO por exposição em aberto
