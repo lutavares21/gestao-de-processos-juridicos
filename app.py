@@ -101,7 +101,7 @@ def usuarios():
 @admin_required
 def usuario_novo():
     if request.method == "GET":
-        return render_template("usuario_novo.html")
+        return render_template("novo_usuario.html")
 
     form = request.form
     nome = form.get("nome", "").strip()
@@ -128,7 +128,7 @@ def usuario_novo():
         erros.append("Já existe um usuário com esse login.")
 
     if erros:
-        return render_template("usuario_novo.html", erros=erros, valores=form)
+        return render_template("novo_usuario.html", erros=erros, valores=form)
 
     novo_usuario = Usuario(
         nome=nome,
@@ -143,7 +143,7 @@ def usuario_novo():
     except IntegrityError:
         db.session.rollback()
         erros.append("Já existe um usuário com esse login.")
-        return render_template("usuario_novo.html", erros=erros, valores=form)
+        return render_template("novo_usuario.html", erros=erros, valores=form)
 
     return redirect(url_for("usuarios"))
 
