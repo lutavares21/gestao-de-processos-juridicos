@@ -148,6 +148,82 @@ def operador_novo():
     return redirect(url_for("operadores"))
 
 
+@app.route("/operadores/<int:operador_id>/editar", methods=["GET", "POST"])
+@admin_required
+def operador_editar(operador_id):
+    operador = db.session.get(Operador, operador_id)
+    if operador is None:
+        abort(404)
+
+    if request.method == "GET":
+        return render_template("operador_editar.html", operador=operador)
+
+    form = request.form
+    nome = form.get("nome", "").strip()
+    login_novo = form.get("login", "").strip()
+    email = form.get("email", "").strip()
+    senha = form.get("senha", "")
+    confirmar_senha = form.get("confirmar_senha", "")
+    nivel = form.get("nivel", "comum")
+    if nivel not in ("administrador", "comum"):
+        nivel = "comum"
+
+    erros = []
+    if not nome:
+        erros.append("Informe o nome.")
+    if not login_novo:
+        erros.append("Informe o login.")
+    if not email:
+        erros.append("Informe o e-mail.")
+    # A senha é opcional na edição - só troca se o campo for preenchido.
+    if senha and senha != confirmar_senha:
+        erros.append("A senha e a confirmação de senha não coincidem.")
+
+    login_em_uso = Operador.query.filter(
+        func.lower(Operador.login) == login_novo.lower(),
+        Operador.id != operador.id,
+    ).first()
+    if login_novo and login_em_uso:
+        erros.append("Já existe outro operador com esse login.")
+
+    if erros:
+        return render_template("operador_editar.html", operador=operador, erros=erros, valores=form)
+
+    operador.nome = nome
+    operador.login = login_novo
+    operador.email = email
+    operador.nivel = nivel
+    if senha:
+        operador.senha_hash = generate_password_hash(senha)
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        erros.append("Já existe outro operador com esse login.")
+        return render_template("operador_editar.html", operador=operador, erros=erros, valores=form)
+
+    return redirect(url_for("operadores"))
+
+
+@app.route("/operadores/<int:operador_id>/excluir", methods=["POST"])
+@admin_required
+def operador_excluir(operador_id):
+    operador = db.session.get(Operador, operador_id)
+    if operador is None:
+        abort(404)
+
+    # Não deixa o administrador excluir a própria conta enquanto está
+    # logado com ela - evitaria ele mesmo se trancar fora do sistema.
+    if operador.id == current_user.id:
+        erros = ["Você não pode excluir o próprio usuário enquanto estiver logado com ele."]
+        return render_template("operador_editar.html", operador=operador, erros=erros)
+
+    db.session.delete(operador)
+    db.session.commit()
+    return redirect(url_for("operadores"))
+
+
 def texto_para_data(valor):
     """Converte string 'AAAA-MM-DD' do formulário em objeto date. Retorna None se vazio."""
     if not valor:
