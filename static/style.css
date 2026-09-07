@@ -362,6 +362,25 @@ textarea {
   background: var(--selo-claro);
 }
 
+.btn-excluir {
+  background: var(--risco-provavel);
+  color: #fff;
+  padding: 10px 20px;
+  font-size: 13.5px;
+}
+
+.btn-excluir:hover {
+  background: #7d2c2c;
+}
+
+.secao-perigo {
+  border-left: 4px solid var(--risco-provavel);
+}
+
+.secao-perigo h2 {
+  color: var(--risco-provavel);
+}
+
 .campo-grande {
   flex: 3 1 260px;
 }

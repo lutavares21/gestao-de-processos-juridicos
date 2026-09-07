@@ -66,6 +66,7 @@
                 <th>Login</th>
                 <th>E-mail</th>
                 <th>Nível</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -81,6 +82,7 @@
                   <span class="selo-status ativo">Comum</span>
                   {% endif %}
                 </td>
+                <td><a class="btn-detalhe" href="{{ url_for('operador_editar', operador_id=u.id) }}">Editar</a></td>
               </tr>
               {% endfor %}
             </tbody>
