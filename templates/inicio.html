@@ -46,6 +46,10 @@
         <div class="bloco-inicio">
           <div class="links-bloco">
             <a href="{{ url_for('registro_processos') }}">Registro de Processos</a>
+
+        {% if current_user.eh_administrador %}
+        <a href="{{ url_for('usuarios') }}">Usuários</a>
+        {% endif %}
           </div>
         </div>
       </div>
