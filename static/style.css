@@ -534,19 +534,19 @@ input[readonly] {
   margin: 0;
 }
 
-.inicio-topo .topo-usuario {
+.inicio-topo .topo-operador {
   color: #c9d2e3;
   font-size: 17px;
   margin-top: 10px;
 }
 
-.inicio-topo .topo-usuario a {
+.inicio-topo .topo-operador a {
   color: #fff;
   font-weight: 600;
   text-decoration: none;
 }
 
-.inicio-topo .topo-usuario a:hover {
+.inicio-topo .topo-operador a:hover {
   text-decoration: underline;
 }
 

@@ -20,7 +20,7 @@
         <h2>Entrar</h2>
 
         {% if erro_login %}
-        <div class="flash flash-erro">Usuário ou senha incorretos.</div>
+        <div class="flash flash-erro">Login ou senha incorretos.</div>
         {% endif %}
 
         {% if get_flashed_messages() %}
@@ -29,8 +29,8 @@
 
         <form method="POST" action="{{ url_for('login') }}">
           <div class="campo">
-            <label for="usuario">Usuário</label>
-            <input type="text" id="usuario" name="usuario" required autofocus>
+            <label for="login">Login</label>
+            <input type="text" id="login" name="login" required autofocus>
           </div>
           <div class="campo">
             <label for="senha">Senha</label>

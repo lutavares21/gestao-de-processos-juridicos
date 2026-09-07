@@ -39,7 +39,7 @@
         <a href="{{ url_for('registro_processos') }}">Registro de Processos</a>
 
         {% if current_user.eh_administrador %}
-        <a href="{{ url_for('usuarios') }}">Usuários</a>
+        <a href="{{ url_for('operadores') }}">Gestão de operadores</a>
         {% endif %}
       </nav>
     </aside>
@@ -402,7 +402,7 @@
   </template>
 
   <script>
-    // Aplica a máscara 0000000-00.0000.0.00.0000 (padrão CNJ) conforme o usuário digita
+    // Aplica a máscara 0000000-00.0000.0.00.0000 (padrão CNJ) conforme o operador digita
     function mascararNumeroProcesso(input) {
       let digitos = input.value.replace(/\D/g, '').slice(0, 20);
       let saida = '';

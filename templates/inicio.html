@@ -13,7 +13,7 @@
 
     <div class="inicio-topo">
       <h1>Gestão de Processos Jurídicos</h1>
-      <div class="topo-usuario">
+      <div class="topo-operador">
         Olá, {{ current_user.nome }} · <a href="{{ url_for('logout') }}">Sair</a>
       </div>
     </div>
@@ -48,7 +48,7 @@
             <a href="{{ url_for('registro_processos') }}">Registro de Processos</a>
 
         {% if current_user.eh_administrador %}
-        <a href="{{ url_for('usuarios') }}">Usuários</a>
+        <a href="{{ url_for('operadores') }}">Gestão de operadores</a>
         {% endif %}
           </div>
         </div>
