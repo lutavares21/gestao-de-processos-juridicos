@@ -49,9 +49,9 @@
           <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
           <ul class="submenu">
             <li><a href="{{ url_for('cadastro_civel') }}">Processo Cível</a></li>
-            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
             <li><a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a></li>
-            <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
+            <li><a href="#" class="oculto-visual">Processo Licitatórios</a></li>
+            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
           </ul>
         </div>
 
@@ -60,7 +60,7 @@
           <ul class="submenu">
             <li><a href="{{ url_for('processos_civel') }}">Processo Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a></li>
             <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
-            <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
             <li><a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a></li>
           </ul>
         </div>
@@ -69,6 +69,7 @@
 
         {% if current_user.eh_administrador %}
         <a href="{{ url_for('operadores') }}">Gestão de operadores</a>
+        <a href="{{ url_for('atividades') }}">Registro de Atividades</a>
         {% endif %}
 
       </nav>
@@ -275,13 +276,15 @@
             </div>
             <div class="campo">
               <div style="display:flex; gap:140px; justify-content:center;">
-                <div style="text-align:center;">
+                <div>
                   <label>Status</label>
                   <div class="valor valor-sem-caixa"><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></div>
                 </div>
-                <div style="text-align:center;">
+                <div>
                   <label>Risco</label>
-                  <div class="valor valor-sem-caixa">{%- if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif -%}</div>
+                  <div class="valor valor-sem-caixa">
+                    {%- if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif -%}
+                  </div>
                 </div>
               </div>
             </div>
