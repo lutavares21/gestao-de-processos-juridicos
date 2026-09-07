@@ -14,7 +14,7 @@
     <aside class="menu-lateral">
       <div class="logo-menu">Gestão de Processos</div>
       <nav>
-        <a href="{{ url_for('inicio') }}">Início</a>
+        <a href="{;{ url_for('inicio') }}">Início</a>
 
         <div class="item-com-submenu">
           <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
