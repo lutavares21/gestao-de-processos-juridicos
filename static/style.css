@@ -597,6 +597,19 @@ input[readonly] {
   opacity: 0.65;
 }
 
+.bloco-inicio.bloco-largo {
+  grid-column: 1 / -1;
+}
+
+.links-bloco.links-bloco-linha {
+  flex-direction: row;
+}
+
+.links-bloco.links-bloco-linha a {
+  flex: 1;
+  justify-content: center;
+}
+
 .bloco-inicio h2 {
   font-family: var(--fonte-titulo);
   font-size: 17px;
