@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Novo Operador - Gestão de Processos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="layout">
+
+    <aside class="menu-lateral">
+      <div class="logo-menu">Gestão de Processos</div>
+      <nav>
+        <a href="{{ url_for('inicio') }}">Início</a>
+
+        <div class="item-com-submenu">
+          <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('cadastro_civel') }}">Processos Cível</a></li>
+            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
+            <li><a href="{{ url_for('cadastro_trabalhista') }}">Processos Trabalhista</a></li>
+          </ul>
+        </div>
+
+        <div class="item-com-submenu">
+          <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a></li>
+            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
+            <li><a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a></li>
+          </ul>
+        </div>
+
+        <a href="{{ url_for('registro_processos') }}">Registro de Processos</a>
+
+        {% if current_user.eh_administrador %}
+        <a href="{{ url_for('operadores') }}" class="ativo">Gestão de operadores</a>
+        {% endif %}
+
+      </nav>
+    </aside>
+
+    <div class="conteudo">
+      <div class="cabecalho">
+        <h1>Novo Operador</h1>
+        <div class="subtitulo">Gestão de Processos Jurídicos</div>
+      </div>
+
+      <div class="container">
+
+        <a class="link-voltar" href="{{ url_for('operadores') }}">← Voltar para a lista de operadores</a>
+
+        {% if erros %}
+        <div class="flash flash-erro">
+          {% for erro in erros %}{{ erro }}{{ "<br>" | safe if not loop.last }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="secao">
+          <h2>Dados do operador</h2>
+
+          <form method="POST" action="{{ url_for('operador_novo') }}">
+            <div class="linha">
+              <div class="campo">
+                <label for="nome">Nome</label>
+                <input type="text" id="nome" name="nome" required value="{{ valores.nome if valores else '' }}">
+              </div>
+              <div class="campo">
+                <label for="login">Login</label>
+                <input type="text" id="login" name="login" required value="{{ valores.login if valores else '' }}">
+              </div>
+            </div>
+
+            <div class="linha">
+              <div class="campo">
+                <label for="email">E-mail</label>
+                <input type="text" id="email" name="email" required value="{{ valores.email if valores else '' }}">
+              </div>
+              <div class="campo">
+                <label for="nivel">Nível</label>
+                <select id="nivel" name="nivel">
+                  <option value="administrador" {% if valores and valores.nivel == 'administrador' %}selected{% endif %}>Administrador</option>
+                  <option value="comum" {% if not valores or valores.nivel != 'administrador' %}selected{% endif %}>Comum</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="linha">
+              <div class="campo">
+                <label for="senha">Senha</label>
+                <input type="password" id="senha" name="senha" required>
+              </div>
+              <div class="campo">
+                <label for="confirmar_senha">Confirmar senha</label>
+                <input type="password" id="confirmar_senha" name="confirmar_senha" required>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-salvar">Criar operador</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

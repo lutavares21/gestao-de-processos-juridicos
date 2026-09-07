@@ -12,16 +12,16 @@ from flask_login import UserMixin
 db = SQLAlchemy()
 
 
-class Usuario(db.Model, UserMixin):
-    """Usuário com acesso ao sistema. A senha nunca é guardada em texto
+class Operador(db.Model, UserMixin):
+    """Operador com acesso ao sistema. A senha nunca é guardada em texto
     puro - só o hash dela (gerado com werkzeug.security).
 
-    nivel: 'administrador' (mais funções, o chefe) ou 'comum' (operador)."""
-    __tablename__ = "usuarios"
+    nivel: 'administrador' (mais funções, o chefe) ou 'comum' (operador comum)."""
+    __tablename__ = "operadores"
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(120), nullable=False)
-    usuario = db.Column(db.String(60), nullable=False, unique=True)  # login
+    login = db.Column(db.String(60), nullable=False, unique=True)
     email = db.Column(db.String(150))
     senha_hash = db.Column(db.String(255), nullable=False)
     nivel = db.Column(db.String(20), nullable=False, default="comum")

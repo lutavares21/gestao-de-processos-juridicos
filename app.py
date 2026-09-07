@@ -12,7 +12,7 @@ from flask_login import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
-from models import db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR, PedidoCivel, Usuario
+from models import db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR, PedidoCivel, Operador
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///processos.db"
@@ -33,12 +33,12 @@ login_manager.login_message = "Faça login para acessar o sistema."
 
 
 @login_manager.user_loader
-def carregar_usuario(usuario_id):
-    return db.session.get(Usuario, int(usuario_id))
+def carregar_operador(operador_id):
+    return db.session.get(Operador, int(operador_id))
 
 
 def admin_required(f):
-    """Só deixa passar se o usuário logado for administrador.
+    """Só deixa passar se o operador logado for administrador.
     Quem não for recebe 403 (acesso negado)."""
     @wraps(f)
     @login_required
@@ -68,15 +68,15 @@ def login():
     if request.method == "GET":
         return render_template("login.html")
 
-    usuario_login = request.form.get("usuario", "").strip()
+    login_informado = request.form.get("login", "").strip()
     senha = request.form.get("senha", "")
 
-    usuario = Usuario.query.filter(
-        func.lower(Usuario.usuario) == usuario_login.lower()
+    operador = Operador.query.filter(
+        func.lower(Operador.login) == login_informado.lower()
     ).first()
 
-    if usuario and check_password_hash(usuario.senha_hash, senha):
-        login_user(usuario)
+    if operador and check_password_hash(operador.senha_hash, senha):
+        login_user(operador)
         proxima = request.args.get("next")
         return redirect(proxima or url_for("index"))
 
@@ -90,22 +90,22 @@ def logout():
     return redirect(url_for("login"))
 
 
-@app.route("/usuarios")
+@app.route("/operadores")
 @admin_required
-def usuarios():
-    lista = Usuario.query.order_by(Usuario.nome).all()
-    return render_template("usuarios.html", usuarios=lista)
+def operadores():
+    lista = Operador.query.order_by(Operador.nome).all()
+    return render_template("operadores.html", operadores=lista)
 
 
-@app.route("/usuarios/novo", methods=["GET", "POST"])
+@app.route("/operadores/novo", methods=["GET", "POST"])
 @admin_required
-def usuario_novo():
+def operador_novo():
     if request.method == "GET":
-        return render_template("novo_usuario.html")
+        return render_template("novo_operador.html")
 
     form = request.form
     nome = form.get("nome", "").strip()
-    login_novo = form.get("usuario", "").strip()
+    login_novo = form.get("login", "").strip()
     email = form.get("email", "").strip()
     senha = form.get("senha", "")
     confirmar_senha = form.get("confirmar_senha", "")
@@ -124,28 +124,28 @@ def usuario_novo():
         erros.append("Informe a senha.")
     if senha != confirmar_senha:
         erros.append("A senha e a confirmação de senha não coincidem.")
-    if login_novo and Usuario.query.filter(func.lower(Usuario.usuario) == login_novo.lower()).first():
-        erros.append("Já existe um usuário com esse login.")
+    if login_novo and Operador.query.filter(func.lower(Operador.login) == login_novo.lower()).first():
+        erros.append("Já existe um operador com esse login.")
 
     if erros:
-        return render_template("novo_usuario.html", erros=erros, valores=form)
+        return render_template("novo_operador.html", erros=erros, valores=form)
 
-    novo_usuario = Usuario(
+    novo_operador = Operador(
         nome=nome,
-        usuario=login_novo,
+        login=login_novo,
         email=email,
         senha_hash=generate_password_hash(senha),
         nivel=nivel,
     )
-    db.session.add(novo_usuario)
+    db.session.add(novo_operador)
     try:
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
-        erros.append("Já existe um usuário com esse login.")
-        return render_template("novo_usuario.html", erros=erros, valores=form)
+        erros.append("Já existe um operador com esse login.")
+        return render_template("novo_operador.html", erros=erros, valores=form)
 
-    return redirect(url_for("usuarios"))
+    return redirect(url_for("operadores"))
 
 
 def texto_para_data(valor):
