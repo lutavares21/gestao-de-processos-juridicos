@@ -271,15 +271,13 @@
             </div>
             <div class="campo">
               <div style="display:flex; gap:140px; justify-content:center;">
-                <div>
+                <div style="text-align:center;">
                   <label>Status</label>
                   <div class="valor valor-sem-caixa"><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></div>
                 </div>
-                <div>
+                <div style="text-align:center;">
                   <label>Risco</label>
-                  <div class="valor valor-sem-caixa">
-                    {%- if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif -%}
-                  </div>
+                  <div class="valor valor-sem-caixa">{%- if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif -%}</div>
                 </div>
               </div>
             </div>
