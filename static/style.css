@@ -685,6 +685,7 @@ input[readonly] {
   min-height: 0;
   background: transparent;
   border: none;
+  justify-content: center;
 }
 
 .lista-itens {
