@@ -607,20 +607,9 @@ input[readonly] {
   grid-column: 1 / -1;
 }
 
-.bloco-inicio.bloco-largo .links-bloco {
-  flex-direction: row;
-}
-
 .bloco-inicio.bloco-largo .links-bloco a {
-  flex: 1;
   justify-content: center;
   text-align: center;
-}
-
-@media (max-width: 640px) {
-  .bloco-inicio.bloco-largo .links-bloco {
-    flex-direction: column;
-  }
 }
 
 .bloco-inicio h2 {
