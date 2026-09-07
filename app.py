@@ -4,13 +4,14 @@ App Flask - Gestão de Processos Jurídicos
 """
 
 from datetime import datetime, date
-from flask import Flask, render_template, request, redirect, url_for, flash
+from functools import wraps
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_login import (
     LoginManager, login_user, logout_user, login_required, current_user,
 )
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from models import db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR, PedidoCivel, Usuario
 
 app = Flask(__name__)
@@ -36,6 +37,18 @@ def carregar_usuario(usuario_id):
     return db.session.get(Usuario, int(usuario_id))
 
 
+def admin_required(f):
+    """Só deixa passar se o usuário logado for administrador.
+    Quem não for recebe 403 (acesso negado)."""
+    @wraps(f)
+    @login_required
+    def decorado(*args, **kwargs):
+        if not current_user.eh_administrador:
+            abort(403)
+        return f(*args, **kwargs)
+    return decorado
+
+
 @app.template_filter("moeda")
 def formatar_moeda(valor):
     """Formata um número no padrão contábil brasileiro: R$ 1.234,56.
@@ -58,7 +71,9 @@ def login():
     usuario_login = request.form.get("usuario", "").strip()
     senha = request.form.get("senha", "")
 
-    usuario = Usuario.query.filter_by(usuario=usuario_login).first()
+    usuario = Usuario.query.filter(
+        func.lower(Usuario.usuario) == usuario_login.lower()
+    ).first()
 
     if usuario and check_password_hash(usuario.senha_hash, senha):
         login_user(usuario)
@@ -73,6 +88,64 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("login"))
+
+
+@app.route("/usuarios")
+@admin_required
+def usuarios():
+    lista = Usuario.query.order_by(Usuario.nome).all()
+    return render_template("usuarios.html", usuarios=lista)
+
+
+@app.route("/usuarios/novo", methods=["GET", "POST"])
+@admin_required
+def usuario_novo():
+    if request.method == "GET":
+        return render_template("usuario_novo.html")
+
+    form = request.form
+    nome = form.get("nome", "").strip()
+    login_novo = form.get("usuario", "").strip()
+    email = form.get("email", "").strip()
+    senha = form.get("senha", "")
+    confirmar_senha = form.get("confirmar_senha", "")
+    nivel = form.get("nivel", "comum")
+    if nivel not in ("administrador", "comum"):
+        nivel = "comum"
+
+    erros = []
+    if not nome:
+        erros.append("Informe o nome.")
+    if not login_novo:
+        erros.append("Informe o login.")
+    if not email:
+        erros.append("Informe o e-mail.")
+    if not senha:
+        erros.append("Informe a senha.")
+    if senha != confirmar_senha:
+        erros.append("A senha e a confirmação de senha não coincidem.")
+    if login_novo and Usuario.query.filter(func.lower(Usuario.usuario) == login_novo.lower()).first():
+        erros.append("Já existe um usuário com esse login.")
+
+    if erros:
+        return render_template("usuario_novo.html", erros=erros, valores=form)
+
+    novo_usuario = Usuario(
+        nome=nome,
+        usuario=login_novo,
+        email=email,
+        senha_hash=generate_password_hash(senha),
+        nivel=nivel,
+    )
+    db.session.add(novo_usuario)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        erros.append("Já existe um usuário com esse login.")
+        return render_template("usuario_novo.html", erros=erros, valores=form)
+
+    return redirect(url_for("usuarios"))
 
 
 def texto_para_data(valor):

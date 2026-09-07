@@ -14,13 +14,21 @@ db = SQLAlchemy()
 
 class Usuario(db.Model, UserMixin):
     """Usuário com acesso ao sistema. A senha nunca é guardada em texto
-    puro - só o hash dela (gerado com werkzeug.security)."""
+    puro - só o hash dela (gerado com werkzeug.security).
+
+    nivel: 'administrador' (mais funções, o chefe) ou 'comum' (operador)."""
     __tablename__ = "usuarios"
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(120), nullable=False)
     usuario = db.Column(db.String(60), nullable=False, unique=True)  # login
+    email = db.Column(db.String(150))
     senha_hash = db.Column(db.String(255), nullable=False)
+    nivel = db.Column(db.String(20), nullable=False, default="comum")
+
+    @property
+    def eh_administrador(self):
+        return self.nivel == "administrador"
 
 
 class Processo(db.Model):

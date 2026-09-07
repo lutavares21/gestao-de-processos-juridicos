@@ -37,6 +37,10 @@
         </div>
 
         <a href="{{ url_for('registro_processos') }}">Registro de Processos</a>
+
+        {% if current_user.eh_administrador %}
+        <a href="{{ url_for('usuarios') }}">Usuários</a>
+        {% endif %}
       </nav>
     </aside>
 
