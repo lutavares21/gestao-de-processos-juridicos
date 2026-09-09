@@ -802,23 +802,6 @@ input[readonly] {
 .selo-pedido.deferido   { background: #f6dede; color: var(--risco-provavel); }  /* vermelho - reclamação julgada procedente contra a empresa */
 .selo-pedido.indeferido { background: #e3f0e6; color: var(--risco-remoto); }    /* verde - empresa venceu esse pedido */
 
-/* --- Selo colorido de cada tipo de ação no Registro de Atividades --- */
-.selo-acao {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 11.5px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.selo-acao.processo_criado,
-.selo-acao.operador_criado  { background: #e3f0e6; color: var(--risco-remoto); }   /* verde - criação */
-.selo-acao.processo_editado,
-.selo-acao.operador_editado { background: #dceefb; color: var(--azul-claro); }     /* azul - edição */
-.selo-acao.operador_excluido { background: #f6dede; color: var(--risco-provavel); } /* vermelho - exclusão */
-
-
 /* --- Cor de destaque do número do processo, conforme situação dos pedidos --- */
 .numero-processo-cor {
   display: inline-block;
