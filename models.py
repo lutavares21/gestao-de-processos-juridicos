@@ -31,6 +31,28 @@ class Operador(db.Model, UserMixin):
         return self.nivel == "administrador"
 
 
+class RegistroAtividade(db.Model):
+    """Log de atividades dos operadores no sistema (auditoria) - quem
+    cadastrou, editou ou excluiu o quê, e quando. Visível só para
+    administradores, na página /atividades.
+
+    operador_nome é guardado separado do relacionamento porque precisa
+    continuar aparecendo no histórico mesmo se aquele operador for
+    excluído depois."""
+    __tablename__ = "registros_atividade"
+
+    id = db.Column(db.Integer, primary_key=True)
+    operador_id = db.Column(db.Integer, db.ForeignKey("operadores.id"))
+    operador_nome = db.Column(db.String(120), nullable=False)
+    acao = db.Column(db.String(30), nullable=False)
+    # 'processo_criado', 'processo_editado',
+    # 'operador_criado', 'operador_editado', 'operador_excluido'
+    descricao = db.Column(db.String(255), nullable=False)
+    data_hora = db.Column(db.DateTime, default=db.func.now())
+
+    operador = db.relationship("Operador", backref="atividades")
+
+
 class Processo(db.Model):
     """Tabela principal - um registro por processo jurídico."""
     __tablename__ = "processos"

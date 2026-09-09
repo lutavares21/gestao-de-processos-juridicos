@@ -20,9 +20,9 @@
           <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
           <ul class="submenu">
             <li><a href="{{ url_for('cadastro_civel') }}">Processo Cível</a></li>
-            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
             <li><a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a></li>
-            <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
           </ul>
         </div>
 
@@ -30,13 +30,18 @@
           <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
           <ul class="submenu">
             <li><a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a></li>
-            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
-            <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
+            <li><a href="#" class="oculto-visual">Processos Cível - Recuperação de Crédito</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
             <li><a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a></li>
           </ul>
         </div>
 
         <a href="{{ url_for('registro_processos') }}">Registro de Processos</a>
+
+        {% if current_user.eh_administrador %}
+        <a href="{{ url_for('operadores') }}">Gestão de operadores</a>
+        <a href="{{ url_for('atividades') }}">Registro de Atividades</a>
+        {% endif %}
       </nav>
     </aside>
 
@@ -588,7 +593,7 @@
   </template>
 
   <script>
-    // Aplica a máscara 0000000-00.0000.0.00.0000 (padrão CNJ) conforme o operador digita
+    // Aplica a máscara 0000000-00.0000.0.00.0000 (padrão CNJ) conforme o usuário digita
     function mascararNumeroProcesso(input) {
       let digitos = input.value.replace(/\D/g, '').slice(0, 20);
       let saida = '';

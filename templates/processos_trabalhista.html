@@ -20,9 +20,9 @@
           <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
           <ul class="submenu">
             <li><a href="{{ url_for('cadastro_civel') }}">Processo Cível</a></li>
-            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
             <li><a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a></li>
-            <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
+            <li><a href="#" class="oculto-visual">Processo Licitatórios</a></li>
+            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
           </ul>
         </div>
 
@@ -31,12 +31,17 @@
           <ul class="submenu">
             <li><a href="{{ url_for('processos_civel') }}">Processo Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a></li>
             <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
-            <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
             <li><a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a></li>
           </ul>
         </div>
 
         <a href="{{ url_for('registro_processos') }}">Registro de Processos</a>
+
+        {% if current_user.eh_administrador %}
+        <a href="{{ url_for('operadores') }}">Gestão de operadores</a>
+        <a href="{{ url_for('atividades') }}">Registro de Atividades</a>
+        {% endif %}
 
       </nav>
     </aside>
@@ -76,7 +81,7 @@
         <div class="secao" style="margin-bottom:16px;">
           <h2>Pesquisa Processual</h2>
           <form method="GET" action="{{ url_for('processos_trabalhista') }}">
-            <div class="linha linha-filtro">
+            <div class="linha">
               <div class="campo">
                 <label for="f_numero">Número do processo</label>
                 <input type="text" id="f_numero" name="numero_processo" value="{{ filtros.get('numero_processo', '') }}" placeholder="0000000-00.0000.0.00.0000" maxlength="25" oninput="mascararNumeroProcesso(this)">
@@ -96,7 +101,7 @@
             </div>
 
             <div id="filtros_avancados" class="oculto">
-              <div class="linha linha-filtro">
+              <div class="linha">
                 <div class="campo">
                   <label for="f_uf">UF</label>
                   <select id="f_uf" name="uf">
@@ -106,7 +111,7 @@
                     {% endfor %}
                   </select>
                 </div>
-                <div class="campo">
+                <div class="campo campo-grande">
                   <label for="f_classe">Classe processual</label>
                   <select id="f_classe" name="tipo_acao">
                     <option value="">Todas</option>
@@ -141,7 +146,7 @@
                 </div>
               </div>
 
-              <div class="linha linha-filtro">
+              <div class="linha">
                 <div class="campo">
                   <label for="f_grau">Grau/Instância</label>
                   <select id="f_grau" name="grau_instancia">
@@ -182,8 +187,8 @@
                 </div>
               </div>
 
-              <div class="linha linha-filtro">
-                <div class="campo">
+              <div class="linha">
+                <div class="campo campo-grande">
                   <label for="f_cr">Centro de Resultados (CR)</label>
                   <select id="f_cr" name="centro_resultado">
                     <option value="">Todos</option>
@@ -201,7 +206,7 @@
                     {% endfor %}
                   </select>
                 </div>
-                <div class="campo">
+                <div class="campo campo-grande">
                   <label for="f_escritorio">Escritório</label>
                   <select id="f_escritorio" name="escritorio">
                     <option value="">Todos</option>
@@ -299,7 +304,7 @@
     </div>
   </div>
   <script>
-    // Aplica a máscara 0000000-00.0000.0.00.0000 (padrão CNJ) conforme o operador digita
+    // Aplica a máscara 0000000-00.0000.0.00.0000 (padrão CNJ) conforme o usuário digita
     function mascararNumeroProcesso(input) {
       let digitos = input.value.replace(/\D/g, '').slice(0, 20);
       let saida = '';

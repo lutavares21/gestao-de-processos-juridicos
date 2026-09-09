@@ -12,7 +12,7 @@ from flask_login import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
-from models import db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR, PedidoCivel, Operador
+from models import db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR, PedidoCivel, Operador, RegistroAtividade
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///processos.db"
@@ -49,7 +49,19 @@ def admin_required(f):
     return decorado
 
 
-@app.template_filter("moeda")
+def registrar_atividade(acao, descricao):
+    """Grava uma linha no log de atividades, associada ao operador
+    logado no momento. Não faz commit sozinha - a chamada que já vai
+    salvar o processo/operador salva essa linha junto."""
+    db.session.add(RegistroAtividade(
+        operador_id=current_user.id if current_user.is_authenticated else None,
+        operador_nome=current_user.nome if current_user.is_authenticated else "Desconhecido",
+        acao=acao,
+        descricao=descricao,
+    ))
+
+
+
 def formatar_moeda(valor):
     """Formata um número no padrão contábil brasileiro: R$ 1.234,56.
     Retorna '—' quando o valor é None."""
@@ -138,6 +150,7 @@ def operador_novo():
         nivel=nivel,
     )
     db.session.add(novo_operador)
+    registrar_atividade("operador_criado", f"Criou o operador {nome} ({login_novo})")
     try:
         db.session.commit()
     except IntegrityError:
@@ -197,6 +210,7 @@ def operador_editar(operador_id):
         operador.senha_hash = generate_password_hash(senha)
 
     try:
+        registrar_atividade("operador_editado", f"Editou o operador {operador.nome} ({operador.login})")
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
@@ -219,9 +233,22 @@ def operador_excluir(operador_id):
         erros = ["Você não pode excluir o próprio usuário enquanto estiver logado com ele."]
         return render_template("operador_editar.html", operador=operador, erros=erros)
 
+    registrar_atividade("operador_excluido", f"Excluiu o operador {operador.nome} ({operador.login})")
     db.session.delete(operador)
     db.session.commit()
     return redirect(url_for("operadores"))
+
+
+@app.route("/atividades")
+@admin_required
+def atividades():
+    registros = (
+        RegistroAtividade.query
+        .order_by(RegistroAtividade.data_hora.desc())
+        .limit(300)
+        .all()
+    )
+    return render_template("atividades.html", registros=registros)
 
 
 def texto_para_data(valor):
@@ -387,6 +414,7 @@ def cadastro_civel():
             processo.pedidos_civeis.append(PedidoCivel(descricao=descricao.strip()))
 
     db.session.add(processo)
+    registrar_atividade("processo_criado", f"Cadastrou o processo cível {numero_processo}")
     try:
         db.session.commit()
     except IntegrityError:
@@ -427,6 +455,7 @@ def cadastro_trabalhista():
             )
 
     db.session.add(processo)
+    registrar_atividade("processo_criado", f"Cadastrou o processo trabalhista {numero_processo}")
     try:
         db.session.commit()
     except IntegrityError:
@@ -582,6 +611,7 @@ def processo_editar(processo_id):
                 processo.pedidos_civeis.append(PedidoCivel(descricao=descricao.strip()))
 
     try:
+        registrar_atividade("processo_editado", f"Editou o processo {numero_processo_original}")
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
