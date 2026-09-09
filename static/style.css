@@ -766,6 +766,12 @@ input[readonly] {
   background: var(--selo);
 }
 
+.btn-largura-auto {
+  display: inline-block;
+  width: auto;
+  padding: 9px 16px;
+}
+
 .btn-editar:hover {
   background: var(--selo-claro);
 }
