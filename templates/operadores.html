@@ -54,8 +54,8 @@
       <div class="container" style="max-width: 1000px;">
 
         <div style="margin-bottom:16px; display:flex; gap:10px;">
-          <a href="{{ url_for('operador_novo') }}" class="btn btn-adicionar">Cadastrar novo operador</a>
-          <a href="{{ url_for('atividades') }}" class="btn btn-adicionar">Registro de Atividades</a>
+          <a href="{{ url_for('operador_novo') }}" class="btn-detalhe btn-editar btn-largura-auto">Cadastrar novo operador</a>
+          <a href="{{ url_for('atividades') }}" class="btn-detalhe btn-editar btn-largura-auto">Registro de Atividades</a>
         </div>
 
         {% if operadores %}
@@ -67,6 +67,7 @@
                 <th>Login</th>
                 <th>E-mail</th>
                 <th>Nível</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -82,6 +83,7 @@
                   <span class="selo-status ativo">Comum</span>
                   {% endif %}
                 </td>
+                <td><a class="btn-detalhe btn-editar" href="{{ url_for('operador_editar', operador_id=u.id) }}">Editar</a></td>
               </tr>
               {% endfor %}
             </tbody>
