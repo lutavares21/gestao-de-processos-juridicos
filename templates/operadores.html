@@ -40,7 +40,6 @@
 
         {% if current_user.eh_administrador %}
         <a href="{{ url_for('operadores') }}" class="ativo">Gestão de operadores</a>
-        <a href="{{ url_for('atividades') }}">Registro de Atividades</a>
         {% endif %}
 
       </nav>
@@ -54,8 +53,9 @@
 
       <div class="container" style="max-width: 1000px;">
 
-        <div style="margin-bottom:16px;">
-          <a href="{{ url_for('operador_novo') }}" class="btn btn-adicionar">+ Novo operador</a>
+        <div style="margin-bottom:16px; display:flex; gap:10px;">
+          <a href="{{ url_for('operador_novo') }}" class="btn btn-adicionar">Cadastrar novo operador</a>
+          <a href="{{ url_for('atividades') }}" class="btn btn-adicionar">Registro de Atividades</a>
         </div>
 
         {% if operadores %}
