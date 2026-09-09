@@ -772,6 +772,10 @@ input[readonly] {
   padding: 9px 16px;
 }
 
+.acoes-topo .btn-detalhe + .btn-detalhe {
+  margin-top: 0;
+}
+
 .btn-editar:hover {
   background: var(--selo-claro);
 }
