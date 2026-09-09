@@ -49,17 +49,21 @@
     <div class="conteudo">
       <div class="cabecalho">
         <h1>Registro de Atividades</h1>
-        <div class="subtitulo">Histórico de ações dos operadores no sistema</div>
+        <div class="subtitulo">Gestão de Processos Jurídicos</div>
       </div>
 
       <div class="container" style="max-width: 1100px;">
+
+        <div style="margin-bottom:16px;">
+          <a href="{{ url_for('operadores') }}" class="btn btn-adicionar">← Voltar para operadores</a>
+        </div>
 
         {% if registros %}
         <div class="tabela-wrap">
           <table class="tabela-processos">
             <thead>
               <tr>
-                <th>Data/hora</th>
+                <th>Data/Hora</th>
                 <th>Operador</th>
                 <th>Ação</th>
                 <th>Descrição</th>
@@ -68,21 +72,21 @@
             <tbody>
               {% for r in registros %}
               <tr>
-                <td style="white-space:nowrap;">{{ r.data_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td style="white-space:nowrap;">{{ r.data_hora.strftime('%d/%m/%Y %H:%M') if r.data_hora else '—' }}</td>
                 <td>{{ r.operador_nome }}</td>
                 <td>
                   {% if r.acao == 'processo_criado' %}
-                  <span class="selo-status ativo">Processo criado</span>
+                  <span class="selo-acao processo_criado">Processo criado</span>
                   {% elif r.acao == 'processo_editado' %}
-                  <span class="selo-status suspenso">Processo editado</span>
+                  <span class="selo-acao processo_editado">Processo editado</span>
                   {% elif r.acao == 'operador_criado' %}
-                  <span class="selo-status ativo">Operador criado</span>
+                  <span class="selo-acao operador_criado">Operador criado</span>
                   {% elif r.acao == 'operador_editado' %}
-                  <span class="selo-status suspenso">Operador editado</span>
+                  <span class="selo-acao operador_editado">Operador editado</span>
                   {% elif r.acao == 'operador_excluido' %}
-                  <span class="selo-status arquivado">Operador excluído</span>
+                  <span class="selo-acao operador_excluido">Operador excluído</span>
                   {% else %}
-                  <span class="selo-status arquivado">{{ r.acao }}</span>
+                  <span class="selo-acao">{{ r.acao }}</span>
                   {% endif %}
                 </td>
                 <td>{{ r.descricao }}</td>
@@ -91,7 +95,7 @@
             </tbody>
           </table>
         </div>
-        <div class="aviso-limite" style="margin-top:10px;">Mostrando as 300 atividades mais recentes.</div>
+        <div class="aviso-limite">Mostrando os 300 registros mais recentes.</div>
         {% else %}
         <div class="tabela-wrap">
           <div class="estado-vazio">Nenhuma atividade registrada ainda.</div>
