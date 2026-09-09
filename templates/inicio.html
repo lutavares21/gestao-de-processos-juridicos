@@ -42,16 +42,15 @@
             <a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a>
           </div>
         </div>
+      </div>
 
-        <div class="bloco-inicio">
-          <div class="links-bloco">
-            <a href="{{ url_for('registro_processos') }}">Registro de Processos</a>
+      <div class="bloco-inicio bloco-largo">
+        <div class="links-bloco">
+          <a href="{{ url_for('registro_processos') }}">Registro de Processos</a>
 
-        {% if current_user.eh_administrador %}
-        <a href="{{ url_for('operadores') }}">Gestão de operadores</a>
-        <a href="{{ url_for('atividades') }}">Registro de Atividades</a>
-        {% endif %}
-          </div>
+      {% if current_user.eh_administrador %}
+      <a href="{{ url_for('operadores') }}">Gestão de operadores</a>
+      {% endif %}
         </div>
       </div>
 
