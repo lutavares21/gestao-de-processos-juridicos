@@ -40,6 +40,7 @@
 
         {% if current_user.eh_administrador %}
         <a href="{{ url_for('operadores') }}">Gestão de operadores</a>
+        <a href="{{ url_for('atividades') }}" class="ativo">Registro de Atividades</a>
         {% endif %}
 
       </nav>
@@ -52,8 +53,6 @@
       </div>
 
       <div class="container" style="max-width: 1100px;">
-
-        <a class="link-voltar" href="{{ url_for('operadores') }}">← Voltar para a lista de operadores</a>
 
         {% if registros %}
         <div class="tabela-wrap">
@@ -92,7 +91,7 @@
             </tbody>
           </table>
         </div>
-        <div class="aviso-limite" style="margin-top:10px;">Mostrando as 300 atividades mais recentes.</div>
+        <div class="aviso-limite" style="margin-top:10px;">Mostrando todas as atividades registradas, da mais recente para a mais antiga.</div>
         {% else %}
         <div class="tabela-wrap">
           <div class="estado-vazio">Nenhuma atividade registrada ainda.</div>
