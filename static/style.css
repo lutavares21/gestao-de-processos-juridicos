@@ -641,6 +641,14 @@ input[readonly] {
   text-align: center;
 }
 
+.bloco-inicio.bloco-destaque .links-bloco a {
+  justify-content: center;
+  text-align: center;
+  padding: 20px 24px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
 .bloco-inicio h2 {
   font-family: var(--fonte-titulo);
   font-size: 17px;
