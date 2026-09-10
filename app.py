@@ -62,6 +62,7 @@ def registrar_atividade(acao, descricao):
 
 
 
+@app.template_filter("moeda")
 def formatar_moeda(valor):
     """Formata um número no padrão contábil brasileiro: R$ 1.234,56.
     Retorna '—' quando o valor é None."""
