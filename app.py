@@ -245,6 +245,7 @@ def atividades():
     registros = (
         RegistroAtividade.query
         .order_by(RegistroAtividade.data_hora.desc())
+        .limit(300)
         .all()
     )
     return render_template("atividades.html", registros=registros)
