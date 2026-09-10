@@ -209,23 +209,23 @@
           <div class="secao">
             <h2>Partes envolvidas</h2>
 
-            <label>Reclamante(s)</label>
+            <label class="rotulo-secao">Reclamante(s)</label>
             <div id="resumo_autores_partes" style="padding:9px 0 4px;font-size:14px;color:var(--texto-suave);font-style:italic;">—</div>
 
             <div style="margin-top:18px;">
-              <label>Advogado(s) do reclamante <span class="aviso-limite">(até 5)</span></label>
+              <label class="rotulo-secao">Advogado(s) do reclamante <span class="aviso-limite">(até 5)</span></label>
               <div id="lista_advogados_autor" class="grupo-dinamico"></div>
               <button type="button" class="btn btn-adicionar" onclick="adicionarAdvogado('autor')">+ Adicionar advogado</button>
             </div>
 
-            <hr style="border:none;border-top:1px solid var(--borda);margin:22px 0;">
+            <hr style="border:none;border-top:3px solid var(--texto-suave);margin:22px 0;">
 
-            <label>Reclamada</label>
+            <label class="rotulo-secao">Reclamada</label>
             <div id="lista_reus" class="grupo-dinamico"></div>
             <button type="button" class="btn btn-adicionar" onclick="adicionarParte('reu')">+ Adicionar reclamada</button>
 
             <div style="margin-top:18px;">
-              <label>Advogado(s) da reclamada <span class="aviso-limite">(até 5)</span></label>
+              <label class="rotulo-secao">Advogado(s) da reclamada <span class="aviso-limite">(até 5)</span></label>
               <div id="lista_advogados_reu" class="grupo-dinamico"></div>
               <button type="button" class="btn btn-adicionar" onclick="adicionarAdvogado('reu')">+ Adicionar advogado</button>
             </div>
