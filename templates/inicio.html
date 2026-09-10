@@ -44,16 +44,11 @@
         </div>
       </div>
 
+      <div class="bloco-inicio bloco-largo">
+        <div class="links-bloco">
       {% if current_user.eh_administrador %}
-      <div class="bloco-inicio bloco-largo">
-        <div class="links-bloco">
-          <a href="{{ url_for('operadores') }}">Gestão de operadores</a>
-        </div>
-      </div>
+      <a href="{{ url_for('operadores') }}">Gestão de operadores</a>
       {% endif %}
-
-      <div class="bloco-inicio bloco-largo">
-        <div class="links-bloco">
           <a href="{{ url_for('registro_processos') }}">Registro de Processos</a>
         </div>
       </div>
