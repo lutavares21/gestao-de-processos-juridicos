@@ -62,7 +62,6 @@ def registrar_atividade(acao, descricao):
 
 
 
-@app.template_filter("moeda")
 def formatar_moeda(valor):
     """Formata um número no padrão contábil brasileiro: R$ 1.234,56.
     Retorna '—' quando o valor é None."""
@@ -246,7 +245,6 @@ def atividades():
     registros = (
         RegistroAtividade.query
         .order_by(RegistroAtividade.data_hora.desc())
-        .limit(300)
         .all()
     )
     return render_template("atividades.html", registros=registros)
