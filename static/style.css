@@ -871,3 +871,28 @@ input[readonly] {
   border-color: var(--risco-provavel);
   color: var(--risco-provavel);
 }
+.dash-legenda-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  justify-items: center;
+  row-gap: 8px;
+  column-gap: 16px;
+  margin-top: 12px;
+}
+
+.dash-legenda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #444;
+  white-space: nowrap;
+}
+
+.dash-legenda-cor {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+  flex-shrink: 0;
+}
