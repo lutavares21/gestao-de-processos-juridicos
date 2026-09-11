@@ -380,6 +380,12 @@
           <div class="dash-painel">
             <div class="dash-secao-titulo">Resultado dos encerrados</div>
             <div class="dash-chart-wrap"><canvas id="graficoResultado"></canvas></div>
+            <div class="dash-legenda-grid" id="legendaResultado">
+              <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#1f8a5f"></span>Vitórias</span>
+              <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#c08a1e"></span>Parciais</span>
+              <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#b7924b"></span>Acordos</span>
+              <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#b3402f"></span>Improcedentes</span>
+            </div>
           </div>
 
         </div>
@@ -487,15 +493,16 @@
       new Chart(document.getElementById('graficoResultado'), {
         type: 'doughnut',
         data: {
-          labels: ['Vitórias', 'Parciais', 'Acordos', 'Derrotas'],
+          labels: ['Vitórias', 'Parciais', 'Acordos', 'Improcedentes'],
           datasets: [{
             data: [resultadoDet.vitorias, resultadoDet.parciais, resultadoDet.acordos, resultadoDet.derrotas],
             backgroundColor: [paletaVerde, paletaAmarelo, paletaGold, paletaVermelho],
           }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
       });
     } else {
+      document.getElementById('legendaResultado')?.remove();
       document.getElementById('graficoResultado').replaceWith(
         Object.assign(document.createElement('div'), {
           className: 'dash-vazio',
