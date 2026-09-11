@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Registro de Processos - Visão Executiva</title>
+  <title>Panorama Jurídico - Visão Executiva</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -220,7 +220,7 @@
           </ul>
         </div>
 
-        <a href="{{ url_for('registro_processos') }}" class="ativo">Registro de Processos</a>
+        <a href="{{ url_for('registro_processos') }}" class="ativo">Panorama Jurídico</a>
 
         {% if current_user.eh_administrador %}
         <a href="{{ url_for('operadores') }}">Gestão de Operadores</a>
@@ -234,8 +234,8 @@
         <!-- CABEÇALHO EXECUTIVO -->
         <div class="dash-header">
           <div>
-            <h1>Registro de Processos</h1>
-            <div class="dash-subtitulo">Visão consolidada - {{ dados.total }} processos</div>
+            <h1>Panorama Jurídico</h1>
+            <div class="dash-subtitulo">Visão Geral dos Processos, indicadores e análises estratégicas</div>
           </div>
         </div>
 
