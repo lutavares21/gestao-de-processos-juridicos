@@ -625,18 +625,37 @@ def processo_editar(processo_id):
 @login_required
 def registro_processos():
 
-    def contar(**filtros):
-        """Conta processos que batem com os filtros dados.
-        Ex: contar(origem_cadastro='civel', status='ativo')"""
+    # Filtro por tipo de processo (caixa de seleção no topo da página).
+    # "todos" (padrão) não aplica nenhum filtro extra.
+    tipos_processo_validos = {"civel", "trabalhista"}
+    tipo_selecionado = request.args.get("tipo", "todos")
+    if tipo_selecionado not in tipos_processo_validos:
+        tipo_selecionado = "todos"
+
+    def query_base():
+        """Ponto de partida de toda consulta nesta página - já vem com o
+        filtro de tipo de processo aplicado (se houver um selecionado)."""
         query = Processo.query
+        if tipo_selecionado != "todos":
+            query = query.filter(Processo.origem_cadastro == tipo_selecionado)
+        return query
+
+    def contar(**filtros):
+        """Conta processos que batem com os filtros dados (além do filtro
+        de tipo de processo já aplicado por query_base).
+        Ex: contar(origem_cadastro='civel', status='ativo')"""
+        query = query_base()
         for campo, valor in filtros.items():
             query = query.filter(getattr(Processo, campo) == valor)
         return query.count()
 
     def somar(coluna, **filtros):
         """Soma uma coluna numérica (ex: Processo.valor_causa) para os
-        processos que batem com os filtros dados. Nunca retorna None."""
-        query = db.session.query(func.coalesce(func.sum(coluna), 0))
+        processos que batem com os filtros dados (além do filtro de tipo
+        de processo já aplicado). Nunca retorna None."""
+        query = db.session.query(func.coalesce(func.sum(coluna), 0)).select_from(Processo)
+        if tipo_selecionado != "todos":
+            query = query.filter(Processo.origem_cadastro == tipo_selecionado)
         for campo, valor in filtros.items():
             query = query.filter(getattr(Processo, campo) == valor)
         return float(query.scalar() or 0)
@@ -709,10 +728,10 @@ def registro_processos():
     #    Derrotas = resultado "perdemos"
     #    Ajuste essa régua se a definição da diretoria for outra.
     # ------------------------------------------------------------------
-    vitorias_qtd = Processo.query.filter(
+    vitorias_qtd = query_base().filter(
         Processo.resultado == "ganhamos", Processo.sentenca != "procedente_parcial"
     ).count()
-    parciais_qtd = Processo.query.filter(Processo.sentenca == "procedente_parcial").count()
+    parciais_qtd = query_base().filter(Processo.sentenca == "procedente_parcial").count()
     acordos_qtd = contar(resultado="acordo")
     derrotas_qtd = contar(resultado="perdemos")
 
@@ -752,7 +771,7 @@ def registro_processos():
         return "alto"
 
     matriz = {nivel: {"baixo": 0, "medio": 0, "alto": 0} for nivel in ["provavel", "possivel", "remoto"]}
-    ativos = Processo.query.filter_by(status="ativo").all()
+    ativos = query_base().filter_by(status="ativo").all()
     for p in ativos:
         if p.risco in matriz:
             matriz[p.risco][faixa_impacto(p.valor_causa)] += 1
@@ -763,7 +782,7 @@ def registro_processos():
     #     ordenados pela maior exposição financeira.
     # ------------------------------------------------------------------
     alertas_processos = (
-        Processo.query.filter_by(status="ativo", risco="provavel")
+        query_base().filter_by(status="ativo", risco="provavel")
         .order_by(Processo.valor_causa.desc())
         .limit(5)
         .all()
@@ -787,13 +806,15 @@ def registro_processos():
     # ------------------------------------------------------------------
     # 5. TOP CENTROS DE RESULTADO por exposição em aberto
     # ------------------------------------------------------------------
+    top_cr_query = db.session.query(
+        Processo.centro_resultado,
+        func.count(Processo.id),
+        func.coalesce(func.sum(Processo.valor_causa), 0),
+    ).filter(Processo.status == "ativo", Processo.centro_resultado.isnot(None))
+    if tipo_selecionado != "todos":
+        top_cr_query = top_cr_query.filter(Processo.origem_cadastro == tipo_selecionado)
     top_cr = (
-        db.session.query(
-            Processo.centro_resultado,
-            func.count(Processo.id),
-            func.coalesce(func.sum(Processo.valor_causa), 0),
-        )
-        .filter(Processo.status == "ativo", Processo.centro_resultado.isnot(None))
+        top_cr_query
         .group_by(Processo.centro_resultado)
         .order_by(func.sum(Processo.valor_causa).desc())
         .limit(6)
@@ -823,14 +844,16 @@ def registro_processos():
 
     evolucao = []
     for ano, mes in meses_alvo:
-        qtd = Processo.query.filter(
+        qtd = query_base().filter(
             func.extract("year", Processo.data_distribuicao) == ano,
             func.extract("month", Processo.data_distribuicao) == mes,
         ).count()
         evolucao.append({"label": f"{nomes_mes[mes - 1]}/{str(ano)[2:]}", "qtd": qtd})
     dados["evolucao_mensal"] = evolucao
 
-    return render_template("registro_processos.html", dados=dados)
+    return render_template(
+        "registro_processos.html", dados=dados, tipo_selecionado=tipo_selecionado
+    )
 
 
 if __name__ == "__main__":

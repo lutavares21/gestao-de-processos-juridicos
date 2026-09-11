@@ -50,6 +50,31 @@
       text-align: right;
     }
 
+    .dash-filtro-tipo{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .dash-filtro-tipo label{
+      font-size: 13px;
+      color: #c7d0e0;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .dash-filtro-tipo select{
+      font-family: 'Inter', sans-serif;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--dash-navy);
+      background: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      cursor: pointer;
+      min-width: 170px;
+    }
+
     .dash-grid-kpi{
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -237,6 +262,15 @@
             <h1>Panorama Jurídico</h1>
             <div class="dash-subtitulo">Visão Geral dos Processos, indicadores e análises estratégicas</div>
           </div>
+
+          <form method="GET" action="{{ url_for('registro_processos') }}" class="dash-filtro-tipo">
+            <label for="tipo">Selecione o tipo de processo:</label>
+            <select id="tipo" name="tipo" onchange="this.form.submit()">
+              <option value="civel" {% if tipo_selecionado == 'civel' %}selected{% endif %}>Cível</option>
+              <option value="trabalhista" {% if tipo_selecionado == 'trabalhista' %}selected{% endif %}>Trabalhista</option>
+              <option value="todos" {% if tipo_selecionado == 'todos' %}selected{% endif %}>Todos</option>
+            </select>
+          </form>
         </div>
 
         <!-- ATENÇÃO DA DIRETORIA -->
