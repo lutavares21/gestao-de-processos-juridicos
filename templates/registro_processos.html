@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Registro de Processos - Visão Executiva</title>
+  <title>Panorama Jurídico - Visão Executiva</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -48,6 +48,31 @@
       color: var(--dash-gold);
       font-weight: 600;
       text-align: right;
+    }
+
+    .dash-filtro-tipo{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .dash-filtro-tipo label{
+      font-size: 13px;
+      color: #c7d0e0;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .dash-filtro-tipo select{
+      font-family: 'Inter', sans-serif;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--dash-navy);
+      background: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      cursor: pointer;
+      min-width: 170px;
     }
 
     .dash-grid-kpi{
@@ -220,7 +245,7 @@
           </ul>
         </div>
 
-        <a href="{{ url_for('registro_processos') }}" class="ativo">Registro de Processos</a>
+        <a href="{{ url_for('registro_processos') }}" class="ativo">Panorama Jurídico</a>
 
         {% if current_user.eh_administrador %}
         <a href="{{ url_for('operadores') }}">Gestão de Operadores</a>
@@ -234,9 +259,18 @@
         <!-- CABEÇALHO EXECUTIVO -->
         <div class="dash-header">
           <div>
-            <h1>Registro de Processos</h1>
-            <div class="dash-subtitulo">Visão consolidada - {{ dados.total }} processos</div>
+            <h1>Panorama Jurídico</h1>
+            <div class="dash-subtitulo">Visão Geral dos Processos, indicadores e análises estratégicas</div>
           </div>
+
+          <form method="GET" action="{{ url_for('registro_processos') }}" class="dash-filtro-tipo">
+            <label for="tipo">Selecione o tipo de processo:</label>
+            <select id="tipo" name="tipo" onchange="this.form.submit()">
+              <option value="civel" {% if tipo_selecionado == 'civel' %}selected{% endif %}>Cível</option>
+              <option value="trabalhista" {% if tipo_selecionado == 'trabalhista' %}selected{% endif %}>Trabalhista</option>
+              <option value="todos" {% if tipo_selecionado == 'todos' %}selected{% endif %}>Todos</option>
+            </select>
+          </form>
         </div>
 
         <!-- ATENÇÃO DA DIRETORIA -->
