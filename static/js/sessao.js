@@ -29,6 +29,12 @@
   // Envio de formulário (salvar cadastro, login, etc).
   document.addEventListener("submit", marcarNavegacaoInterna);
 
+  // Campos <select> que mudam de página sozinhos ao trocar de valor
+  // (ex: filtro "onchange='this.form.submit()'"). Chamar form.submit()
+  // via JavaScript NÃO dispara o evento "submit" - só o "change" - por
+  // isso essa escuta separada é necessária.
+  document.addEventListener("change", marcarNavegacaoInterna);
+
   // F5, Ctrl+R ou Cmd+R (atualizar a página).
   document.addEventListener("keydown", function (evento) {
     var ehF5 = evento.key === "F5";
