@@ -13,9 +13,9 @@
   --borda: #dcd8cf;
   --texto: #262420;
   --texto-suave: #4a463c;
-  --risco-remoto: #4a7c59;
-  --risco-possivel: #b8862b;
-  --risco-provavel: #a13d3d;
+  --risco-remoto: #1f9e4a;
+  --risco-possivel: #d4a017;
+  --risco-provavel: #dc2626;
   --azul-claro: #2f6690;
 
   --fonte-titulo: "Source Serif 4", Georgia, serif;
@@ -529,7 +529,7 @@ input[readonly] {
   font-weight: 600;
 }
 
-.selo-risco.remoto { background: #dceefb; color: var(--azul-claro); }
+.selo-risco.remoto { background: #e3f0e6; color: var(--risco-remoto); }
 .selo-risco.possivel { background: #fbeecb; color: var(--risco-possivel); }
 .selo-risco.provavel { background: #f6dede; color: var(--risco-provavel); }
 

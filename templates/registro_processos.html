@@ -357,7 +357,7 @@
                   <tr><th>Risco</th><th>Baixo</th><th>Médio</th><th>Alto</th></tr>
                 </thead>
                 <tbody>
-                  {% for nivel, rotulo, cor in [('provavel','Provável','#b3402f'), ('possivel','Possível','#c08a1e'), ('remoto','Remoto','#1f8a5f')] %}
+                  {% for nivel, rotulo, cor in [('provavel','Provável','#dc2626'), ('possivel','Possível','#d4a017'), ('remoto','Remoto','#1f9e4a')] %}
                   <tr>
                     <td>{{ rotulo }}</td>
                     {% for coluna in ['baixo','medio','alto'] %}
@@ -450,6 +450,9 @@
     const paletaVermelho = "#b3402f";
     const paletaAmarelo = "#c08a1e";
     const paletaCinza = "#8a93a3";
+    const corRiscoProvavel = "#dc2626";
+    const corRiscoPossivel = "#d4a017";
+    const corRiscoRemoto = "#1f9e4a";
 
     if (typeof Chart === "undefined") {
       console.error("Chart.js não carregou - verifique a conexão com o CDN.");
@@ -471,7 +474,7 @@
             dadosDashboard.risco.possivel.valor,
             dadosDashboard.risco.remoto.valor,
           ],
-          backgroundColor: [paletaVermelho, paletaAmarelo, paletaVerde],
+          backgroundColor: [corRiscoProvavel, corRiscoPossivel, corRiscoRemoto],
           borderRadius: 6,
         }]
       },
