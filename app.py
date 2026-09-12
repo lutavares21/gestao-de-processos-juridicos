@@ -3,10 +3,9 @@
 App Flask - Gestão de Processos Jurídicos
 """
 
-import time
 from datetime import datetime, date
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, abort, session
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_login import (
     LoginManager, login_user, logout_user, login_required, current_user,
 )
@@ -38,36 +37,14 @@ def carregar_operador(operador_id):
     return db.session.get(Operador, int(operador_id))
 
 
-# Quantos segundos esperamos antes de considerar que a aba/navegador foi
-# fechado de verdade (e não só um F5 ou um clique em outro link do site).
-TOLERANCIA_LOGOUT_SEGUNDOS = 3
-
-
-@app.before_request
-def verificar_fechamento_de_aba():
-    """Sempre que a página é fechada (aba ou navegador), o JavaScript avisa
-    a rota /logout-beacon, que guarda um prazo-limite na sessão (ver função
-    logout_beacon abaixo). Aqui, a cada requisição normal, conferimos esse
-    prazo:
-    - Se a requisição chegou dentro da tolerância, foi só um F5 ou uma
-      navegação para outra página do site -> cancela o logout.
-    - Se demorou mais que isso, foi um fechamento de verdade -> desloga o
-      operador antes de continuar (ele verá a tela de login normalmente,
-      via o @login_required das rotas)."""
-    if request.endpoint in ("logout_beacon", "static"):
-        return
-    prazo = session.pop("_pendente_logout_em", None)
-    if prazo is not None and time.time() > prazo and current_user.is_authenticated:
-        logout_user()
-
-
 @app.route("/logout-beacon", methods=["POST"])
 def logout_beacon():
-    """Chamada pelo navegador (via navigator.sendBeacon) sempre que a página
-    está prestes a ser fechada - seja fechamento de verdade ou só um
-    refresh/navegação. Não desloga na hora; só marca o prazo acima."""
+    """Chamada pelo navegador (via navigator.sendBeacon) só quando a página
+    detectou que está sendo fechada de verdade - o próprio JavaScript
+    (static/js/sessao.js) já filtrou navegações internas, F5, etc, então
+    aqui é só deslogar direto, sem prazo de espera."""
     if current_user.is_authenticated:
-        session["_pendente_logout_em"] = time.time() + TOLERANCIA_LOGOUT_SEGUNDOS
+        logout_user()
     return ("", 204)
 
 
