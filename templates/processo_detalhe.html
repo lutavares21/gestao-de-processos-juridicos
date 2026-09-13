@@ -110,7 +110,11 @@
 
     <div class="conteudo">
       <div class="cabecalho">
-        <h1>Processo {{ p.numero_processo }}</h1>
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <h1>Processo {{ p.numero_processo }}</h1>
+          {% if p.status %}<span class="selo-status {{ p.status }}">{{ p.status|title }}</span>{% endif %}
+          {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% endif %}
+        </div>
         <div class="subtitulo">Gestão de Processos Jurídicos</div>
       </div>
 
@@ -118,10 +122,8 @@
 
         <a class="link-voltar" href="{{ url_for('processos_trabalhista') if eh_trabalhista else url_for('processos_civel') }}">← Voltar para a listagem</a>
 
-        <div class="acoes-topo" style="margin:14px 0 20px; display:flex; align-items:center; gap:10px;">
+        <div class="acoes-topo" style="margin:14px 0 20px;">
           <a href="{{ url_for('processo_editar', processo_id=p.id) }}" class="btn-detalhe btn-editar btn-largura-auto">Editar processo</a>
-          {% if p.status %}<span class="selo-status {{ p.status }}">{{ p.status|title }}</span>{% endif %}
-          {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% endif %}
         </div>
 
         <!-- 1. IDENTIFICAÇÃO -->
