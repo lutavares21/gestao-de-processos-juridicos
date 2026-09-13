@@ -23,8 +23,8 @@
 {% set eh_trabalhista = p.origem_cadastro == 'trabalhista' %}
 {% set rotulo_ativo = 'Reclamante(s)' if eh_trabalhista else 'Autor(es)' %}
 {% set rotulo_passivo = 'Reclamada' if eh_trabalhista else 'Réu' %}
-{% set rotulo_adv_ativo = 'reclamante' if eh_trabalhista else 'autor' %}
-{% set rotulo_adv_passivo = 'reclamada' if eh_trabalhista else 'réu' %}
+{% set rotulo_adv_ativo = 'Advogado(s) do reclamante' if eh_trabalhista else 'Advogado(s) do autor' %}
+{% set rotulo_adv_passivo = 'Advogado(s) da reclamada' if eh_trabalhista else 'Advogado(s) do réu' %}
 {% set tipo_ativo = 'reclamante' if eh_trabalhista else 'autor' %}
 {% set tipo_passivo = 'reclamada' if eh_trabalhista else 'reu' %}
 {% set nomes_ativo = p.partes|selectattr('tipo', 'equalto', tipo_ativo)|list %}
@@ -54,6 +54,7 @@
   'primeira_instancia':'1ª Instância', 'segunda_instancia_trt':'2ª Instância - Recurso TRT',
   'nao_informado':'Não informado', 'stf':'STF', 'tst':'TST'
 } %}
+{% set rotulos_status = {'ativo':'Ativo', 'arquivado':'Arquivado', 'suspenso':'Suspenso'} %}
 {% set rotulos_status_pedido = {'em_analise': 'Em análise', 'deferido': 'Deferido', 'indeferido': 'Indeferido'} %}
 {% set rotulos_modalidade = {'hibrida':'Híbrida','presencial':'Presencial','telepresencial':'Telepresencial','videoconferencia':'Videoconferência'} %}
 
@@ -68,10 +69,10 @@
   {% set ns.rateio_texto = ns.rateio_texto + nomes_crs.get(r.centro_resultado, r.centro_resultado) + (', ' if not loop.last else '') %}
 {% endfor %}
 
-{% set texto_audiencia = (p.data_audiencia_1.strftime('%d/%m/%Y') ~ (' às ' ~ p.audiencia_1_horario if p.audiencia_1_horario else '')) if p.data_audiencia_1 else '' %}
 {% set texto_tramitacao = (p.dias_ativos|string ~ ' dias') if p.dias_ativos is not none else '' %}
-{% set texto_alvara = (p.valor_alvara|moeda ~ (' em ' ~ p.data_alvara.strftime('%d/%m/%Y') if p.data_alvara else '')) if p.valor_alvara is not none else '' %}
 {% set texto_cr %}{% if p.centro_resultado == 'rateio' %}Rateio{% elif p.centro_resultado %}{{ p.centro_resultado }} - {{ nomes_crs.get(p.centro_resultado, '') }}{% endif %}{% endset %}
+{% set nomes_ativo_texto = nomes_ativo|map(attribute='nome')|join(', ') %}
+{% set nomes_passivo_texto = nomes_passivo|map(attribute='nome')|join(', ') %}
 
   <div class="layout">
 
@@ -112,7 +113,7 @@
       <div class="cabecalho">
         <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
           <h1>Processo {{ p.numero_processo }}</h1>
-          {% if p.status %}<span class="selo-status {{ p.status }}">{{ p.status|title }}</span>{% endif %}
+          {% if p.status %}<span class="selo-status {{ p.status }}">{{ rotulos_status.get(p.status, p.status) }}</span>{% endif %}
           {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% endif %}
         </div>
         <div class="subtitulo">Gestão de Processos Jurídicos</div>
@@ -122,36 +123,34 @@
 
         <a class="link-voltar" href="{{ url_for('processos_trabalhista') if eh_trabalhista else url_for('processos_civel') }}">← Voltar para a listagem</a>
 
-        <div class="acoes-topo" style="margin:14px 0 20px;">
-          <a href="{{ url_for('processo_editar', processo_id=p.id) }}" class="btn-detalhe btn-editar btn-largura-auto">Editar processo</a>
-        </div>
-
         <!-- 1. IDENTIFICAÇÃO -->
         <div class="secao">
           <h2>Identificação</h2>
           <div class="linha">
+            {{ cv('Número do processo', p.numero_processo) }}
             {{ cv('Vara do Trabalho' if eh_trabalhista else 'Juizado', p.juizado) }}
+          </div>
+          <div class="linha">
             {{ cv('Comarca', p.comarca) }}
             {{ cv('UF', p.uf, 'campo-pequeno') }}
             {{ cv('Classe processual' if eh_trabalhista else 'Tipo de ação', rotulos_tipo_acao.get(p.tipo_acao, p.tipo_acao)) }}
           </div>
           <div class="linha">
-            {{ cv(rotulo_ativo, nomes_ativo|map(attribute='nome')|join(', ')) }}
-            {{ cv(rotulo_passivo, nomes_passivo|map(attribute='nome')|join(', ')) }}
+            {{ cv(rotulo_ativo, nomes_ativo_texto) }}
           </div>
         </div>
 
-        <!-- 2. DATAS, AUDIÊNCIAS E VALOR DA CAUSA -->
+        <!-- 2. DATAS DE DISTRIBUIÇÃO, AUDIÊNCIAS, ARQUIVAMENTO E VALOR DA CAUSA -->
         <div class="secao">
-          <h2>Datas, audiências e valor da causa</h2>
+          <h2>Datas de Distribuição, Audiências, Arquivamento e Valor da Causa</h2>
           <div class="linha">
             {{ cv('Data de distribuição', p.data_distribuicao.strftime('%d/%m/%Y') if p.data_distribuicao else '') }}
-            {{ cv('Valor da causa', p.valor_causa|moeda if p.valor_causa is not none else '') }}
-            {{ cv('Tempo de tramitação', texto_tramitacao) }}
+            {{ cv('Valor da causa (R$)', p.valor_causa|moeda if p.valor_causa is not none else '') }}
           </div>
           <div class="linha">
-            {{ cv('Próxima audiência', texto_audiencia) }}
-            {{ cv('Modalidade', rotulos_modalidade.get(p.audiencia_1_tipo)) }}
+            {{ cv('Próxima audiência', p.data_audiencia_1.strftime('%d/%m/%Y') if p.data_audiencia_1 else '') }}
+            {{ cv('Horário', p.audiencia_1_horario, 'campo-pequeno') }}
+            {{ cv('Modalidade da audiência', rotulos_modalidade.get(p.audiencia_1_tipo)) }}
             {% if p.audiencia_1_link %}
             <div class="campo">
               <label>Link da audiência</label>
@@ -160,19 +159,32 @@
             {% endif %}
           </div>
           <div class="linha">
-            {{ cv('Última audiência', p.data_audiencia_2.strftime('%d/%m/%Y') if p.data_audiencia_2 else '') }}
+            {{ cv('Última audiência', p.data_audiencia_2.strftime('%d/%m/%Y') if p.data_audiencia_2 else '', 'campo-pequeno') }}
             {{ cv('Audiência inicial', p.data_audiencia_3.strftime('%d/%m/%Y') if p.data_audiencia_3 else '') }}
-            {{ cv('Data do arquivamento', p.data_arquivamento.strftime('%d/%m/%Y') if p.data_arquivamento else '') }}
+          </div>
+          <div class="linha">
+            {{ cv('Data do arquivamento', p.data_arquivamento.strftime('%d/%m/%Y') if p.data_arquivamento else '', 'campo-pequeno') }}
+            {{ cv('Tempo de tramitação', texto_tramitacao) }}
           </div>
         </div>
 
         <!-- 3. PARTES ENVOLVIDAS -->
         <div class="secao">
           <h2>Partes envolvidas</h2>
-          <div class="linha">
-            {{ cv('Advogado(s) d' ~ ('a' if eh_trabalhista else 'o') ~ ' ' ~ rotulo_adv_ativo, ns.adv_autor_texto) }}
-            {{ cv('Advogado(s) d' ~ ('a' if eh_trabalhista else 'o') ~ ' ' ~ rotulo_adv_passivo, ns.adv_reu_texto) }}
-          </div>
+
+          <label class="rotulo-secao">{{ rotulo_ativo }}</label>
+          <div class="valor{{ '' if nomes_ativo_texto else ' texto-vazio' }}" style="margin-bottom:18px;">{{ nomes_ativo_texto or '—' }}</div>
+
+          <label class="rotulo-secao">{{ rotulo_adv_ativo }}</label>
+          <div class="valor{{ '' if ns.adv_autor_texto else ' texto-vazio' }}">{{ ns.adv_autor_texto or '—' }}</div>
+
+          <hr style="border:none;border-top:3px solid var(--texto-suave);margin:22px 0;">
+
+          <label class="rotulo-secao">{{ rotulo_passivo }}</label>
+          <div class="valor{{ '' if nomes_passivo_texto else ' texto-vazio' }}" style="margin-bottom:18px;">{{ nomes_passivo_texto or '—' }}</div>
+
+          <label class="rotulo-secao">{{ rotulo_adv_passivo }}</label>
+          <div class="valor{{ '' if ns.adv_reu_texto else ' texto-vazio' }}">{{ ns.adv_reu_texto or '—' }}</div>
         </div>
 
         <!-- 4. ORGANIZAÇÃO INTERNA -->
@@ -195,7 +207,25 @@
           <div class="linha">
             {{ cv('Resultado', p.resultado|title if p.resultado else '') }}
             {{ cv('Sentença', p.sentenca|title if p.sentenca else '') }}
+          </div>
+          <div class="linha">
+            <div class="campo">
+              <label>Status</label>
+              {% if p.status %}
+              <div class="valor"><span class="selo-status {{ p.status }}">{{ rotulos_status.get(p.status, p.status) }}</span></div>
+              {% else %}
+              <div class="valor texto-vazio">—</div>
+              {% endif %}
+            </div>
             {{ cv('Grau/Instância atual', rotulos_grau_instancia.get(p.grau_instancia)) }}
+          </div>
+          <div class="campo">
+            <label>Risco</label>
+            {% if p.risco %}
+            <div class="valor"><span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span></div>
+            {% else %}
+            <div class="valor texto-vazio">—</div>
+            {% endif %}
           </div>
         </div>
 
@@ -211,7 +241,17 @@
                   {% for ped in p.pedidos_trabalhistas %}
                   <tr>
                     <td>{{ ped.verba }}</td>
-                    <td>{{ ped.valor|moeda if ped.valor is not none else '—' }}</td>
+                    <td>
+                      {% if ped.valor is not none %}
+                      {% set texto_moeda = ped.valor|moeda %}
+                      <div style="display:flex; justify-content:space-between;">
+                        <span>{{ texto_moeda.split(' ')[0] }}</span>
+                        <span>{{ texto_moeda.split(' ', 1)[1] }}</span>
+                      </div>
+                      {% else %}
+                      <div style="text-align:right;">—</div>
+                      {% endif %}
+                    </td>
                     <td><span class="selo-pedido {{ ped.status or 'em_analise' }}">{{ rotulos_status_pedido.get(ped.status, 'Em análise') }}</span></td>
                   </tr>
                   {% endfor %}
@@ -229,7 +269,8 @@
         <!-- 7. ACOMPANHAMENTO -->
         <div class="secao">
           <h2>Acompanhamento</h2>
-          <span class="rotulo-secao">Últimos movimentos</span>
+
+          <label>Últimos movimentos</label>
           {% set movimentos_ordenados = p.movimentos|sort(attribute='data_movimento') %}
           {% if movimentos_ordenados %}
           <ul class="lista-itens">
@@ -241,8 +282,18 @@
           <p class="texto-vazio">Nenhum movimento cadastrado.</p>
           {% endif %}
 
-          <div class="linha" style="margin-top:16px;">
-            {{ cv('Resumo do processo', p.resumo) }}
+          <div class="campo" style="margin-top:18px;">
+            <label>Resumo do processo</label>
+            {% if p.resumo %}
+            <div class="valor" style="min-height:80px; align-items:flex-start; white-space:pre-wrap;">{{ p.resumo }}</div>
+            {% else %}
+            <div class="valor texto-vazio" style="min-height:80px; align-items:flex-start;">—</div>
+            {% endif %}
+          </div>
+
+          <div class="campo">
+            <label>Relatório importado</label>
+            <div class="valor{{ '' if p.arquivo_relatorio else ' texto-vazio' }}">{{ p.arquivo_relatorio or 'Nenhum relatório importado.' }}</div>
           </div>
         </div>
 
@@ -250,17 +301,22 @@
         <div class="secao">
           <h2>Valores financeiros</h2>
           <div class="linha">
-            {{ cv('Valor final pago', p.valor_final|moeda if p.valor_final is not none else '') }}
-            {{ cv('Honorários advocatícios', p.honorarios_advogado|moeda if p.honorarios_advogado is not none else '') }}
-            {{ cv('Economia gerada', p.economia_gerada|moeda if p.economia_gerada is not none else '') }}
+            {{ cv('Valor final pago (R$)', p.valor_final|moeda if p.valor_final is not none else '') }}
+            {{ cv('Honorários Advocatícios (R$)', p.honorarios_advogado|moeda if p.honorarios_advogado is not none else '') }}
+            {{ cv('Economia Gerada (R$)', p.economia_gerada|moeda if p.economia_gerada is not none else '') }}
           </div>
           <div class="linha">
-            {{ cv('Honorários periciais', p.honorarios_periciais|moeda if p.honorarios_periciais is not none else '') }}
-            {{ cv('Custas processuais', p.custas_processuais|moeda if p.custas_processuais is not none else '') }}
-            {{ cv('Depósito recursal', p.deposito_recursal|moeda if p.deposito_recursal is not none else '') }}
-            {{ cv('Alvará', texto_alvara) }}
+            {{ cv('Honorários periciais (R$)', p.honorarios_periciais|moeda if p.honorarios_periciais is not none else '') }}
+            {{ cv('Custas processuais (R$)', p.custas_processuais|moeda if p.custas_processuais is not none else '') }}
+            {{ cv('Depósito recursal (R$)', p.deposito_recursal|moeda if p.deposito_recursal is not none else '') }}
+          </div>
+          <div class="linha">
+            {{ cv('Alvará (R$)', p.valor_alvara|moeda if p.valor_alvara is not none else '') }}
+            {{ cv('Data do alvará', p.data_alvara.strftime('%d/%m/%Y') if p.data_alvara else '') }}
           </div>
         </div>
+
+        <a href="{{ url_for('processo_editar', processo_id=p.id) }}" class="btn btn-salvar" style="text-decoration:none; text-align:center; display:block;">Editar processo</a>
 
       </div>
     </div>
