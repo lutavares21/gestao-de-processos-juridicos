@@ -6,22 +6,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <style>
-    .tabela-processos { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
-    .tabela-processos th, .tabela-processos td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--borda, #e2e2e2); vertical-align: top; }
-    .tabela-processos th { font-weight: 600; color: var(--texto-suave, #555); white-space: nowrap; }
-    .tabela-processos tbody tr:hover { background: rgba(0,0,0,0.02); }
-    .selo-status { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; display: inline-block; }
-    .selo-status.ativo { background: #e5f6ea; color: #1e7a34; }
-    .selo-status.arquivado { background: #eee; color: #666; }
-    .selo-status.suspenso { background: #fdf1d8; color: #9a6a00; }
-    .selo-risco { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; display: inline-block; }
-    .selo-risco.remoto { background: #e5f6ea; color: #1e7a34; }
-    .selo-risco.possivel { background: #fdf1d8; color: #9a6a00; }
-    .selo-risco.provavel { background: #fdeaea; color: #a12626; }
-    .acoes-linha { display: flex; gap: 10px; white-space: nowrap; }
-    .sem-registros { padding: 24px 0; color: var(--texto-suave, #666); font-style: italic; }
-  </style>
 </head>
 <body>
 
@@ -69,55 +53,49 @@
       <div class="container">
 
         {% if processos %}
-        <table class="tabela-processos">
-          <thead>
-            <tr>
-              <th>Número do processo</th>
-              <th>Comarca/UF</th>
-              <th>Autor(es)</th>
-              <th>Réu</th>
-              <th>Valor da causa</th>
-              <th>Próxima audiência</th>
-              <th>Status</th>
-              <th>Risco</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for processo in processos %}
-            {% set autores = processo.partes|selectattr('tipo', 'equalto', 'autor')|map(attribute='nome')|list %}
-            {% set reus = processo.partes|selectattr('tipo', 'equalto', 'reu')|map(attribute='nome')|list %}
-            <tr>
-              <td>{{ processo.numero_processo }}</td>
-              <td>{{ processo.comarca or '—' }}{{ '/' ~ processo.uf if processo.uf else '' }}</td>
-              <td>{{ autores|join(', ') if autores else '—' }}</td>
-              <td>{{ reus|join(', ') if reus else '—' }}</td>
-              <td>{{ processo.valor_causa|moeda if processo.valor_causa is not none else '—' }}</td>
-              <td>{{ processo.data_audiencia_1.strftime('%d/%m/%Y') if processo.data_audiencia_1 else '—' }}</td>
-              <td>
-                {% if processo.status %}
-                <span class="selo-status {{ processo.status }}">{{ {'ativo': 'Ativo', 'arquivado': 'Arquivado', 'suspenso': 'Suspenso'}.get(processo.status, processo.status) }}</span>
-                {% else %}
-                —
-                {% endif %}
-              </td>
-              <td>
-                {% if processo.risco %}
-                <span class="selo-risco {{ processo.risco }}">{{ {'remoto': 'Remoto', 'possivel': 'Possível', 'provavel': 'Provável'}.get(processo.risco, processo.risco) }}</span>
-                {% else %}
-                —
-                {% endif %}
-              </td>
-              <td class="acoes-linha">
-                <a href="{{ url_for('processo_detalhe', processo_id=processo.id) }}">Ver</a>
-                <a href="{{ url_for('processo_editar', processo_id=processo.id) }}">Editar</a>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+        <div class="tabela-wrap">
+          <table class="tabela-processos">
+            <thead>
+              <tr>
+                <th>Número do processo</th>
+                <th>Comarca/UF</th>
+                <th>Autor(es)</th>
+                <th>Réu</th>
+                <th>Status</th>
+                <th>Risco</th>
+                <th>Resultado</th>
+                <th>Valor da causa</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in processos %}
+              <tr>
+                <td>{{ p.numero_processo }}</td>
+                <td>{{ p.comarca or '—' }}{{ '/' ~ p.uf if p.uf else '' }}</td>
+                <td>{{ p.partes|selectattr('tipo', 'equalto', 'autor')|map(attribute='nome')|join(', ') or '—' }}</td>
+                <td>{{ p.partes|selectattr('tipo', 'equalto', 'reu')|map(attribute='nome')|join(', ') or '—' }}</td>
+                <td><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></td>
+                <td>
+                  {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif %}
+                </td>
+                <td>{{ p.resultado|title if p.resultado else '—' }}</td>
+                <td>{{ p.valor_causa|moeda if p.valor_causa is not none else '—' }}</td>
+                <td>
+                  <a class="btn-detalhe" href="{{ url_for('processo_detalhe', processo_id=p.id) }}">Ver detalhes</a>
+                  <a class="btn-detalhe btn-editar" href="{{ url_for('processo_editar', processo_id=p.id) }}">Editar</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
         {% else %}
-        <p class="sem-registros">Nenhum processo cível cadastrado até o momento.</p>
+        <div class="tabela-wrap">
+          <div class="estado-vazio">
+            Nenhum processo cível cadastrado ainda. <a href="{{ url_for('cadastro_civel') }}">Cadastrar o primeiro</a>.
+          </div>
+        </div>
         {% endif %}
 
       </div>
