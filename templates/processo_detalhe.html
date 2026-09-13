@@ -211,17 +211,17 @@
             <div class="campo" style="flex: 1 1 140px;">
               <label>Status</label>
               {% if p.status %}
-              <div class="valor valor-sem-caixa"><span class="selo-status {{ p.status }}">{{ rotulos_status.get(p.status, p.status) }}</span></div>
+              <div class="valor valor-sem-caixa" style="justify-content:flex-start;"><span class="selo-status {{ p.status }}">{{ rotulos_status.get(p.status, p.status) }}</span></div>
               {% else %}
-              <div class="valor valor-sem-caixa texto-vazio">—</div>
+              <div class="valor valor-sem-caixa texto-vazio" style="justify-content:flex-start;">—</div>
               {% endif %}
             </div>
             <div class="campo" style="flex: 1 1 140px;">
               <label>Risco</label>
               {% if p.risco %}
-              <div class="valor valor-sem-caixa"><span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span></div>
+              <div class="valor valor-sem-caixa" style="justify-content:flex-start;"><span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span></div>
               {% else %}
-              <div class="valor valor-sem-caixa texto-vazio">—</div>
+              <div class="valor valor-sem-caixa texto-vazio" style="justify-content:flex-start;">—</div>
               {% endif %}
             </div>
           </div>
