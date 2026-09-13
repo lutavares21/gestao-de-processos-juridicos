@@ -207,6 +207,7 @@
             {{ cv('Sentença', p.sentenca|title if p.sentenca else '') }}
           </div>
           <div class="linha">
+          <div class="linha">
             <div class="campo">
               <label>Status</label>
               {% if p.status %}
@@ -216,14 +217,14 @@
               {% endif %}
             </div>
             {{ cv('Grau/Instância atual', rotulos_grau_instancia.get(p.grau_instancia)) }}
-          </div>
-          <div class="campo">
-            <label>Risco</label>
-            {% if p.risco %}
-            <span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>
-            {% else %}
-            <span class="texto-vazio">—</span>
-            {% endif %}
+            <div class="campo">
+              <label>Risco</label>
+              {% if p.risco %}
+              <span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>
+              {% else %}
+              <span class="texto-vazio">—</span>
+              {% endif %}
+            </div>
           </div>
         </div>
 
@@ -242,12 +243,12 @@
                     <td>
                       {% if ped.valor is not none %}
                       {% set texto_moeda = ped.valor|moeda %}
-                      <div style="display:flex; justify-content:center; gap:6px;">
+                      <div style="display:flex; justify-content:space-between;">
                         <span>{{ texto_moeda.split(' ')[0] }}</span>
                         <span>{{ texto_moeda.split(' ', 1)[1] }}</span>
                       </div>
                       {% else %}
-                      <div style="text-align:center;">—</div>
+                      <div style="text-align:right;">—</div>
                       {% endif %}
                     </td>
                     <td><span class="selo-pedido {{ ped.status or 'em_analise' }}">{{ rotulos_status_pedido.get(ped.status, 'Em análise') }}</span></td>
