@@ -113,8 +113,6 @@
       <div class="cabecalho">
         <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
           <h1>Processo {{ p.numero_processo }}</h1>
-          {% if p.status %}<span class="selo-status {{ p.status }}">{{ rotulos_status.get(p.status, p.status) }}</span>{% endif %}
-          {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% endif %}
         </div>
         <div class="subtitulo">Gestão de Processos Jurídicos</div>
       </div>
@@ -212,9 +210,9 @@
             <div class="campo">
               <label>Status</label>
               {% if p.status %}
-              <div class="valor"><span class="selo-status {{ p.status }}">{{ rotulos_status.get(p.status, p.status) }}</span></div>
+              <span class="selo-status {{ p.status }}">{{ rotulos_status.get(p.status, p.status) }}</span>
               {% else %}
-              <div class="valor texto-vazio">—</div>
+              <span class="texto-vazio">—</span>
               {% endif %}
             </div>
             {{ cv('Grau/Instância atual', rotulos_grau_instancia.get(p.grau_instancia)) }}
@@ -222,9 +220,9 @@
           <div class="campo">
             <label>Risco</label>
             {% if p.risco %}
-            <div class="valor"><span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span></div>
+            <span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>
             {% else %}
-            <div class="valor texto-vazio">—</div>
+            <span class="texto-vazio">—</span>
             {% endif %}
           </div>
         </div>
@@ -236,7 +234,7 @@
             {% if p.pedidos_trabalhistas %}
             <div class="tabela-wrap">
               <table class="tabela-processos">
-                <thead><tr><th>Pedido/Verba</th><th>Valor</th><th>Situação</th></tr></thead>
+                <thead><tr><th>Pedido/Verba</th><th style="text-align:center;">Valor</th><th>Situação</th></tr></thead>
                 <tbody>
                   {% for ped in p.pedidos_trabalhistas %}
                   <tr>
@@ -244,12 +242,12 @@
                     <td>
                       {% if ped.valor is not none %}
                       {% set texto_moeda = ped.valor|moeda %}
-                      <div style="display:flex; justify-content:space-between;">
+                      <div style="display:flex; justify-content:center; gap:6px;">
                         <span>{{ texto_moeda.split(' ')[0] }}</span>
                         <span>{{ texto_moeda.split(' ', 1)[1] }}</span>
                       </div>
                       {% else %}
-                      <div style="text-align:right;">—</div>
+                      <div style="text-align:center;">—</div>
                       {% endif %}
                     </td>
                     <td><span class="selo-pedido {{ ped.status or 'em_analise' }}">{{ rotulos_status_pedido.get(ped.status, 'Em análise') }}</span></td>
