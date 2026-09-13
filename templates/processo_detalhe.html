@@ -2,12 +2,48 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Operadores - Gestão de Processos</title>
+  <title>Processo {{ p.numero_processo }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+
+{% set eh_trabalhista = p.origem_cadastro == 'trabalhista' %}
+{% set rotulo_ativo = 'Reclamante(s)' if eh_trabalhista else 'Autor(es)' %}
+{% set rotulo_passivo = 'Reclamada' if eh_trabalhista else 'Réu' %}
+{% set rotulo_adv_ativo = 'reclamante' if eh_trabalhista else 'autor' %}
+{% set rotulo_adv_passivo = 'reclamada' if eh_trabalhista else 'réu' %}
+{% set tipo_ativo = 'reclamante' if eh_trabalhista else 'autor' %}
+{% set tipo_passivo = 'reclamada' if eh_trabalhista else 'reu' %}
+{% set nomes_ativo = p.partes|selectattr('tipo', 'equalto', tipo_ativo)|list %}
+{% set nomes_passivo = p.partes|selectattr('tipo', 'equalto', tipo_passivo)|list %}
+{% set adv_autor = p.advogados|selectattr('lado', 'equalto', 'autor')|list %}
+{% set adv_reu = p.advogados|selectattr('lado', 'equalto', 'reu')|list %}
+{% set crs_lista = [
+  ('271','Audiologia'), ('290','Bernafon'), ('245','Call Center'), ('220','Departamento Financeiro'),
+  ('273','Diatec'), ('211','Diretoria Executiva'), ('501','Distribuidores'), ('302','Expansão'),
+  ('800','Expatriados'), ('246','Hub Teleconsulta'), ('253','Interacoustics - Distribuidores'),
+  ('1111','Laboratório'), ('237','Licitação e Legalização'), ('234','Logística'), ('242','Marketing'),
+  ('601','Marketing B2B'), ('700','México'), ('402','Neurelec'), ('254','Oticon Governo'),
+  ('400','Oticon Medical'), ('301','Philips'), ('281','Produtos e Regulatórios'), ('249','Programa Parceria'),
+  ('251','RH/Depto.Pessoal'), ('258','Sonic'), ('502','Sonic Distribuidores'), ('236','Suprimentos'),
+  ('213','Telex Licença'), ('261','TI - Informática')
+] %}
+{% set nomes_crs = dict(crs_lista) %}
+{% set rotulos_tipo_acao = {
+  'acao_anulatoria':'Ação Anulatória', 'acao_civil_publica':'Ação Civil Pública',
+  'acao_consignacao_pagamento':'Ação de Consignação em Pagamento', 'acao_cumprimento':'Ação de Cumprimento',
+  'acao_rescisoria':'Ação Rescisória', 'dissidio_coletivo':'Dissídio Coletivo',
+  'inquerito_falta_grave':'Inquérito para Apuração de Falta Grave', 'mandado_seguranca':'Mandado de Segurança',
+  'reclamacao_trabalhista':'Reclamação Trabalhista', 'acao_civel':'Ação Cível', 'acao_trabalhista':'Ação Trabalhista',
+  'cobranca_extrajudicial':'Cobrança Extrajudicial', 'cobranca_judicial':'Cobrança Judicial', 'outros':'Outros'
+} %}
+{% set rotulos_grau_instancia = {
+  'primeira_instancia':'1ª Instância', 'segunda_instancia_trt':'2ª Instância - Recurso TRT',
+  'nao_informado':'Não informado', 'stf':'STF', 'tst':'TST'
+} %}
+{% set rotulos_status_pedido = {'em_analise': 'Em análise', 'deferido': 'Deferido', 'indeferido': 'Indeferido'} %}
 
   <div class="layout">
 
@@ -19,14 +55,14 @@
         <div class="item-com-submenu">
           <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
           <ul class="submenu">
-            <li><a href="{{ url_for('cadastro_civel') }}">Processos Cível</a></li>
+            <li><a href="{{ url_for('cadastro_civel') }}">Processo Cível</a></li>
             <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
+            <li><a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a></li>
             <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
-            <li><a href="{{ url_for('cadastro_trabalhista') }}">Processos Trabalhista</a></li>
           </ul>
         </div>
 
-        <div class="item-com-submenu">
+        <div class="item-com-submenu ativo">
           <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
           <ul class="submenu">
             <li><a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a></li>
@@ -39,61 +75,266 @@
         <a href="{{ url_for('registro_processos') }}">Panorama Jurídico</a>
 
         {% if current_user.eh_administrador %}
-        <a href="{{ url_for('operadores') }}" class="ativo">Gestão de Operadores</a>
+        <a href="{{ url_for('operadores') }}">Gestão de Operadores</a>
         {% endif %}
-
       </nav>
     </aside>
 
     <div class="conteudo">
       <div class="cabecalho">
-        <h1>Gestão de operadores</h1>
-        <div class="subtitulo">Gestão de operadores</div>
+        <h1>Processo {{ p.numero_processo }}</h1>
+        <div class="subtitulo">Gestão de Processos Jurídicos</div>
       </div>
 
-      <div class="container" style="max-width: 1000px;">
+      <div class="container">
 
-        <div class="acoes-topo" style="margin-bottom:16px; display:flex; align-items:center; gap:10px;">
-          <a href="{{ url_for('operador_novo') }}" class="btn-detalhe btn-editar btn-largura-auto">Cadastrar novo operador</a>
-          <a href="{{ url_for('atividades') }}" class="btn-detalhe btn-editar btn-largura-auto">Registro de atividades</a>
+        <a class="link-voltar" href="{{ url_for('processos_trabalhista') if eh_trabalhista else url_for('processos_civel') }}">← Voltar para a listagem</a>
+
+        <div class="acoes-topo" style="margin:14px 0; display:flex; align-items:center; gap:10px;">
+          <a href="{{ url_for('processo_editar', processo_id=p.id) }}" class="btn-detalhe btn-editar btn-largura-auto">Editar processo</a>
+          {% if p.status %}<span class="selo-status {{ p.status }}">{{ p.status|title }}</span>{% endif %}
+          {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% endif %}
         </div>
 
-        {% if operadores %}
-        <div class="tabela-wrap">
-          <table class="tabela-processos">
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Login</th>
-                <th>E-mail</th>
-                <th>Nível</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for u in operadores %}
-              <tr>
-                <td>{{ u.nome }}</td>
-                <td>{{ u.login }}</td>
-                <td>{{ u.email or '—' }}</td>
-                <td>
-                  {% if u.eh_administrador %}
-                  <span class="selo-status suspenso">Administrador</span>
-                  {% else %}
-                  <span class="selo-status ativo">Comum</span>
-                  {% endif %}
-                </td>
-                <td><a class="btn-detalhe" href="{{ url_for('operador_editar', operador_id=u.id) }}">Editar</a></td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+        <!-- 1. IDENTIFICAÇÃO -->
+        <div class="secao">
+          <h2>Identificação</h2>
+          <div class="linha">
+            <div class="campo">
+              <label>{{ 'Vara do Trabalho' if eh_trabalhista else 'Juizado' }}</label>
+              <p>{{ p.juizado or '—' }}</p>
+            </div>
+            <div class="campo">
+              <label>Comarca</label>
+              <p>{{ p.comarca or '—' }}</p>
+            </div>
+            <div class="campo campo-pequeno">
+              <label>UF</label>
+              <p>{{ p.uf or '—' }}</p>
+            </div>
+            <div class="campo">
+              <label>{{ 'Classe processual' if eh_trabalhista else 'Tipo de ação' }}</label>
+              <p>{{ rotulos_tipo_acao.get(p.tipo_acao, p.tipo_acao) if p.tipo_acao else '—' }}</p>
+            </div>
+          </div>
+          <div class="linha">
+            <div class="campo">
+              <label>{{ rotulo_ativo }}</label>
+              <p>{{ nomes_ativo|map(attribute='nome')|join(', ') if nomes_ativo else '—' }}</p>
+            </div>
+            <div class="campo">
+              <label>{{ rotulo_passivo }}</label>
+              <p>{{ nomes_passivo|map(attribute='nome')|join(', ') if nomes_passivo else '—' }}</p>
+            </div>
+          </div>
         </div>
-        {% else %}
-        <div class="tabela-wrap">
-          <div class="estado-vazio">Nenhum operador cadastrado ainda.</div>
+
+        <!-- 2. DATAS, AUDIÊNCIAS E VALOR DA CAUSA -->
+        <div class="secao">
+          <h2>Datas, audiências e valor da causa</h2>
+          <div class="linha">
+            <div class="campo">
+              <label>Data de distribuição</label>
+              <p>{{ p.data_distribuicao.strftime('%d/%m/%Y') if p.data_distribuicao else '—' }}</p>
+            </div>
+            <div class="campo">
+              <label>Valor da causa</label>
+              <p>{{ p.valor_causa|moeda if p.valor_causa is not none else '—' }}</p>
+            </div>
+            <div class="campo">
+              <label>Tempo de tramitação</label>
+              <p>{{ (p.dias_ativos ~ ' dias') if p.dias_ativos is not none else '—' }}</p>
+            </div>
+          </div>
+          <div class="linha">
+            <div class="campo">
+              <label>Próxima audiência</label>
+              <p>{{ p.data_audiencia_1.strftime('%d/%m/%Y') if p.data_audiencia_1 else '—' }}{{ ' às ' ~ p.audiencia_1_horario if p.audiencia_1_horario else '' }}</p>
+            </div>
+            <div class="campo">
+              <label>Modalidade</label>
+              <p>{{ {'hibrida':'Híbrida','presencial':'Presencial','telepresencial':'Telepresencial','videoconferencia':'Videoconferência'}.get(p.audiencia_1_tipo, '—') }}</p>
+            </div>
+            {% if p.audiencia_1_link %}
+            <div class="campo">
+              <label>Link da audiência</label>
+              <p><a href="{{ p.audiencia_1_link }}" target="_blank" rel="noopener">{{ p.audiencia_1_link }}</a></p>
+            </div>
+            {% endif %}
+          </div>
+          <div class="linha">
+            <div class="campo">
+              <label>Última audiência</label>
+              <p>{{ p.data_audiencia_2.strftime('%d/%m/%Y') if p.data_audiencia_2 else '—' }}</p>
+            </div>
+            <div class="campo">
+              <label>Audiência inicial</label>
+              <p>{{ p.data_audiencia_3.strftime('%d/%m/%Y') if p.data_audiencia_3 else '—' }}</p>
+            </div>
+            <div class="campo">
+              <label>Data do arquivamento</label>
+              <p>{{ p.data_arquivamento.strftime('%d/%m/%Y') if p.data_arquivamento else '—' }}</p>
+            </div>
+          </div>
         </div>
-        {% endif %}
+
+        <!-- 3. PARTES ENVOLVIDAS -->
+        <div class="secao">
+          <h2>Partes envolvidas</h2>
+          <div class="linha">
+            <div class="campo">
+              <label>Advogado(s) d{{ 'a' if eh_trabalhista else 'o' }} {{ rotulo_adv_ativo }}</label>
+              <p>
+                {% if adv_autor %}
+                {% for adv in adv_autor %}{{ adv.nome }}{{ ' (OAB ' ~ adv.oab ~ ')' if adv.oab }}{{ ', ' if not loop.last }}{% endfor %}
+                {% else %}—{% endif %}
+              </p>
+            </div>
+            <div class="campo">
+              <label>Advogado(s) d{{ 'a' if eh_trabalhista else 'o' }} {{ rotulo_adv_passivo }}</label>
+              <p>
+                {% if adv_reu %}
+                {% for adv in adv_reu %}{{ adv.nome }}{{ ' (OAB ' ~ adv.oab ~ ')' if adv.oab }}{{ ', ' if not loop.last }}{% endfor %}
+                {% else %}—{% endif %}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. ORGANIZAÇÃO INTERNA -->
+        <div class="secao">
+          <h2>Organização interna</h2>
+          <div class="linha">
+            <div class="campo">
+              <label>Centro de Resultados (CR)</label>
+              <p>
+                {% if p.centro_resultado == 'rateio' %}
+                Rateio
+                {% elif p.centro_resultado %}
+                {{ p.centro_resultado }} - {{ nomes_crs.get(p.centro_resultado, '') }}
+                {% else %}—{% endif %}
+              </p>
+            </div>
+            <div class="campo">
+              <label>Escritório</label>
+              <p>{{ p.escritorio or '—' }}</p>
+            </div>
+          </div>
+          {% if p.centro_resultado == 'rateio' and p.rateio_crs %}
+          <div class="campo">
+            <label>CRs no rateio</label>
+            <p>{% for r in p.rateio_crs %}{{ nomes_crs.get(r.centro_resultado, r.centro_resultado) }}{{ ', ' if not loop.last }}{% endfor %}</p>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- 5. RESULTADO, STATUS E RISCO -->
+        <div class="secao">
+          <h2>Resultado, status e risco</h2>
+          <div class="linha">
+            <div class="campo">
+              <label>Resultado</label>
+              <p>{{ p.resultado|title if p.resultado else '—' }}</p>
+            </div>
+            <div class="campo">
+              <label>Sentença</label>
+              <p>{{ p.sentenca|title if p.sentenca else '—' }}</p>
+            </div>
+            <div class="campo">
+              <label>Grau/Instância atual</label>
+              <p>{{ rotulos_grau_instancia.get(p.grau_instancia, '—') }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. PEDIDOS E REQUERIMENTOS -->
+        <div class="secao">
+          <h2>Pedidos e requerimentos</h2>
+          {% if eh_trabalhista %}
+            {% if p.pedidos_trabalhistas %}
+            <div class="tabela-wrap">
+              <table class="tabela-processos">
+                <thead><tr><th>Pedido/Verba</th><th>Valor</th><th>Situação</th></tr></thead>
+                <tbody>
+                  {% for ped in p.pedidos_trabalhistas %}
+                  <tr>
+                    <td>{{ ped.verba }}</td>
+                    <td>{{ ped.valor|moeda if ped.valor is not none else '—' }}</td>
+                    <td>{{ rotulos_status_pedido.get(ped.status, ped.status or 'Em análise') }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <p>Nenhum pedido cadastrado.</p>
+            {% endif %}
+          {% else %}
+            {% if p.pedidos_civeis %}
+            <p>{{ p.pedidos_civeis|map(attribute='descricao')|join(', ') }}</p>
+            {% else %}
+            <p>Nenhum pedido cadastrado.</p>
+            {% endif %}
+          {% endif %}
+        </div>
+
+        <!-- 7. ACOMPANHAMENTO -->
+        <div class="secao">
+          <h2>Acompanhamento</h2>
+          <label>Últimos movimentos</label>
+          {% set movimentos_ordenados = p.movimentos|sort(attribute='data_movimento') %}
+          {% if movimentos_ordenados %}
+          <ul>
+            {% for m in movimentos_ordenados %}
+            <li>{{ m.data_movimento.strftime('%d/%m/%Y') if m.data_movimento else '—' }} — {{ m.tipo_movimento }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p>Nenhum movimento cadastrado.</p>
+          {% endif %}
+
+          <div class="campo" style="margin-top:14px;">
+            <label>Resumo do processo</label>
+            <p>{{ p.resumo or '—' }}</p>
+          </div>
+        </div>
+
+        <!-- 8. VALORES FINANCEIROS -->
+        <div class="secao">
+          <h2>Valores financeiros</h2>
+          <div class="linha">
+            <div class="campo">
+              <label>Valor final pago</label>
+              <p>{{ p.valor_final|moeda if p.valor_final is not none else '—' }}</p>
+            </div>
+            <div class="campo">
+              <label>Honorários advocatícios</label>
+              <p>{{ p.honorarios_advogado|moeda if p.honorarios_advogado is not none else '—' }}</p>
+            </div>
+            <div class="campo">
+              <label>Economia gerada</label>
+              <p>{{ p.economia_gerada|moeda if p.economia_gerada is not none else '—' }}</p>
+            </div>
+          </div>
+          <div class="linha">
+            <div class="campo">
+              <label>Honorários periciais</label>
+              <p>{{ p.honorarios_periciais|moeda if p.honorarios_periciais is not none else '—' }}</p>
+            </div>
+            <div class="campo">
+              <label>Custas processuais</label>
+              <p>{{ p.custas_processuais|moeda if p.custas_processuais is not none else '—' }}</p>
+            </div>
+            <div class="campo">
+              <label>Depósito recursal</label>
+              <p>{{ p.deposito_recursal|moeda if p.deposito_recursal is not none else '—' }}</p>
+            </div>
+            <div class="campo">
+              <label>Alvará</label>
+              <p>{{ p.valor_alvara|moeda if p.valor_alvara is not none else '—' }}{{ ' em ' ~ p.data_alvara.strftime('%d/%m/%Y') if p.data_alvara else '' }}</p>
+            </div>
+          </div>
+        </div>
 
       </div>
     </div>
