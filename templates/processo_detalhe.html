@@ -9,8 +9,8 @@
 </head>
 <body>
 
-{% macro cv(rotulo, valor, classe_campo='') %}
-<div class="campo {{ classe_campo }}">
+{% macro cv(rotulo, valor, classe_campo='', estilo='') %}
+<div class="campo {{ classe_campo }}" style="{{ estilo }}">
   <label>{{ rotulo }}</label>
   {% if valor %}
   <div class="valor">{{ valor }}</div>
@@ -207,8 +207,8 @@
             {{ cv('Sentença', p.sentenca|title if p.sentenca else '') }}
           </div>
           <div class="linha">
-            {{ cv('Grau/Instância atual', rotulos_grau_instancia.get(p.grau_instancia)) }}
-            <div class="campo">
+            {{ cv('Grau/Instância atual', rotulos_grau_instancia.get(p.grau_instancia), '', 'flex: 2 1 300px;') }}
+            <div class="campo" style="flex: 1 1 140px;">
               <label>Status</label>
               {% if p.status %}
               <div class="valor valor-sem-caixa"><span class="selo-status {{ p.status }}">{{ rotulos_status.get(p.status, p.status) }}</span></div>
@@ -216,7 +216,7 @@
               <div class="valor valor-sem-caixa texto-vazio">—</div>
               {% endif %}
             </div>
-            <div class="campo">
+            <div class="campo" style="flex: 1 1 140px;">
               <label>Risco</label>
               {% if p.risco %}
               <div class="valor valor-sem-caixa"><span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span></div>
