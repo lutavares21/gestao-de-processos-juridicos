@@ -207,21 +207,21 @@
             {{ cv('Sentença', p.sentenca|title if p.sentenca else '') }}
           </div>
           <div class="linha">
+            {{ cv('Grau/Instância atual', rotulos_grau_instancia.get(p.grau_instancia)) }}
             <div class="campo">
               <label>Status</label>
               {% if p.status %}
-              <span class="selo-status {{ p.status }}">{{ rotulos_status.get(p.status, p.status) }}</span>
+              <div class="valor valor-sem-caixa"><span class="selo-status {{ p.status }}">{{ rotulos_status.get(p.status, p.status) }}</span></div>
               {% else %}
-              <span class="texto-vazio">—</span>
+              <div class="valor valor-sem-caixa texto-vazio">—</div>
               {% endif %}
             </div>
-            {{ cv('Grau/Instância atual', rotulos_grau_instancia.get(p.grau_instancia)) }}
             <div class="campo">
               <label>Risco</label>
               {% if p.risco %}
-              <span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>
+              <div class="valor valor-sem-caixa"><span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span></div>
               {% else %}
-              <span class="texto-vazio">—</span>
+              <div class="valor valor-sem-caixa texto-vazio">—</div>
               {% endif %}
             </div>
           </div>
@@ -314,7 +314,7 @@
           </div>
         </div>
 
-        <a href="{{ url_for('processo_editar', processo_id=p.id) }}" class="btn btn-salvar" style="text-decoration:none; text-align:center; display:block;">Editar processo</a>
+        <a href="{{ url_for('processo_editar', processo_id=p.id) }}" class="btn btn-salvar" style="text-decoration:none;">Editar processo</a>
 
       </div>
     </div>
