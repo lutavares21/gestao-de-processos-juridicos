@@ -83,7 +83,7 @@
                 <label for="comarca">Comarca</label>
                 <input type="text" id="comarca" name="comarca">
               </div>
-              <div class="campo campo-pequeno">
+              <div class="campo" style="flex: 0 0 90px;">
                 <label for="uf">UF</label>
                 <select id="uf" name="uf">
                   <option value="">Selecione</option>
@@ -474,7 +474,7 @@
             <h2>Valores financeiros</h2>
             <div class="linha">
               <div class="campo">
-                <label for="valor_final_display">Valor final pago(R$)</label>
+                <label for="valor_final_display">Valor pago ao reclamante(R$)</label>
                 <input type="text" inputmode="numeric" id="valor_final_display" placeholder="R$ 0,00"
                        data-alvo="valor_final" oninput="formatarDinheiro(this)">
                 <input type="hidden" id="valor_final" name="valor_final">

@@ -20,9 +20,9 @@
           <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
           <ul class="submenu">
             <li><a href="{{ url_for('cadastro_civel') }}">Processo Cível</a></li>
-            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
-            <li><a href="#" class="oculto-visual">Processo Licitatórios</a></li>
             <li><a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
+            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
           </ul>
         </div>
 
@@ -56,6 +56,10 @@
           <div class="flash">Processo cadastrado com sucesso.</div>
         {% endif %}
 
+        {% if erro_numero_duplicado %}
+          <div class="flash flash-erro">Já existe um processo cadastrado com o número <strong>{{ erro_numero_duplicado }}</strong>. Verifique o número e tente novamente.</div>
+        {% endif %}
+
         <form method="POST" action="{{ url_for('cadastro_civel') }}" enctype="multipart/form-data">
 
           <!-- 1. IDENTIFICAÇÃO -->
@@ -78,6 +82,39 @@
               <div class="campo">
                 <label for="comarca">Comarca</label>
                 <input type="text" id="comarca" name="comarca">
+              </div>
+              <div class="campo" style="flex: 0 0 90px;">
+                <label for="uf">UF</label>
+                <select id="uf" name="uf">
+                  <option value="">Selecione</option>
+                  <option value="AC">AC</option>
+                  <option value="AL">AL</option>
+                  <option value="AM">AM</option>
+                  <option value="AP">AP</option>
+                  <option value="BA">BA</option>
+                  <option value="CE">CE</option>
+                  <option value="DF">DF</option>
+                  <option value="ES">ES</option>
+                  <option value="GO">GO</option>
+                  <option value="MA">MA</option>
+                  <option value="MG">MG</option>
+                  <option value="MS">MS</option>
+                  <option value="MT">MT</option>
+                  <option value="PA">PA</option>
+                  <option value="PB">PB</option>
+                  <option value="PE">PE</option>
+                  <option value="PI">PI</option>
+                  <option value="PR">PR</option>
+                  <option value="RJ">RJ</option>
+                  <option value="RN">RN</option>
+                  <option value="RO">RO</option>
+                  <option value="RR">RR</option>
+                  <option value="RS">RS</option>
+                  <option value="SC">SC</option>
+                  <option value="SE">SE</option>
+                  <option value="SP">SP</option>
+                  <option value="TO">TO</option>
+                </select>
               </div>
               <div class="campo">
                 <label for="tipo_acao">Tipo de ação</label>
@@ -120,7 +157,27 @@
                 <label for="data_audiencia_1">Próxima audiência</label>
                 <input type="date" id="data_audiencia_1" name="data_audiencia_1">
               </div>
+              <div class="campo campo-pequeno">
+                <label for="audiencia_1_horario">Horário</label>
+                <input type="time" id="audiencia_1_horario" name="audiencia_1_horario">
+              </div>
               <div class="campo">
+                <label for="audiencia_1_tipo">Modalidade da audiência</label>
+                <select id="audiencia_1_tipo" name="audiencia_1_tipo" onchange="alternarLinkAudiencia()">
+                  <option value="">Selecione</option>
+                  <option value="hibrida">Híbrida</option>
+                  <option value="presencial">Presencial</option>
+                  <option value="telepresencial">Telepresencial</option>
+                  <option value="videoconferencia">Videoconferência</option>
+                </select>
+              </div>
+              <div class="campo oculto" id="campo_link_audiencia">
+                <label for="audiencia_1_link">Link da audiência</label>
+                <input type="text" id="audiencia_1_link" name="audiencia_1_link" placeholder="https://...">
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo campo-pequeno">
                 <label for="data_audiencia_2">Última audiência</label>
                 <input type="date" id="data_audiencia_2" name="data_audiencia_2">
               </div>
@@ -137,7 +194,7 @@
               </div>
               <div class="campo">
                 <label for="tempo_tramitacao">Tempo de tramitação</label>
-                <input type="text" id="tempo_tramitacao" readonly placeholder="Preencha a data de distribuição">
+                <input type="text" id="tempo_tramitacao" readonly placeholder="Preencha a data de distribuição ou do arquivamento">
               </div>
             </div>
           </div>
@@ -146,23 +203,23 @@
           <div class="secao">
             <h2>Partes envolvidas</h2>
 
-            <label>Autor(es)</label>
+            <label class="rotulo-secao">Autor(es)</label>
             <div id="resumo_autores_partes" style="padding:9px 0 4px;font-size:14px;color:var(--texto-suave);font-style:italic;">—</div>
 
             <div style="margin-top:18px;">
-              <label>Advogado(s) do autor <span class="aviso-limite">(até 5)</span></label>
+              <label class="rotulo-secao">Advogado(s) do autor <span class="aviso-limite">(até 5)</span></label>
               <div id="lista_advogados_autor" class="grupo-dinamico"></div>
               <button type="button" class="btn btn-adicionar" onclick="adicionarAdvogado('autor')">+ Adicionar advogado</button>
             </div>
 
-            <hr style="border:none;border-top:1px solid var(--borda);margin:22px 0;">
+            <hr style="border:none;border-top:3px solid var(--texto-suave);margin:22px 0;">
 
-            <label>Réu</label>
+            <label class="rotulo-secao">Réu</label>
             <div id="lista_reus" class="grupo-dinamico"></div>
             <button type="button" class="btn btn-adicionar" onclick="adicionarParte('reu')">+ Adicionar réu</button>
 
             <div style="margin-top:18px;">
-              <label>Advogado(s) do réu <span class="aviso-limite">(até 5)</span></label>
+              <label class="rotulo-secao">Advogado(s) do réu <span class="aviso-limite">(até 5)</span></label>
               <div id="lista_advogados_reu" class="grupo-dinamico"></div>
               <button type="button" class="btn btn-adicionar" onclick="adicionarAdvogado('reu')">+ Adicionar advogado</button>
             </div>
@@ -176,9 +233,35 @@
                 <label for="centro_resultado">Centro de Resultados (CR)</label>
                 <select id="centro_resultado" name="centro_resultado" onchange="alternarRateio()">
                   <option value="">Selecione</option>
-                  <option value="CR1">CR1</option>
-                  <option value="CR2">CR2</option>
-                  <option value="CR3">CR3</option>
+                  <option value="271">271 - Audiologia</option>
+                  <option value="290">290 - Bernafon</option>
+                  <option value="245">245 - Call Center</option>
+                  <option value="220">220 - Departamento Financeiro</option>
+                  <option value="273">273 - Diatec</option>
+                  <option value="211">211 - Diretoria Executiva</option>
+                  <option value="501">501 - Distribuidores</option>
+                  <option value="302">302 - Expansão</option>
+                  <option value="800">800 - Expatriados</option>
+                  <option value="246">246 - Hub Teleconsulta</option>
+                  <option value="253">253 - Interacoustics - Distribuidores</option>
+                  <option value="1111">1111 - Laboratório</option>
+                  <option value="237">237 - Licitação e Legalização</option>
+                  <option value="234">234 - Logística</option>
+                  <option value="242">242 - Marketing</option>
+                  <option value="601">601 - Marketing B2B</option>
+                  <option value="700">700 - México</option>
+                  <option value="402">402 - Neurelec</option>
+                  <option value="254">254 - Oticon Governo</option>
+                  <option value="400">400 - Oticon Medical</option>
+                  <option value="301">301 - Philips</option>
+                  <option value="281">281 - Produtos e Regulatórios</option>
+                  <option value="249">249 - Programa Parceria</option>
+                  <option value="251">251 - RH/Depto.Pessoal</option>
+                  <option value="258">258 - Sonic</option>
+                  <option value="502">502 - Sonic Distribuidores</option>
+                  <option value="236">236 - Suprimentos</option>
+                  <option value="213">213 - Telex Licença</option>
+                  <option value="261">261 - TI - Informática</option>
                   <option value="rateio">Rateio</option>
                 </select>
               </div>
@@ -202,9 +285,35 @@
               <p class="aviso-limite" style="margin-top:-2px;margin-bottom:10px;">Marque os CRs da lista, ou digite outro que não esteja na lista.</p>
 
               <div class="chip-risco" style="flex-wrap:wrap;margin-bottom:14px;">
-                <label><input type="checkbox" name="rateio_cr" value="CR1"> CR1</label>
-                <label><input type="checkbox" name="rateio_cr" value="CR2"> CR2</label>
-                <label><input type="checkbox" name="rateio_cr" value="CR3"> CR3</label>
+                <label><input type="checkbox" name="rateio_cr" value="271"> 271 - Audiologia</label>
+                <label><input type="checkbox" name="rateio_cr" value="290"> 290 - Bernafon</label>
+                <label><input type="checkbox" name="rateio_cr" value="245"> 245 - Call Center</label>
+                <label><input type="checkbox" name="rateio_cr" value="220"> 220 - Departamento Financeiro</label>
+                <label><input type="checkbox" name="rateio_cr" value="273"> 273 - Diatec</label>
+                <label><input type="checkbox" name="rateio_cr" value="211"> 211 - Diretoria Executiva</label>
+                <label><input type="checkbox" name="rateio_cr" value="501"> 501 - Distribuidores</label>
+                <label><input type="checkbox" name="rateio_cr" value="302"> 302 - Expansão</label>
+                <label><input type="checkbox" name="rateio_cr" value="800"> 800 - Expatriados</label>
+                <label><input type="checkbox" name="rateio_cr" value="246"> 246 - Hub Teleconsulta</label>
+                <label><input type="checkbox" name="rateio_cr" value="253"> 253 - Interacoustics - Distribuidores</label>
+                <label><input type="checkbox" name="rateio_cr" value="1111"> 1111 - Laboratório</label>
+                <label><input type="checkbox" name="rateio_cr" value="237"> 237 - Licitação e Legalização</label>
+                <label><input type="checkbox" name="rateio_cr" value="234"> 234 - Logística</label>
+                <label><input type="checkbox" name="rateio_cr" value="242"> 242 - Marketing</label>
+                <label><input type="checkbox" name="rateio_cr" value="601"> 601 - Marketing B2B</label>
+                <label><input type="checkbox" name="rateio_cr" value="700"> 700 - México</label>
+                <label><input type="checkbox" name="rateio_cr" value="402"> 402 - Neurelec</label>
+                <label><input type="checkbox" name="rateio_cr" value="254"> 254 - Oticon Governo</label>
+                <label><input type="checkbox" name="rateio_cr" value="400"> 400 - Oticon Medical</label>
+                <label><input type="checkbox" name="rateio_cr" value="301"> 301 - Philips</label>
+                <label><input type="checkbox" name="rateio_cr" value="281"> 281 - Produtos e Regulatórios</label>
+                <label><input type="checkbox" name="rateio_cr" value="249"> 249 - Programa Parceria</label>
+                <label><input type="checkbox" name="rateio_cr" value="251"> 251 - RH/Depto.Pessoal</label>
+                <label><input type="checkbox" name="rateio_cr" value="258"> 258 - Sonic</label>
+                <label><input type="checkbox" name="rateio_cr" value="502"> 502 - Sonic Distribuidores</label>
+                <label><input type="checkbox" name="rateio_cr" value="236"> 236 - Suprimentos</label>
+                <label><input type="checkbox" name="rateio_cr" value="213"> 213 - Telex Licença</label>
+                <label><input type="checkbox" name="rateio_cr" value="261"> 261 - TI - Informática</label>
               </div>
 
               <div id="lista_rateio_manual"></div>
@@ -217,16 +326,17 @@
             <h2>Resultado, status e risco</h2>
             <div class="linha">
               <div class="campo">
-                <label for="sentenca">Resultado</label>
-                <select id="sentenca" name="sentenca">
+                <label for="resultado">Resultado</label>
+                <select id="resultado" name="resultado">
                   <option value="">Selecione</option>
+                  <option value="acordo">Acordo</option>
                   <option value="ganhamos">Ganhamos</option>
                   <option value="perdemos">Perdemos</option>
                 </select>
               </div>
               <div class="campo">
-                <label for="resultado">Sentença</label>
-                <select id="resultado" name="resultado">
+                <label for="sentenca">Sentença</label>
+                <select id="sentenca" name="sentenca">
                   <option value="">Selecione</option>
                   <option value="improcedente">Improcedente</option>
                   <option value="procedente">Procedente</option>
@@ -235,7 +345,7 @@
               </div>
             </div>
             <div class="linha">
-              <div class="campo campo-pequeno">
+              <div class="campo">
                 <label for="status">Status</label>
                 <select id="status" name="status">
                   <option value="arquivado">Arquivado</option>
@@ -247,10 +357,11 @@
                 <label for="grau_instancia">Grau/Instância atual</label>
                 <select id="grau_instancia" name="grau_instancia">
                   <option value="">Selecione</option>
-                  <option value="recurso">Recurso</option>
-                  <option value="trt">Recurso TRT</option>
-                  <option value="stj">STJ</option>
+                  <option value="primeira_instancia">1ª Instância</option>
+                  <option value="segunda_instancia_trt">2ª Instância - Recurso TRT</option>
+                  <option value="nao_informado">Não informado</option>
                   <option value="stf">STF</option>
+                  <option value="tst">TST</option>
                 </select>
               </div>
             </div>
@@ -307,16 +418,22 @@
             <h2>Valores financeiros</h2>
             <div class="linha">
               <div class="campo">
-                <label for="valor_final_display">Valor final pago (R$)</label>
+                <label for="valor_final_display">Valor pago ao autor (R$)</label>
                 <input type="text" inputmode="numeric" id="valor_final_display" placeholder="R$ 0,00"
                        data-alvo="valor_final" oninput="formatarDinheiro(this)">
                 <input type="hidden" id="valor_final" name="valor_final">
               </div>
               <div class="campo">
-                <label for="honorarios_advogado_display">Honorários de advogado (R$)</label>
+                <label for="honorarios_advogado_display">Honorários Advocatícios (R$)</label>
                 <input type="text" inputmode="numeric" id="honorarios_advogado_display" placeholder="R$ 0,00"
                        data-alvo="honorarios_advogado" oninput="formatarDinheiro(this)">
                 <input type="hidden" id="honorarios_advogado" name="honorarios_advogado">
+              </div>
+              <div class="campo">
+                <label for="economia_gerada_display">Economia Gerada (R$)</label>
+                <input type="text" inputmode="numeric" id="economia_gerada_display" placeholder="R$ 0,00"
+                       data-alvo="economia_gerada" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="economia_gerada" name="economia_gerada">
               </div>
             </div>
             <div class="linha">
@@ -419,7 +536,7 @@
     // enquanto guarda o valor numérico puro (1234.56) no campo escondido correspondente.
     function formatarDinheiro(campoTexto) {
       const idAlvo = campoTexto.dataset.alvo;
-      const campoOculto = document.getElementById(idAlvo);
+      const campoOculto = idAlvo ? document.getElementById(idAlvo) : null;
       const digitos = campoTexto.value.replace(/\D/g, '');
 
       if (!digitos) {
@@ -451,6 +568,13 @@
       const diffMs = dataFim - dataDist;
       const dias = Math.round(diffMs / (1000 * 60 * 60 * 24));
       campo.value = (dias >= 0 ? dias : 0) + ' dias';
+    }
+
+    // Mostra o campo de link da audiência quando o tipo não é presencial
+    function alternarLinkAudiencia() {
+      const tipo = document.getElementById('audiencia_1_tipo').value;
+      const mostrar = tipo === 'telepresencial' || tipo === 'videoconferencia' || tipo === 'hibrida';
+      document.getElementById('campo_link_audiencia').classList.toggle('oculto', !mostrar);
     }
 
     // Mostra o bloco de rateio só quando Centro de Resultados = "rateio"
