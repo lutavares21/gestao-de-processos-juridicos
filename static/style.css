@@ -822,31 +822,17 @@ input[readonly] {
 .selo-pedido.deferido   { background: #f6dede; color: var(--risco-provavel); }  /* vermelho - reclamação julgada procedente contra a empresa */
 .selo-pedido.indeferido { background: #e3f0e6; color: var(--risco-remoto); }    /* verde - empresa venceu esse pedido */
 
-/* --- Select de status do pedido/verba (mesmo visual do selo, porém editável) --- */
+/* --- Select de status do pedido/verba (mesma caixa retangular dos demais campos) --- */
 select.selo-pedido-select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  cursor: pointer;
-  font-family: var(--fonte-corpo);
-  padding: 4px 26px 4px 12px;
-  border: 1px solid currentColor;
-  border-radius: 20px;
-  background-color: #fff;
-  background-repeat: no-repeat;
-  background-position: right 9px center;
-  background-size: 10px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='currentColor' d='M2 4l4 4 4-4z'/%3E%3C/svg%3E");
+  display: block;
+  width: auto;
+  min-width: 130px;
+  font-weight: 600;
 }
 
-select.selo-pedido-select.em_analise { background-color: #fbeecb; }
-select.selo-pedido-select.deferido   { background-color: #f6dede; }
-select.selo-pedido-select.indeferido { background-color: #e3f0e6; }
-
-select.selo-pedido-select:focus {
-  outline: 2px solid var(--tinta-clara);
-  outline-offset: 1px;
-}
+select.selo-pedido-select.em_analise { background: #fff; color: var(--risco-possivel); }
+select.selo-pedido-select.deferido   { background: #fff; color: var(--risco-provavel); }
+select.selo-pedido-select.indeferido { background: #fff; color: var(--risco-remoto); }
 
 /* --- Campo de valor com o "R$" fixo alinhado à direita e o número à esquerda --- */
 .input-valor-moeda {
