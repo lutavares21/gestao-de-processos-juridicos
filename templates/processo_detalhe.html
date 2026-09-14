@@ -126,8 +126,9 @@
 
     <div class="conteudo">
       <div class="cabecalho">
-        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
           <h1>Processo {{ p.numero_processo }}</h1>
+          <a href="{{ url_for('processo_editar', processo_id=p.id) }}" class="btn btn-adicionar" style="text-decoration:none;">Editar processo</a>
         </div>
         <div class="subtitulo">Gestão de Processos Jurídicos</div>
       </div>
@@ -223,20 +224,20 @@
           </div>
           <div class="linha">
             {{ cv('Grau/Instância atual', rotulos_grau_instancia.get(p.grau_instancia), '', 'flex: 2 1 300px;') }}
-            <div class="campo" style="flex: 1 1 140px; display:flex; flex-direction:column; justify-content:center;">
+            <div class="campo" style="flex: 0 1 140px; margin-left:32px;">
               <label>Status</label>
               {% if p.status %}
-              <div class="valor valor-sem-caixa" style="justify-content:flex-start;"><span class="selo-status {{ p.status }}">{{ rotulos_status.get(p.status, p.status) }}</span></div>
+              <span class="selo-status {{ p.status }}">{{ rotulos_status.get(p.status, p.status) }}</span>
               {% else %}
-              <div class="valor valor-sem-caixa texto-vazio" style="justify-content:flex-start;">—</div>
+              <span class="texto-vazio">—</span>
               {% endif %}
             </div>
-            <div class="campo" style="flex: 1 1 140px; display:flex; flex-direction:column; justify-content:center;">
+            <div class="campo" style="flex: 0 1 140px;">
               <label>Risco</label>
               {% if p.risco %}
-              <div class="valor valor-sem-caixa" style="justify-content:flex-start;"><span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span></div>
+              <span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>
               {% else %}
-              <div class="valor valor-sem-caixa texto-vazio" style="justify-content:flex-start;">—</div>
+              <span class="texto-vazio">—</span>
               {% endif %}
             </div>
           </div>
