@@ -827,15 +827,21 @@ select.selo-pedido-select {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  border: none;
   cursor: pointer;
   font-family: var(--fonte-corpo);
-  padding: 3px 24px 3px 10px;
+  padding: 4px 26px 4px 12px;
+  border: 1px solid currentColor;
+  border-radius: 20px;
+  background-color: #fff;
   background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 9px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%23555' d='M2 4l4 4 4-4z'/%3E%3C/svg%3E");
+  background-position: right 9px center;
+  background-size: 10px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='currentColor' d='M2 4l4 4 4-4z'/%3E%3C/svg%3E");
 }
+
+select.selo-pedido-select.em_analise { background-color: #fbeecb; }
+select.selo-pedido-select.deferido   { background-color: #f6dede; }
+select.selo-pedido-select.indeferido { background-color: #e3f0e6; }
 
 select.selo-pedido-select:focus {
   outline: 2px solid var(--tinta-clara);
