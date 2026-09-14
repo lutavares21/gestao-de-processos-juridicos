@@ -431,7 +431,13 @@
                 <tr>
                   <td>{{ item.nome }}</td>
                   <td style="text-align:right;">{{ item.qtd }}</td>
-                  <td style="text-align:right; white-space:nowrap;">{{ item.valor|moeda }}</td>
+                  <td style="text-align:right; white-space:nowrap;">
+                    {% set texto_moeda = item.valor|moeda %}
+                    <div style="display:flex; justify-content:space-between;">
+                      <span>{{ texto_moeda.split(' ')[0] }}</span>
+                      <span>{{ texto_moeda.split(' ', 1)[1] }}</span>
+                    </div>
+                  </td>
                 </tr>
                 {% endfor %}
               </tbody>
