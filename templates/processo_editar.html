@@ -80,13 +80,13 @@
 
       <div class="container">
 
-        <a class="link-voltar" href="{{ url_for('processo_detalhe', processo_id=p.id) }}">← Voltar para os detalhes</a>
+        <a class="link-voltar" href="{{ url_for('processos_trabalhista') if eh_trabalhista else url_for('processos_civel') }}">← Voltar para a listagem</a>
 
         {% if erro_numero_duplicado %}
           <div class="flash flash-erro">Já existe um processo cadastrado com o número <strong>{{ erro_numero_duplicado }}</strong>. Verifique o número e tente novamente.</div>
         {% endif %}
 
-        <form method="POST" action="{{ url_for('processo_editar', processo_id=p.id) }}" enctype="multipart/form-data" style="margin-top:16px;">
+        <form method="POST" action="{{ url_for('processo_editar', processo_id=p.id) }}" enctype="multipart/form-data" style="margin-top:16px;" onsubmit="return confirmarEdicao()">
 
           <!-- 1. IDENTIFICAÇÃO -->
           <div class="secao">
@@ -412,12 +412,18 @@
                     <input type="text" name="pedido_verba" value="{{ ped.verba }}" readonly>
                   </div>
                   <div class="campo campo-pequeno">
-                    <input type="text" class="valor-verba-linha" value="{{ ped.valor|moeda if ped.valor is not none else 'R$ 0,00' }}" readonly>
+                    <div class="input-valor-moeda">
+                      <input type="text" class="valor-verba-linha" value="{{ (ped.valor|moeda|replace('R$ ', '')) if ped.valor is not none else '0,00' }}" readonly>
+                      <span class="moeda-simbolo">R$</span>
+                    </div>
                     <input type="hidden" name="pedido_valor" value="{{ ped.valor if ped.valor is not none else 0 }}">
                   </div>
                   <div class="campo campo-pequeno" style="align-self:center;">
-                    <span class="selo-pedido {{ ped.status or 'em_analise' }}">{{ {'em_analise':'Em análise','deferido':'Deferido','indeferido':'Indeferido'}.get(ped.status, 'Em análise') }}</span>
-                    <input type="hidden" name="pedido_status" value="{{ ped.status or 'em_analise' }}">
+                    <select name="pedido_status" class="selo-pedido selo-pedido-select {{ ped.status or 'em_analise' }}" onchange="this.className = 'selo-pedido selo-pedido-select ' + this.value">
+                      <option value="em_analise" {{ 'selected' if (ped.status or 'em_analise') == 'em_analise' else '' }}>Em análise</option>
+                      <option value="deferido" {{ 'selected' if ped.status == 'deferido' else '' }}>Deferido</option>
+                      <option value="indeferido" {{ 'selected' if ped.status == 'indeferido' else '' }}>Indeferido</option>
+                    </select>
                   </div>
                   <button type="button" class="btn btn-remover" onclick="this.parentElement.remove(); calcularTotalPedidos()">Remover</button>
                 </div>
@@ -583,12 +589,18 @@
         <input type="text" name="pedido_verba" readonly>
       </div>
       <div class="campo campo-pequeno">
-        <input type="text" class="valor-verba-linha" readonly>
+        <div class="input-valor-moeda">
+          <input type="text" class="valor-verba-linha" readonly>
+          <span class="moeda-simbolo">R$</span>
+        </div>
         <input type="hidden" name="pedido_valor">
       </div>
       <div class="campo campo-pequeno" style="align-self:center;">
-        <span class="selo-pedido"></span>
-        <input type="hidden" name="pedido_status">
+        <select name="pedido_status" class="selo-pedido selo-pedido-select" onchange="this.className = 'selo-pedido selo-pedido-select ' + this.value">
+          <option value="em_analise">Em análise</option>
+          <option value="deferido">Deferido</option>
+          <option value="indeferido">Indeferido</option>
+        </select>
       </div>
       <button type="button" class="btn btn-remover" onclick="this.parentElement.remove(); calcularTotalPedidos()">Remover</button>
     </div>
@@ -641,9 +653,6 @@
       campo.value = (dias >= 0 ? dias : 0) + ' dias';
     }
 
-    // Textos e classes de cor do selo de status de cada pedido
-    const ROTULOS_STATUS_PEDIDO = { em_analise: 'Em análise', deferido: 'Deferido', indeferido: 'Indeferido' };
-
     // Adiciona uma linha de pedido/verba trabalhista, usando o que está selecionado no topo
     function adicionarVerba() {
       const select = document.getElementById('select_verba');
@@ -663,15 +672,13 @@
       const campoNome = modelo.querySelector('input[name="pedido_verba"]');
       const campoValorDisplay = modelo.querySelector('.valor-verba-linha');
       const campoValorOculto = modelo.querySelector('input[name="pedido_valor"]');
-      const campoStatusOculto = modelo.querySelector('input[name="pedido_status"]');
-      const seloStatus = modelo.querySelector('.selo-pedido');
+      const seloStatus = modelo.querySelector('select[name="pedido_status"]');
 
       campoNome.value = select.value;
-      campoValorDisplay.value = 'R$ ' + valorNumerico.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      campoValorDisplay.value = valorNumerico.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       campoValorOculto.value = valorNumerico.toFixed(2);
-      campoStatusOculto.value = statusEscolhido;
-      seloStatus.textContent = ROTULOS_STATUS_PEDIDO[statusEscolhido];
-      seloStatus.className = 'selo-pedido ' + statusEscolhido;
+      seloStatus.value = statusEscolhido;
+      seloStatus.className = 'selo-pedido selo-pedido-select ' + statusEscolhido;
 
       container.appendChild(modelo);
 
@@ -734,6 +741,11 @@
       const container = document.getElementById('lista_movimentos');
       const modelo = document.getElementById('modelo_movimento').content.cloneNode(true);
       container.appendChild(modelo);
+    }
+
+    // Confirmação obrigatória antes de salvar as alterações do processo
+    function confirmarEdicao() {
+      return confirm('ATENÇÃO: ESTA AÇÃO NÃO PODERÁ SER DESFEITA.\n\nTEM CERTEZA QUE DESEJA SALVAR AS ALTERAÇÕES NESTE PROCESSO?');
     }
 
     // Ao carregar a página, calcula o total dos pedidos já existentes (trabalhista)
