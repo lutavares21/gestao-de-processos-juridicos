@@ -20,6 +20,21 @@
 </div>
 {% endmacro %}
 
+{% macro cv_moeda(rotulo, valor) %}
+<div class="campo">
+  <label>{{ rotulo }}</label>
+  {% if valor is not none %}
+  {% set texto = valor|moeda %}
+  <div class="valor" style="justify-content:space-between;">
+    <span>{{ texto.split(' ')[0] }}</span>
+    <span>{{ texto.split(' ', 1)[1] }}</span>
+  </div>
+  {% else %}
+  <div class="valor texto-vazio">—</div>
+  {% endif %}
+</div>
+{% endmacro %}
+
 {% set eh_trabalhista = p.origem_cadastro == 'trabalhista' %}
 {% set rotulo_ativo = 'Reclamante(s)' if eh_trabalhista else 'Autor(es)' %}
 {% set rotulo_passivo = 'Reclamada' if eh_trabalhista else 'Réu' %}
@@ -130,7 +145,7 @@
           </div>
           <div class="linha">
             {{ cv('Comarca', p.comarca) }}
-            {{ cv('UF', p.uf, 'campo-pequeno') }}
+            {{ cv('UF', p.uf, '', 'flex: 0 0 90px;') }}
             {{ cv('Classe processual' if eh_trabalhista else 'Tipo de ação', rotulos_tipo_acao.get(p.tipo_acao, p.tipo_acao)) }}
           </div>
           <div class="linha">
@@ -208,7 +223,7 @@
           </div>
           <div class="linha">
             {{ cv('Grau/Instância atual', rotulos_grau_instancia.get(p.grau_instancia), '', 'flex: 2 1 300px;') }}
-            <div class="campo" style="flex: 1 1 140px;">
+            <div class="campo" style="flex: 1 1 140px; display:flex; flex-direction:column; justify-content:center;">
               <label>Status</label>
               {% if p.status %}
               <div class="valor valor-sem-caixa" style="justify-content:flex-start;"><span class="selo-status {{ p.status }}">{{ rotulos_status.get(p.status, p.status) }}</span></div>
@@ -216,7 +231,7 @@
               <div class="valor valor-sem-caixa texto-vazio" style="justify-content:flex-start;">—</div>
               {% endif %}
             </div>
-            <div class="campo" style="flex: 1 1 140px;">
+            <div class="campo" style="flex: 1 1 140px; display:flex; flex-direction:column; justify-content:center;">
               <label>Risco</label>
               {% if p.risco %}
               <div class="valor valor-sem-caixa" style="justify-content:flex-start;"><span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span></div>
@@ -299,17 +314,17 @@
         <div class="secao">
           <h2>Valores financeiros</h2>
           <div class="linha">
-            {{ cv('Valor final pago (R$)', p.valor_final|moeda if p.valor_final is not none else '') }}
-            {{ cv('Honorários Advocatícios (R$)', p.honorarios_advogado|moeda if p.honorarios_advogado is not none else '') }}
-            {{ cv('Economia Gerada (R$)', p.economia_gerada|moeda if p.economia_gerada is not none else '') }}
+            {{ cv_moeda('Valor pago ao reclamante (R$)' if eh_trabalhista else 'Valor pago ao autor (R$)', p.valor_final) }}
+            {{ cv_moeda('Honorários Advocatícios (R$)', p.honorarios_advogado) }}
+            {{ cv_moeda('Economia Gerada (R$)', p.economia_gerada) }}
           </div>
           <div class="linha">
-            {{ cv('Honorários periciais (R$)', p.honorarios_periciais|moeda if p.honorarios_periciais is not none else '') }}
-            {{ cv('Custas processuais (R$)', p.custas_processuais|moeda if p.custas_processuais is not none else '') }}
-            {{ cv('Depósito recursal (R$)', p.deposito_recursal|moeda if p.deposito_recursal is not none else '') }}
+            {{ cv_moeda('Honorários periciais (R$)', p.honorarios_periciais) }}
+            {{ cv_moeda('Custas processuais (R$)', p.custas_processuais) }}
+            {{ cv_moeda('Depósito recursal (R$)', p.deposito_recursal) }}
           </div>
           <div class="linha">
-            {{ cv('Alvará (R$)', p.valor_alvara|moeda if p.valor_alvara is not none else '') }}
+            {{ cv_moeda('Alvará (R$)', p.valor_alvara) }}
             {{ cv('Data do alvará', p.data_alvara.strftime('%d/%m/%Y') if p.data_alvara else '') }}
           </div>
         </div>
