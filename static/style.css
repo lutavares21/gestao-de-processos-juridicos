@@ -906,11 +906,11 @@ select.selo-pedido-select.indeferido { background: #fff; color: var(--risco-remo
   color: var(--risco-provavel);
 }
 .dash-legenda-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  justify-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   row-gap: 8px;
-  column-gap: 16px;
+  column-gap: 20px;
   margin-top: 12px;
 }
 

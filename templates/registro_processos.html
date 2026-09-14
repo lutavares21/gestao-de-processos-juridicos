@@ -134,6 +134,7 @@
       display: grid;
       gap: 24px;
       margin-bottom: 24px;
+      align-items: start;
     }
     .dash-row.duas-colunas{ grid-template-columns: 1.3fr 1fr; }
     .dash-row.tres-colunas{ grid-template-columns: repeat(3, 1fr); }
@@ -381,8 +382,8 @@
             <div class="dash-secao-titulo">Resultado dos encerrados</div>
             <div class="dash-chart-wrap"><canvas id="graficoResultado"></canvas></div>
             <div class="dash-legenda-grid" id="legendaResultado">
-              <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#1f8a5f"></span>Vitórias</span>
-              <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#c08a1e"></span>Parciais</span>
+              <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#1f8a5f"></span>Procedentes</span>
+              <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#c08a1e"></span>Parcialmente Procedentes</span>
               <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#b7924b"></span>Acordos</span>
               <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#b3402f"></span>Improcedentes</span>
             </div>
@@ -417,15 +418,20 @@
             <div class="dash-secao-titulo">Exposição por Centro de Resultado</div>
             {% if dados.top_centros_resultado %}
             <table class="dash-tabela">
+              <colgroup>
+                <col style="width:34%;">
+                <col style="width:26%;">
+                <col style="width:40%;">
+              </colgroup>
               <thead>
-                <tr><th>Centro de resultado</th><th>Processos ativos</th><th>Valor da causa</th></tr>
+                <tr><th>Centro de resultado</th><th style="text-align:right;">Processos ativos</th><th style="text-align:right;">Valor da causa</th></tr>
               </thead>
               <tbody>
                 {% for item in dados.top_centros_resultado %}
                 <tr>
                   <td>{{ item.nome }}</td>
-                  <td>{{ item.qtd }}</td>
-                  <td>{{ item.valor|moeda }}</td>
+                  <td style="text-align:right;">{{ item.qtd }}</td>
+                  <td style="text-align:right; white-space:nowrap;">{{ item.valor|moeda }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -496,7 +502,7 @@
       new Chart(document.getElementById('graficoResultado'), {
         type: 'doughnut',
         data: {
-          labels: ['Vitórias', 'Parciais', 'Acordos', 'Improcedentes'],
+          labels: ['Procedentes', 'Parcialmente Procedentes', 'Acordos', 'Improcedentes'],
           datasets: [{
             data: [resultadoDet.vitorias, resultadoDet.parciais, resultadoDet.acordos, resultadoDet.derrotas],
             backgroundColor: [paletaVerde, paletaAmarelo, paletaGold, paletaVermelho],
