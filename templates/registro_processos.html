@@ -81,6 +81,15 @@
       gap: 16px;
       margin-bottom: 28px;
     }
+    .dash-grid-kpi-5{ grid-template-columns: repeat(5, 1fr); }
+    .dash-grid-kpi-3{ grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 980px){
+      .dash-grid-kpi-5{ grid-template-columns: repeat(3, 1fr); }
+      .dash-grid-kpi-3{ grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 640px){
+      .dash-grid-kpi-5, .dash-grid-kpi-3{ grid-template-columns: repeat(2, 1fr); }
+    }
     .dash-kpi{
       background: var(--dash-fundo-card);
       border: 1px solid var(--dash-borda);
@@ -134,10 +143,10 @@
       display: grid;
       gap: 24px;
       margin-bottom: 24px;
-      align-items: start;
     }
     .dash-row.duas-colunas{ grid-template-columns: 1.3fr 1fr; }
     .dash-row.tres-colunas{ grid-template-columns: repeat(3, 1fr); }
+    .dash-row.altura-livre{ align-items: start; }
     @media (max-width: 980px){
       .dash-row.duas-colunas, .dash-row.tres-colunas{ grid-template-columns: 1fr; }
     }
@@ -290,7 +299,7 @@
         {% endif %}
 
         <!-- KPIs PRINCIPAIS -->
-        <div class="dash-grid-kpi">
+        <div class="dash-grid-kpi dash-grid-kpi-5">
           <div class="dash-kpi">
             <div class="dash-kpi-label">Total de processos</div>
             <div class="dash-kpi-valor">{{ dados.total }}</div>
@@ -306,6 +315,19 @@
             <div class="dash-kpi-valor">{{ dados.civel.arquivado + dados.trabalhista.arquivado }}</div>
             <div class="dash-kpi-nota">Encerrados</div>
           </div>
+          <div class="dash-kpi">
+            <div class="dash-kpi-label">Suspensos</div>
+            <div class="dash-kpi-valor">{{ dados.civel.suspenso + dados.trabalhista.suspenso }}</div>
+            <div class="dash-kpi-nota">Aguardando</div>
+          </div>
+          <div class="dash-kpi">
+            <div class="dash-kpi-label">Taxa de êxito</div>
+            <div class="dash-kpi-valor">{{ (dados.taxa_exito ~ '%') if dados.taxa_exito is not none else '—' }}</div>
+            <div class="dash-kpi-nota">Vitórias + parciais / encerrados</div>
+          </div>
+        </div>
+
+        <div class="dash-grid-kpi dash-grid-kpi-3">
           <div class="dash-kpi destaque-ouro">
             <div class="dash-kpi-label">Exposição em aberto</div>
             <div class="dash-kpi-valor">{{ dados.financeiro.provisionado|moeda }}</div>
@@ -321,15 +343,10 @@
             <div class="dash-kpi-valor">{{ dados.financeiro.economizado|moeda }}</div>
             <div class="dash-kpi-nota">Acumulado</div>
           </div>
-          <div class="dash-kpi">
-            <div class="dash-kpi-label">Taxa de êxito</div>
-            <div class="dash-kpi-valor">{{ (dados.taxa_exito ~ '%') if dados.taxa_exito is not none else '—' }}</div>
-            <div class="dash-kpi-nota">Vitórias + parciais / encerrados</div>
-          </div>
         </div>
 
         <!-- RISCO + RESULTADO -->
-        <div class="dash-row duas-colunas">
+        <div class="dash-row duas-colunas altura-livre">
 
           <div class="dash-painel">
             <div class="dash-secao-titulo">Exposição por nível de risco (processos ativos)</div>
@@ -384,7 +401,7 @@
             <div class="dash-legenda-grid" id="legendaResultado">
               <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#1f8a5f"></span>Procedentes</span>
               <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#c08a1e"></span>Parcialmente Procedentes</span>
-              <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#b7924b"></span>Acordos</span>
+              <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#8bc34a"></span>Acordos</span>
               <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#b3402f"></span>Improcedentes</span>
             </div>
           </div>
@@ -424,13 +441,13 @@
                 <col style="width:40%;">
               </colgroup>
               <thead>
-                <tr><th>Centro de resultado</th><th style="text-align:right;">Processos ativos</th><th style="text-align:right;">Valor da causa</th></tr>
+                <tr><th>Centro de resultado</th><th>Processos ativos</th><th style="text-align:right;">Valor da causa</th></tr>
               </thead>
               <tbody>
                 {% for item in dados.top_centros_resultado %}
                 <tr>
                   <td>{{ item.nome }}</td>
-                  <td style="text-align:right;">{{ item.qtd }}</td>
+                  <td>{{ item.qtd }}</td>
                   <td style="text-align:right; white-space:nowrap;">
                     {% set texto_moeda = item.valor|moeda %}
                     <div style="display:flex; justify-content:space-between;">
@@ -461,7 +478,7 @@
     const paletaVerde = "#1f8a5f";
     const paletaVermelho = "#b3402f";
     const paletaAmarelo = "#c08a1e";
-    const paletaCinza = "#8a93a3";
+    const paletaVerdeClaro = "#8bc34a";
     const corRiscoProvavel = "#dc2626";
     const corRiscoPossivel = "#d4a017";
     const corRiscoRemoto = "#1f9e4a";
@@ -511,7 +528,7 @@
           labels: ['Procedentes', 'Parcialmente Procedentes', 'Acordos', 'Improcedentes'],
           datasets: [{
             data: [resultadoDet.vitorias, resultadoDet.parciais, resultadoDet.acordos, resultadoDet.derrotas],
-            backgroundColor: [paletaVerde, paletaAmarelo, paletaGold, paletaVermelho],
+            backgroundColor: [paletaVerde, paletaAmarelo, paletaVerdeClaro, paletaVermelho],
           }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
