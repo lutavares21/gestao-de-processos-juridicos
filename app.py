@@ -436,6 +436,42 @@ def cadastro_civel():
     return redirect(url_for("cadastro_civel", sucesso=1))
 
 
+@app.route("/cadastro/civel-recuperacao", methods=["GET", "POST"])
+@login_required
+def cadastro_civel_recuperacao():
+    if request.method == "GET":
+        sucesso = request.args.get("sucesso") == "1"
+        return render_template("cadastro_civel_recuperacao.html", sucesso=sucesso)
+
+    form = request.form
+    numero_processo = form.get("numero_processo")
+
+    if numero_processo_ja_existe(numero_processo):
+        return render_template(
+            "cadastro_civel_recuperacao.html",
+            erro_numero_duplicado=numero_processo,
+        )
+
+    processo = montar_processo_base(form)
+    processo.origem_cadastro = "civel_recuperacao"
+    preencher_partes_e_advogados(processo, form)
+
+    # Pedidos e requerimentos (cível) - checkboxes marcados
+    for descricao in form.getlist("pedido_civel"):
+        if descricao.strip():
+            processo.pedidos_civeis.append(PedidoCivel(descricao=descricao.strip()))
+
+    db.session.add(processo)
+    registrar_atividade("processo_criado", f"Cadastrou o processo cível - recuperação de crédito {numero_processo}")
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return render_template("cadastro_civel_recuperacao.html", erro_numero_duplicado=numero_processo)
+
+    return redirect(url_for("cadastro_civel_recuperacao", sucesso=1))
+
+
 @app.route("/cadastro/trabalhista", methods=["GET", "POST"])
 @login_required
 def cadastro_trabalhista():
