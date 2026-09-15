@@ -458,7 +458,7 @@
                   <td style="text-align:right;">{{ item.qtd }}</td>
                   <td style="text-align:right; white-space:nowrap;">
                     {% set texto_moeda = item.valor|moeda %}
-                    <div style="display:flex; justify-content:space-between;">
+                    <div style="display:flex; justify-content:space-between; width:120px; margin-left:auto;">
                       <span>{{ texto_moeda.split(' ')[0] }}</span>
                       <span>{{ texto_moeda.split(' ', 1)[1] }}</span>
                     </div>
