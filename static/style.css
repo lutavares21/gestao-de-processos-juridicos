@@ -1091,6 +1091,7 @@ select.selo-pedido-select.indeferido { background: #fff; color: var(--risco-remo
 
 .dash-chart-wrap{ position: relative; height: 260px; width: 100%; }
 .dash-chart-wrap.pequeno{ height: 200px; }
+.dash-chart-wrap.grande{ height: 320px; }
 
 .dash-matriz{ width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: center; }
 .dash-matriz th{
@@ -1130,6 +1131,12 @@ select.selo-pedido-select.indeferido { background: #fff; color: var(--risco-remo
 .dash-alerta-linha:last-child{ border-bottom: none; }
 .dash-alerta-linha .num{ font-weight: 700; color: var(--dash-navy); min-width: 90px; }
 .dash-alerta-linha .motivo{ color: var(--dash-cinza-texto); flex: 1; padding: 0 12px; }
-.dash-alerta-linha .val{ font-weight: 700; color: var(--dash-vermelho); }
+.dash-alerta-linha .val{
+  font-weight: 700;
+  color: var(--dash-vermelho);
+  display: flex;
+  justify-content: space-between;
+  width: 150px;
+}
 
 canvas{ max-width: 100%; }
