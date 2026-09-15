@@ -10,7 +10,7 @@ from flask_login import (
     LoginManager, login_user, logout_user, login_required, current_user,
 )
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func
+from sqlalchemy import func, case
 from werkzeug.security import check_password_hash, generate_password_hash
 from models import db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR, PedidoCivel, Operador, RegistroAtividade
 
@@ -880,6 +880,72 @@ def registro_processos():
         ).count()
         evolucao.append({"label": f"{nomes_mes[mes - 1]}/{str(ano)[2:]}", "qtd": qtd})
     dados["evolucao_mensal"] = evolucao
+
+    # ------------------------------------------------------------------
+    # 7. PEDIDOS E REQUERIMENTOS MAIS RECORRENTES - aponta quais itens
+    #    aparecem com mais frequência e onde a tese da empresa está mais
+    #    frágil. Os pedidos são diferentes conforme o tipo de processo:
+    #    - Trabalhista: cada verba tem status próprio (deferido/
+    #      indeferido/em análise) - "% deferido" = perda para a empresa.
+    #    - Cível: o pedido em si não tem status - usamos a SENTENÇA do
+    #      processo como um todo (procedente/procedente_parcial = ponto
+    #      frágil) para saber o quanto aquele pedido pesa no resultado.
+    # ------------------------------------------------------------------
+    pedidos_trab_query = (
+        db.session.query(
+            PedidoTrabalhista.verba,
+            func.count(PedidoTrabalhista.id),
+            func.sum(case((PedidoTrabalhista.status == "deferido", 1), else_=0)),
+            func.sum(case((PedidoTrabalhista.status == "indeferido", 1), else_=0)),
+            func.sum(case((PedidoTrabalhista.status == "em_analise", 1), else_=0)),
+        )
+        .join(Processo, PedidoTrabalhista.processo_id == Processo.id)
+    )
+    if tipo_selecionado != "todos":
+        pedidos_trab_query = pedidos_trab_query.filter(Processo.origem_cadastro == tipo_selecionado)
+    pedidos_trab_query = (
+        pedidos_trab_query.group_by(PedidoTrabalhista.verba)
+        .order_by(func.count(PedidoTrabalhista.id).desc())
+        .limit(8)
+        .all()
+    )
+    dados["pedidos_recorrentes_trabalhista"] = [
+        {
+            "item": verba,
+            "total": total,
+            "deferidos": deferidos,
+            "indeferidos": indeferidos,
+            "em_analise": em_analise,
+            "pct_deferido": round(100 * deferidos / total, 1) if total else 0,
+        }
+        for verba, total, deferidos, indeferidos, em_analise in pedidos_trab_query
+    ]
+
+    pedidos_civel_query = (
+        db.session.query(
+            PedidoCivel.descricao,
+            func.count(PedidoCivel.id),
+            func.sum(case((Processo.sentenca.in_(["procedente", "procedente_parcial"]), 1), else_=0)),
+        )
+        .join(Processo, PedidoCivel.processo_id == Processo.id)
+    )
+    if tipo_selecionado != "todos":
+        pedidos_civel_query = pedidos_civel_query.filter(Processo.origem_cadastro == tipo_selecionado)
+    pedidos_civel_query = (
+        pedidos_civel_query.group_by(PedidoCivel.descricao)
+        .order_by(func.count(PedidoCivel.id).desc())
+        .limit(8)
+        .all()
+    )
+    dados["pedidos_recorrentes_civel"] = [
+        {
+            "item": descricao,
+            "total": total,
+            "desfavoraveis": desfavoraveis,
+            "pct_desfavoravel": round(100 * desfavoraveis / total, 1) if total else 0,
+        }
+        for descricao, total, desfavoraveis in pedidos_civel_query
+    ]
 
     return render_template(
         "registro_processos.html", dados=dados, tipo_selecionado=tipo_selecionado

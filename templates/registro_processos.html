@@ -180,7 +180,6 @@
        disponível e desenhar corretamente (sem isso, o gráfico fica em branco) */
     .dash-chart-wrap{ position: relative; height: 260px; width: 100%; }
     .dash-chart-wrap.pequeno{ height: 200px; }
-    .dash-chart-wrap.grande{ height: 320px; }
 
     /* Matriz de risco */
     .dash-matriz{ width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: center; }
@@ -406,7 +405,7 @@
 
           <div class="dash-painel" style="display:flex; flex-direction:column;">
             <div class="dash-secao-titulo">Resultado dos encerrados</div>
-            <div class="dash-chart-wrap grande"><canvas id="graficoResultado"></canvas></div>
+            <div class="dash-chart-wrap"><canvas id="graficoResultado"></canvas></div>
             <div class="dash-legenda-grid" id="legendaResultado" style="flex-direction:column; align-items:flex-start; margin-top:auto;">
               <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#0f9960"></span>Procedente</span>
               <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#5bbf8a"></span>Parcialmente procedente</span>
@@ -453,7 +452,7 @@
                 <col style="width:59%;">
               </colgroup>
               <thead>
-                <tr><th style="text-align:center;">Centro de resultado</th><th style="text-align:center; padding-left:18px;">Processos ativos</th><th><div style="width:155px; margin-left:auto; text-align:center;">Valor da causa</div></th></tr>
+                <tr><th style="text-align:center;">Centro de resultado</th><th style="text-align:center;">Processos ativos</th><th><div style="width:155px; margin-left:auto; text-align:center;">Valor da causa</div></th></tr>
               </thead>
               <tbody>
                 {% for item in dados.top_centros_resultado %}
@@ -475,6 +474,87 @@
             <div class="dash-vazio">Nenhum centro de resultado informado nos processos ativos.</div>
             {% endif %}
           </div>
+
+        </div>
+
+        <!-- PEDIDOS E REQUERIMENTOS MAIS RECORRENTES -->
+        {% set mostrar_trab = tipo_selecionado != 'civel' %}
+        {% set mostrar_civ = tipo_selecionado != 'trabalhista' %}
+        <div class="dash-row {{ 'duas-colunas' if (mostrar_trab and mostrar_civ) else '' }}">
+
+          {% if mostrar_trab %}
+          <div class="dash-painel">
+            <div class="dash-secao-titulo">Pedidos mais recorrentes - Trabalhista</div>
+            {% if dados.pedidos_recorrentes_trabalhista %}
+            <table class="dash-tabela">
+              <colgroup>
+                <col style="width:38%;">
+                <col style="width:14%;">
+                <col style="width:16%;">
+                <col style="width:16%;">
+                <col style="width:16%;">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Pedido / verba</th>
+                  <th style="text-align:center;">Qtd.</th>
+                  <th style="text-align:center;">Deferido</th>
+                  <th style="text-align:center;">Indeferido</th>
+                  <th style="text-align:center;">Em análise</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in dados.pedidos_recorrentes_trabalhista %}
+                <tr>
+                  <td>{{ item.item }}</td>
+                  <td style="text-align:center;">{{ item.total }}</td>
+                  <td style="text-align:center; {% if item.pct_deferido >= 50 %}color:var(--dash-vermelho); font-weight:700;{% endif %}">{{ item.pct_deferido }}%</td>
+                  <td style="text-align:center;">{{ item.indeferidos }}</td>
+                  <td style="text-align:center;">{{ item.em_analise }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <div class="dash-vazio" style="text-align:left; padding-top:10px;">% deferido = pedido julgado a favor do reclamante (ponto frágil da tese da empresa).</div>
+            {% else %}
+            <div class="dash-vazio">Nenhum pedido trabalhista cadastrado ainda.</div>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          {% if mostrar_civ %}
+          <div class="dash-painel">
+            <div class="dash-secao-titulo">Pedidos mais recorrentes - Cível</div>
+            {% if dados.pedidos_recorrentes_civel %}
+            <table class="dash-tabela">
+              <colgroup>
+                <col style="width:56%;">
+                <col style="width:18%;">
+                <col style="width:26%;">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Pedido / requerimento</th>
+                  <th style="text-align:center;">Qtd.</th>
+                  <th style="text-align:center;">Sentença desfavorável</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in dados.pedidos_recorrentes_civel %}
+                <tr>
+                  <td>{{ item.item }}</td>
+                  <td style="text-align:center;">{{ item.total }}</td>
+                  <td style="text-align:center; {% if item.pct_desfavoravel >= 50 %}color:var(--dash-vermelho); font-weight:700;{% endif %}">{{ item.pct_desfavoravel }}%</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <div class="dash-vazio" style="text-align:left; padding-top:10px;">% desfavorável = processos com esse pedido cuja sentença foi procedente ou parcialmente procedente.</div>
+            {% else %}
+            <div class="dash-vazio">Nenhum pedido cível cadastrado ainda.</div>
+            {% endif %}
+          </div>
+          {% endif %}
 
         </div>
 
