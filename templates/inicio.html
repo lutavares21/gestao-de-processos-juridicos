@@ -1,14 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <title>Início - Gestão de Processos</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
+{% extends "base.html" %}
 
+{% block titulo %}Início - Gestão de Processos{% endblock %}
+
+{% block corpo %}
   <div class="pagina-inicio">
 
     <div class="inicio-topo">
@@ -25,9 +19,9 @@
           <h2>Novo cadastro</h2>
           <div class="links-bloco">
             <a href="{{ url_for('cadastro_civel') }}">Processo Cível</a>
-            <a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a>
+            <a href="{{ url_for('cadastro_civel_recuperacao') }}">Processo Cível - Recuperação de Crédito</a>
             <a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a>
-            <a href="#" class="oculto-visual">Processos Licitatório</a>
+            <a href="#" class="oculto-visual">Processo Licitatório</a>
           </div>
         </div>
       </div>
@@ -36,9 +30,9 @@
         <div class="bloco-inicio">
           <h2>Processos Cadastrados</h2>
           <div class="links-bloco">
-            <a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a>
             <a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a>
-            <a href="#" class="oculto-visual">Processos Licitatório</a>
+            <a href="#" class="oculto-visual">Processos Cível - Recuperação de Crédito</a>
+            <a href="#" class="oculto-visual">Processos Licitatórios</a>
             <a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a>
           </div>
         </div>
@@ -56,7 +50,4 @@
 
     </div>
   </div>
-
-  <script src="{{ url_for('static', filename='js/sessao.js') }}"></script>
-</body>
-</html>
+{% endblock %}

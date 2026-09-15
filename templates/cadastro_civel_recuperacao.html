@@ -1,7 +1,7 @@
 {% extends "base_painel.html" %}
 
-{% block titulo %}Cadastro de Processo Trabalhista{% endblock %}
-{% block cabecalho_titulo %}Cadastro de Processo Trabalhista{% endblock %}
+{% block titulo %}Cadastro Cível - Recuperação de Crédito{% endblock %}
+{% block cabecalho_titulo %}Cadastro Cível - Recuperação de Crédito{% endblock %}
 
 {% block conteudo %}
         {% if sucesso %}
@@ -12,7 +12,7 @@
           <div class="flash flash-erro">Já existe um processo cadastrado com o número <strong>{{ erro_numero_duplicado }}</strong>. Verifique o número e tente novamente.</div>
         {% endif %}
 
-        <form method="POST" action="{{ url_for('cadastro_trabalhista') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('cadastro_civel_recuperacao') }}" enctype="multipart/form-data">
 
           <!-- 1. IDENTIFICAÇÃO -->
           <div class="secao">
@@ -26,7 +26,7 @@
                        oninput="mascararNumeroProcesso(this)">
               </div>
               <div class="campo">
-                <label for="juizado">Vara do Trabalho</label>
+                <label for="juizado">Juizado</label>
                 <input type="text" id="juizado" name="juizado">
               </div>
             </div>
@@ -69,27 +69,21 @@
                 </select>
               </div>
               <div class="campo">
-                <label for="tipo_acao">Classe processual</label>
+                <label for="tipo_acao">Tipo de ação</label>
                 <select id="tipo_acao" name="tipo_acao" required>
                   <option value="">Selecione</option>
-                  <option value="acao_anulatoria">Ação Anulatória</option>
-                  <option value="acao_civil_publica">Ação Civil Pública</option>
-                  <option value="acao_consignacao_pagamento">Ação de Consignação em Pagamento</option>
-                  <option value="acao_cumprimento">Ação de Cumprimento</option>
-                  <option value="acao_rescisoria">Ação Rescisória</option>
-                  <option value="dissidio_coletivo">Dissídio Coletivo</option>
-                  <option value="inquerito_falta_grave">Inquérito para Apuração de Falta Grave</option>
-                  <option value="mandado_seguranca">Mandado de Segurança</option>
-                  <option value="outros">Outros</option>
-                  <option value="reclamacao_trabalhista">Reclamação Trabalhista</option>
+                  <option value="acao_civel">Ação Cível</option>
+                  <option value="acao_trabalhista">Ação Trabalhista</option>
+                  <option value="cobranca_extrajudicial">Cobrança Extrajudicial</option>
+                  <option value="cobranca_judicial">Cobrança Judicial</option>
                 </select>
               </div>
             </div>
             <div class="linha">
               <div class="campo">
-                <label>Reclamante(s)</label>
+                <label>Autor(es)</label>
                 <div id="lista_autores" class="grupo-dinamico"></div>
-                <button type="button" class="btn btn-adicionar" onclick="adicionarParte('autor')">+ Adicionar reclamante</button>
+                <button type="button" class="btn btn-adicionar" onclick="adicionarParte('autor')">+ Adicionar autor</button>
               </div>
             </div>
           </div>
@@ -161,23 +155,23 @@
           <div class="secao">
             <h2>Partes envolvidas</h2>
 
-            <label class="rotulo-secao">Reclamante(s)</label>
+            <label class="rotulo-secao">Autor(es)</label>
             <div id="resumo_autores_partes" style="padding:9px 0 4px;font-size:14px;color:var(--texto-suave);font-style:italic;">—</div>
 
             <div style="margin-top:18px;">
-              <label class="rotulo-secao">Advogado(s) do reclamante <span class="aviso-limite">(até 5)</span></label>
+              <label class="rotulo-secao">Advogado(s) do autor <span class="aviso-limite">(até 5)</span></label>
               <div id="lista_advogados_autor" class="grupo-dinamico"></div>
               <button type="button" class="btn btn-adicionar" onclick="adicionarAdvogado('autor')">+ Adicionar advogado</button>
             </div>
 
             <hr style="border:none;border-top:3px solid var(--texto-suave);margin:22px 0;">
 
-            <label class="rotulo-secao">Reclamada</label>
+            <label class="rotulo-secao">Réu</label>
             <div id="lista_reus" class="grupo-dinamico"></div>
-            <button type="button" class="btn btn-adicionar" onclick="adicionarParte('reu')">+ Adicionar reclamada</button>
+            <button type="button" class="btn btn-adicionar" onclick="adicionarParte('reu')">+ Adicionar réu</button>
 
             <div style="margin-top:18px;">
-              <label class="rotulo-secao">Advogado(s) da reclamada <span class="aviso-limite">(até 5)</span></label>
+              <label class="rotulo-secao">Advogado(s) do réu <span class="aviso-limite">(até 5)</span></label>
               <div id="lista_advogados_reu" class="grupo-dinamico"></div>
               <button type="button" class="btn btn-adicionar" onclick="adicionarAdvogado('reu')">+ Adicionar advogado</button>
             </div>
@@ -342,68 +336,20 @@
           <!-- 6. PEDIDOS E REQUERIMENTOS -->
           <div class="secao">
             <h2>Pedidos e requerimentos</h2>
-
-            <div class="linha">
-              <div class="campo campo-grande">
-                <label for="select_verba">Pedido / verba</label>
-                <select id="select_verba">
-                  <option value="">Selecione</option>
-                  <option value="13º salário proporcional">13º salário proporcional</option>
-                  <option value="Adicional de insalubridade">Adicional de insalubridade</option>
-                  <option value="Adicional de periculosidade">Adicional de periculosidade</option>
-                  <option value="Adicional noturno">Adicional noturno</option>
-                  <option value="Aviso-prévio">Aviso-prévio</option>
-                  <option value="Comissões">Comissões</option>
-                  <option value="Diferenças salariais">Diferenças salariais</option>
-                  <option value="Equiparação salarial">Equiparação salarial</option>
-                  <option value="Férias em Dobro + 1/3">Férias em Dobro + 1/3</option>
-                  <option value="Férias proporcionais + 1/3">Férias proporcionais + 1/3</option>
-                  <option value="Férias vencidas + 1/3">Férias vencidas + 1/3</option>
-                  <option value="FGTS (8%) não depositado">FGTS (8%) não depositado</option>
-                  <option value="Honorários">Honorários</option>
-                  <option value="Horas extras">Horas extras</option>
-                  <option value="Indenização por Assédio Moral">Indenização por Assédio Moral</option>
-                  <option value="Indenização por danos morais">Indenização por danos morais</option>
-                  <option value="Intervalo Interjornada">Intervalo Interjornada</option>
-                  <option value="Intervalo intrajornada">Intervalo intrajornada</option>
-                  <option value="Multa do art. 467 da CLT">Multa do art. 467 da CLT</option>
-                  <option value="Multa do art. 477 da CLT">Multa do art. 477 da CLT</option>
-                  <option value="Outros">Outros</option>
-                  <option value="Prêmios">Prêmios</option>
-                  <option value="Recolhimento do FGTS 8%">Recolhimento do FGTS 8%</option>
-                  <option value="Recolhimento FGTS - Multa de 40%">Recolhimento FGTS - Multa de 40%</option>
-                  <option value="Reconhecimento de vínculo empregatício">Reconhecimento de vínculo empregatício</option>
-                  <option value="Retificação/anotação da CTPS">Retificação/anotação da CTPS</option>
-                  <option value="Saldo de salário">Saldo de salário</option>
-                  <option value="Seguro-desemprego">Seguro-desemprego</option>
-                </select>
-              </div>
-              <div class="campo campo-pequeno">
-                <label for="valor_verba_display">Valor (R$)</label>
-                <input type="text" inputmode="numeric" id="valor_verba_display" placeholder="R$ 0,00" oninput="formatarDinheiro(this)">
-              </div>
-              <div class="campo campo-pequeno">
-                <label for="situacao_verba">Situação</label>
-                <select id="situacao_verba">
-                  <option value="deferido">Deferido</option>
-                  <option value="em_analise" selected>Em análise</option>
-                  <option value="indeferido">Indeferido</option>
-                </select>
-              </div>
-              <div class="campo" style="flex:0 0 auto;align-self:flex-end;margin-bottom:14px;">
-                <button type="button" class="btn btn-adicionar" onclick="adicionarVerba()">+ Adicionar novo</button>
-              </div>
+            <div class="grid-requerimentos">
+              <label><input type="checkbox" name="pedido_civel" value="Atendimento Loja"> Atendimento Loja</label>
+              <label><input type="checkbox" name="pedido_civel" value="Cancelamento da compra"> Cancelamento da compra</label>
+              <label><input type="checkbox" name="pedido_civel" value="Devolução do valor pago"> Devolução do valor pago</label>
+              <label><input type="checkbox" name="pedido_civel" value="Indenização danos materiais"> Indenização danos materiais</label>
+              <label><input type="checkbox" name="pedido_civel" value="Indenização danos morais"> Indenização danos morais</label>
+              <label><input type="checkbox" name="pedido_civel" value="Não recebeu produto do conserto"> Não recebeu produto do conserto</label>
+              <label><input type="checkbox" name="pedido_civel" value="Perícia Técnica"> Perícia Técnica</label>
+              <label><input type="checkbox" name="pedido_civel" value="Produto com defeito"> Produto com defeito</label>
+              <label><input type="checkbox" name="pedido_civel" value="Responsabilidade solidária"> Responsabilidade solidária</label>
+              <label><input type="checkbox" name="pedido_civel" value="Responsabilidade subsidiária"> Responsabilidade subsidiária</label>
+              <label><input type="checkbox" name="pedido_civel" value="Tempo de retorno garantia"> Tempo de retorno garantia</label>
+              <label><input type="checkbox" name="pedido_civel" value="Tutela antecipada"> Tutela antecipada</label>
             </div>
-
-            <div id="lista_verbas" class="grupo-dinamico"></div>
-
-            <div class="linha" style="margin-top:8px;padding-top:14px;border-top:1px solid var(--borda);">
-              <div class="campo">
-                <label for="total_pedidos">Total dos pedidos</label>
-                <input type="text" id="total_pedidos" readonly value="R$ 0,00">
-              </div>
-            </div>
-
           </div>
 
           <!-- 7. ACOMPANHAMENTO -->
@@ -430,7 +376,7 @@
             <h2>Valores financeiros</h2>
             <div class="linha">
               <div class="campo">
-                <label for="valor_final_display">Valor pago ao reclamante(R$)</label>
+                <label for="valor_final_display">Valor pago ao autor (R$)</label>
                 <input type="text" inputmode="numeric" id="valor_final_display" placeholder="R$ 0,00"
                        data-alvo="valor_final" oninput="formatarDinheiro(this)">
                 <input type="hidden" id="valor_final" name="valor_final">
@@ -530,23 +476,6 @@
     </div>
   </template>
 
-  <template id="modelo_verba">
-    <div class="linha-repetida">
-      <div class="campo campo-grande">
-        <input type="text" name="pedido_verba" readonly>
-      </div>
-      <div class="campo campo-pequeno">
-        <input type="text" class="valor-verba-linha" readonly>
-        <input type="hidden" name="pedido_valor">
-      </div>
-      <div class="campo campo-pequeno" style="align-self:center;">
-        <span class="selo-pedido"></span>
-        <input type="hidden" name="pedido_status">
-      </div>
-      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove(); calcularTotalPedidos()">Remover</button>
-    </div>
-  </template>
-
   <script>
     // Aplica a máscara 0000000-00.0000.0.00.0000 (padrão CNJ) conforme o usuário digita
     function mascararNumeroProcesso(input) {
@@ -562,8 +491,7 @@
     }
 
     // Formata automaticamente os campos de dinheiro no padrão contábil (R$ 1.234,56),
-    // enquanto guarda o valor numérico puro (1234.56) no campo escondido correspondente
-    // (quando houver um, via data-alvo).
+    // enquanto guarda o valor numérico puro (1234.56) no campo escondido correspondente.
     function formatarDinheiro(campoTexto) {
       const idAlvo = campoTexto.dataset.alvo;
       const campoOculto = idAlvo ? document.getElementById(idAlvo) : null;
@@ -578,13 +506,6 @@
       const valor = parseInt(digitos, 10) / 100;
       campoTexto.value = 'R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       if (campoOculto) campoOculto.value = valor.toFixed(2);
-    }
-
-    // Converte um texto já formatado como dinheiro (ex.: "R$ 1.234,56") em número puro (1234.56)
-    function paraNumero(textoFormatado) {
-      const digitos = (textoFormatado || '').replace(/\D/g, '');
-      if (!digitos) return 0;
-      return parseInt(digitos, 10) / 100;
     }
 
     // Calcula o tempo de tramitação: (arquivamento ou hoje) - distribuição, em dias
@@ -605,58 +526,6 @@
       const diffMs = dataFim - dataDist;
       const dias = Math.round(diffMs / (1000 * 60 * 60 * 24));
       campo.value = (dias >= 0 ? dias : 0) + ' dias';
-    }
-
-    // Textos e classes de cor do selo de status de cada pedido
-    const ROTULOS_STATUS_PEDIDO = { em_analise: 'Em análise', deferido: 'Deferido', indeferido: 'Indeferido' };
-
-    // Adiciona uma linha de pedido/verba trabalhista, usando o que está selecionado no topo
-    function adicionarVerba() {
-      const select = document.getElementById('select_verba');
-      const inputValor = document.getElementById('valor_verba_display');
-      const selectStatus = document.getElementById('situacao_verba');
-
-      if (!select.value) {
-        alert('Selecione um pedido/verba antes de adicionar.');
-        return;
-      }
-
-      const valorNumerico = paraNumero(inputValor.value);
-      const statusEscolhido = selectStatus.value;
-
-      const container = document.getElementById('lista_verbas');
-      const modelo = document.getElementById('modelo_verba').content.cloneNode(true);
-      const campoNome = modelo.querySelector('input[name="pedido_verba"]');
-      const campoValorDisplay = modelo.querySelector('.valor-verba-linha');
-      const campoValorOculto = modelo.querySelector('input[name="pedido_valor"]');
-      const campoStatusOculto = modelo.querySelector('input[name="pedido_status"]');
-      const seloStatus = modelo.querySelector('.selo-pedido');
-
-      campoNome.value = select.value;
-      campoValorDisplay.value = 'R$ ' + valorNumerico.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      campoValorOculto.value = valorNumerico.toFixed(2);
-      campoStatusOculto.value = statusEscolhido;
-      seloStatus.textContent = ROTULOS_STATUS_PEDIDO[statusEscolhido];
-      seloStatus.className = 'selo-pedido ' + statusEscolhido;
-
-      container.appendChild(modelo);
-
-      selectStatus.value = 'em_analise';
-
-      select.value = '';
-      inputValor.value = '';
-      calcularTotalPedidos();
-    }
-
-    // Soma todos os valores dos pedidos/verbas já adicionados
-    function calcularTotalPedidos() {
-      const valores = document.querySelectorAll('#lista_verbas input[name="pedido_valor"]');
-      let total = 0;
-      valores.forEach((campo) => {
-        total += parseFloat(campo.value) || 0;
-      });
-      document.getElementById('total_pedidos').value =
-        'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     // Mostra o campo de link da audiência quando o tipo não é presencial

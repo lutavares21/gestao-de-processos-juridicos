@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block corpo %}
+  <div class="layout">
+
+    <aside class="menu-lateral">
+      <div class="logo-menu">Gestão de Processos</div>
+      <nav>
+        <a href="{{ url_for('inicio') }}" class="{{ 'ativo' if request.endpoint == 'inicio' else '' }}">Início</a>
+
+        <div class="item-com-submenu{{ ' ativo' if request.endpoint in ['cadastro_civel', 'cadastro_civel_recuperacao', 'cadastro_trabalhista'] else '' }}">
+          <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('cadastro_civel') }}">Processo Cível</a></li>
+            <li><a href="{{ url_for('cadastro_civel_recuperacao') }}">Processo Cível - Recuperação de Crédito</a></li>
+            <li><a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a></li>
+            <li><a href="#" class="oculto-visual">Processo Licitatório</a></li>
+            <li><a href="#" class="oculto-visual">Processos Tributários</a></li>
+          </ul>
+        </div>
+
+        <div class="item-com-submenu{{ ' ativo' if request.endpoint in ['processos_civel', 'processos_trabalhista', 'processo_detalhe', 'processo_editar'] else '' }}">
+          <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
+          <ul class="submenu">
+            <li><a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a></li>
+            <li><a href="#" class="oculto-visual">Processos Cível - Recuperação de Crédito</a></li>
+            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+            <li><a href="#" class="oculto-visual">Processos Tributários</a></li>
+            <li><a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a></li>
+          </ul>
+        </div>
+
+        <a href="{{ url_for('registro_processos') }}" class="{{ 'ativo' if request.endpoint == 'registro_processos' else '' }}">Panorama Jurídico</a>
+
+        {% if current_user.eh_administrador %}
+        <a href="{{ url_for('operadores') }}" class="{{ 'ativo' if request.endpoint in ['operadores', 'operador_novo', 'operador_editar', 'atividades'] else '' }}">Gestão de Operadores</a>
+        {% endif %}
+      </nav>
+    </aside>
+
+    <div class="conteudo">
+      {% block cabecalho %}
+      <div class="cabecalho">
+        <h1>{% block cabecalho_titulo %}{% endblock %}</h1>
+        <div class="subtitulo">{% block cabecalho_subtitulo %}Gestão de Processos Jurídicos{% endblock %}</div>
+      </div>
+      {% endblock %}
+
+      <div class="container"{% block container_attrs %}{% endblock %}>
+        {% block conteudo %}{% endblock %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
