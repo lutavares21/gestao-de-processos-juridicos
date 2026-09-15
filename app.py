@@ -770,6 +770,23 @@ def registro_processos():
         else None
     )
 
+    # Quadro "Resultado dos encerrados" do painel - usa o campo SENTENÇA
+    # (não o campo "resultado" acima), em 7 categorias definidas pela
+    # diretoria.
+    dados["resultado_sentenca"] = {
+        chave: contar(sentenca=chave)
+        for chave in [
+            "procedente",
+            "procedente_parcial",
+            "acordo",
+            "extinto_com_resolucao_merito",
+            "extinto_sem_resolucao_merito",
+            "desistencia",
+            "improcedente",
+        ]
+    }
+
+
     # ------------------------------------------------------------------
     # 4b. MATRIZ DE RISCO - Provável/Possível/Remoto x Baixo/Médio/Alto
     #     impacto, calculado pelo valor da causa (só processos ativos).

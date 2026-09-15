@@ -99,7 +99,7 @@
                        title="O número do processo não pode ser alterado depois do cadastro.">
               </div>
               <div class="campo">
-                <label for="juizado">Vara do Trabalho</label>
+                <label for="juizado">{{ 'Vara do Trabalho' if eh_trabalhista else 'Juizado' }}</label>
                 <input type="text" id="juizado" name="juizado" value="{{ p.juizado or '' }}">
               </div>
             </div>
