@@ -1,104 +1,52 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <title>Operadores - Gestão de Processos</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
+{% extends "base_painel.html" %}
 
-  <div class="layout">
+{% block titulo %}Operadores - Gestão de Processos{% endblock %}
+{% block cabecalho_titulo %}Gestão de operadores{% endblock %}
+{% block cabecalho_subtitulo %}Gestão de operadores{% endblock %}
+{% block container_attrs %} style="max-width: 1000px;"{% endblock %}
 
-    <aside class="menu-lateral">
-      <div class="logo-menu">Gestão de Processos</div>
-      <nav>
-        <a href="{{ url_for('inicio') }}">Início</a>
+{% block conteudo %}
 
-        <div class="item-com-submenu">
-          <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
-          <ul class="submenu">
-            <li><a href="{{ url_for('cadastro_civel') }}">Processos Cível</a></li>
-            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
-            <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
-            <li><a href="{{ url_for('cadastro_trabalhista') }}">Processos Trabalhista</a></li>
-          </ul>
-        </div>
-
-        <div class="item-com-submenu">
-          <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
-          <ul class="submenu">
-            <li><a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a></li>
-            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
-            <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
-            <li><a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a></li>
-          </ul>
-        </div>
-
-        <a href="{{ url_for('registro_processos') }}">Panorama Jurídico</a>
-
-        {% if current_user.eh_administrador %}
-        <a href="{{ url_for('operadores') }}" class="ativo">Gestão de Operadores</a>
-        {% endif %}
-
-      </nav>
-    </aside>
-
-    <div class="conteudo">
-      <div class="cabecalho">
-        <h1>Gestão de operadores</h1>
-        <div class="subtitulo">Gestão de operadores</div>
-      </div>
-
-      <div class="container" style="max-width: 1000px;">
-
-        <div class="acoes-topo" style="margin-bottom:16px; display:flex; align-items:center; gap:10px;">
-          <a href="{{ url_for('operador_novo') }}" class="btn-detalhe btn-editar btn-largura-auto">Cadastrar novo operador</a>
-          <a href="{{ url_for('atividades') }}" class="btn-detalhe btn-editar btn-largura-auto">Registro de atividades</a>
-        </div>
-
-        {% if operadores %}
-        <div class="tabela-wrap">
-          <table class="tabela-processos">
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Login</th>
-                <th>E-mail</th>
-                <th>Nível</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for u in operadores %}
-              <tr>
-                <td>{{ u.nome }}</td>
-                <td>{{ u.login }}</td>
-                <td>{{ u.email or '—' }}</td>
-                <td>
-                  {% if u.eh_administrador %}
-                  <span class="selo-status suspenso">Administrador</span>
-                  {% else %}
-                  <span class="selo-status ativo">Comum</span>
-                  {% endif %}
-                </td>
-                <td><a class="btn-detalhe" href="{{ url_for('operador_editar', operador_id=u.id) }}">Editar</a></td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% else %}
-        <div class="tabela-wrap">
-          <div class="estado-vazio">Nenhum operador cadastrado ainda.</div>
-        </div>
-        {% endif %}
-
-      </div>
-    </div>
+  <div class="acoes-topo" style="margin-bottom:16px; display:flex; align-items:center; gap:10px;">
+    <a href="{{ url_for('operador_novo') }}" class="btn-detalhe btn-editar btn-largura-auto">Cadastrar novo operador</a>
+    <a href="{{ url_for('atividades') }}" class="btn-detalhe btn-editar btn-largura-auto">Registro de atividades</a>
   </div>
 
-  <script src="{{ url_for('static', filename='js/sessao.js') }}"></script>
-</body>
-</html>
+  {% if operadores %}
+  <div class="tabela-wrap">
+    <table class="tabela-processos">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Login</th>
+          <th>E-mail</th>
+          <th>Nível</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in operadores %}
+        <tr>
+          <td>{{ u.nome }}</td>
+          <td>{{ u.login }}</td>
+          <td>{{ u.email or '—' }}</td>
+          <td>
+            {% if u.eh_administrador %}
+            <span class="selo-status suspenso">Administrador</span>
+            {% else %}
+            <span class="selo-status ativo">Comum</span>
+            {% endif %}
+          </td>
+          <td><a class="btn-detalhe" href="{{ url_for('operador_editar', operador_id=u.id) }}">Editar</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="tabela-wrap">
+    <div class="estado-vazio">Nenhum operador cadastrado ainda.</div>
+  </div>
+  {% endif %}
+
+{% endblock %}

@@ -1,109 +1,56 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <title>Registro de Atividades - Gestão de Processos</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
+{% extends "base_painel.html" %}
 
-  <div class="layout">
+{% block titulo %}Registro de Atividades - Gestão de Processos{% endblock %}
+{% block cabecalho_titulo %}Registro de Atividades{% endblock %}
+{% block cabecalho_subtitulo %}Histórico de ações dos operadores no sistema{% endblock %}
+{% block container_attrs %} style="max-width: 1100px;"{% endblock %}
 
-    <aside class="menu-lateral">
-      <div class="logo-menu">Gestão de Processos</div>
-      <nav>
-        <a href="{{ url_for('inicio') }}">Início</a>
+{% block conteudo %}
 
-        <div class="item-com-submenu">
-          <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
-          <ul class="submenu">
-            <li><a href="{{ url_for('cadastro_civel') }}">Processos Cível</a></li>
-            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
-            <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
-            <li><a href="{{ url_for('cadastro_trabalhista') }}">Processos Trabalhista</a></li>
-          </ul>
-        </div>
+  <a class="link-voltar" href="{{ url_for('operadores') }}">← Voltar para a lista de operadores</a>
 
-        <div class="item-com-submenu">
-          <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
-          <ul class="submenu">
-            <li><a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a></li>
-            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
-            <li><a href="#" class="oculto-visual">Processos Licitatório</a></li>
-            <li><a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a></li>
-          </ul>
-        </div>
-
-        <a href="{{ url_for('registro_processos') }}">Panorama Jurídico</a>
-
-        {% if current_user.eh_administrador %}
-        <a href="{{ url_for('operadores') }}">Gestão de Operadores</a>
-        <a href="{{ url_for('atividades') }}" class="ativo">Registro de Atividades</a>
-        {% endif %}
-
-      </nav>
-    </aside>
-
-    <div class="conteudo">
-      <div class="cabecalho">
-        <h1>Registro de Atividades</h1>
-        <div class="subtitulo">Histórico de ações dos operadores no sistema</div>
-      </div>
-
-      <div class="container" style="max-width: 1100px;">
-
-        <a class="link-voltar" href="{{ url_for('operadores') }}">← Voltar para a lista de operadores</a>
-
-        {% if registros %}
-        <div class="tabela-wrap">
-          <table class="tabela-processos">
-            <thead>
-              <tr>
-                <th>Data/hora</th>
-                <th>Operador</th>
-                <th>Ação</th>
-                <th>Descrição</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for r in registros %}
-              <tr>
-                <td style="white-space:nowrap;">{{ r.data_hora.strftime('%d/%m/%Y %H:%M') }}</td>
-                <td>{{ r.operador_nome }}</td>
-                <td>
-                  {% if r.acao == 'processo_criado' %}
-                  <span class="selo-status ativo">Processo criado</span>
-                  {% elif r.acao == 'processo_editado' %}
-                  <span class="selo-status suspenso">Processo editado</span>
-                  {% elif r.acao == 'operador_criado' %}
-                  <span class="selo-status ativo">Operador criado</span>
-                  {% elif r.acao == 'operador_editado' %}
-                  <span class="selo-status suspenso">Operador editado</span>
-                  {% elif r.acao == 'operador_excluido' %}
-                  <span class="selo-status arquivado">Operador excluído</span>
-                  {% else %}
-                  <span class="selo-status arquivado">{{ r.acao }}</span>
-                  {% endif %}
-                </td>
-                <td>{{ r.descricao }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        <div class="aviso-limite" style="margin-top:10px;">Mostrando todas as atividades registradas, da mais recente para a mais antiga.</div>
-        {% else %}
-        <div class="tabela-wrap">
-          <div class="estado-vazio">Nenhuma atividade registrada ainda.</div>
-        </div>
-        {% endif %}
-
-      </div>
-    </div>
+  {% if registros %}
+  <div class="tabela-wrap">
+    <table class="tabela-processos">
+      <thead>
+        <tr>
+          <th>Data/hora</th>
+          <th>Operador</th>
+          <th>Ação</th>
+          <th>Descrição</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in registros %}
+        <tr>
+          <td style="white-space:nowrap;">{{ r.data_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+          <td>{{ r.operador_nome }}</td>
+          <td>
+            {% if r.acao == 'processo_criado' %}
+            <span class="selo-status ativo">Processo criado</span>
+            {% elif r.acao == 'processo_editado' %}
+            <span class="selo-status suspenso">Processo editado</span>
+            {% elif r.acao == 'operador_criado' %}
+            <span class="selo-status ativo">Operador criado</span>
+            {% elif r.acao == 'operador_editado' %}
+            <span class="selo-status suspenso">Operador editado</span>
+            {% elif r.acao == 'operador_excluido' %}
+            <span class="selo-status arquivado">Operador excluído</span>
+            {% else %}
+            <span class="selo-status arquivado">{{ r.acao }}</span>
+            {% endif %}
+          </td>
+          <td>{{ r.descricao }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
+  <div class="aviso-limite" style="margin-top:10px;">Mostrando todas as atividades registradas, da mais recente para a mais antiga.</div>
+  {% else %}
+  <div class="tabela-wrap">
+    <div class="estado-vazio">Nenhuma atividade registrada ainda.</div>
+  </div>
+  {% endif %}
 
-  <script src="{{ url_for('static', filename='js/sessao.js') }}"></script>
-</body>
-</html>
+{% endblock %}

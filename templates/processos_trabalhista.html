@@ -1,58 +1,10 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <title>Processos Cadastrados - Trabalhista</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
+{% extends "base_painel.html" %}
 
-  <div class="layout">
+{% block titulo %}Processos Cadastrados - Trabalhista{% endblock %}
+{% block cabecalho_titulo %}Processos Cadastrados - Trabalhista{% endblock %}
+{% block container_attrs %} style="max-width: 1200px;"{% endblock %}
 
-    <aside class="menu-lateral">
-      <div class="logo-menu">Gestão de Processos</div>
-      <nav>
-        <a href="{{ url_for('inicio') }}">Início</a>
-
-        <div class="item-com-submenu">
-          <span class="rotulo-menu">Novo cadastro <span class="seta-submenu">▸</span></span>
-          <ul class="submenu">
-            <li><a href="{{ url_for('cadastro_civel') }}">Processo Cível</a></li>
-            <li><a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a></li>
-            <li><a href="#" class="oculto-visual">Processo Licitatórios</a></li>
-            <li><a href="#" class="oculto-visual">Processo de Recuperação de Crédito</a></li>
-          </ul>
-        </div>
-
-        <div class="item-com-submenu ativo">
-          <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
-          <ul class="submenu">
-            <li><a href="{{ url_for('processos_civel') }}">Processo Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a></li>
-            <li><a href="#" class="oculto-visual">Processo Cível - Recuperação de Crédito</a></li>
-            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
-            <li><a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a></li>
-          </ul>
-        </div>
-
-        <a href="{{ url_for('registro_processos') }}">Panorama Jurídico</a>
-
-        {% if current_user.eh_administrador %}
-        <a href="{{ url_for('operadores') }}">Gestão de Operadores</a>
-        {% endif %}
-
-      </nav>
-    </aside>
-
-    <div class="conteudo">
-      <div class="cabecalho">
-        <h1>Processos Cadastrados - Trabalhista</h1>
-        <div class="subtitulo">Gestão de Processos Jurídicos</div>
-      </div>
-
-      <div class="container" style="max-width: 1200px;">
-
+{% block conteudo %}
         <div style="display:flex; flex-wrap:wrap; gap:18px; align-items:center; background:var(--papel-cartao); border:1px solid var(--borda); border-radius:4px; padding:10px 16px; margin-bottom:16px; font-size:13px; color:var(--texto-suave);">
           <span><strong>Risco:</strong></span>
           <span style="display:flex; align-items:center; gap:7px;">
@@ -299,10 +251,11 @@
         </div>
         {% endif %}
 
-      </div>
-    </div>
-  </div>
-  <script>
+      
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
     // Aplica a máscara 0000000-00.0000.0.00.0000 (padrão CNJ) conforme o usuário digita
     function mascararNumeroProcesso(input) {
       let digitos = input.value.replace(/\D/g, '').slice(0, 20);
@@ -344,7 +297,4 @@
       });
     });
   </script>
-
-  <script src="{{ url_for('static', filename='js/sessao.js') }}"></script>
-</body>
-</html>
+{% endblock %}
