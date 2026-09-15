@@ -344,7 +344,7 @@
           <div class="dash-kpi destaque-vermelho">
             <div class="dash-kpi-label">Gasto realizado</div>
             <div class="dash-kpi-valor">{{ dados.financeiro.gasto|moeda }}</div>
-            <div class="dash-kpi-nota">Valor pago ao {% if tipo_selecionado == 'civel' %}autor{% elif tipo_selecionado == 'trabalhista' %}reclamante{% else %}reclamante ou autor{% endif %} + honorários + custas + depósito</div>
+            <div class="dash-kpi-nota">Valor pago ao {% if tipo_selecionado == 'civel' %}autor{% elif tipo_selecionado == 'trabalhista' %}reclamante{% else %}reclamante ou autor{% endif %} + honorários + custas + depósito - alvará</div>
           </div>
           <div class="dash-kpi destaque-verde">
             <div class="dash-kpi-label">Economia gerada</div>
@@ -444,18 +444,18 @@
             {% if dados.top_centros_resultado %}
             <table class="dash-tabela">
               <colgroup>
-                <col style="width:34%;">
-                <col style="width:26%;">
-                <col style="width:40%;">
+                <col style="width:22%;">
+                <col style="width:14%;">
+                <col style="width:64%;">
               </colgroup>
               <thead>
-                <tr><th>Centro de resultado</th><th style="text-align:left;">Processos ativos</th><th style="text-align:right;">Valor da causa</th></tr>
+                <tr><th>Centro de resultado</th><th style="text-align:right;">Processos ativos</th><th style="text-align:right;">Valor da causa</th></tr>
               </thead>
               <tbody>
                 {% for item in dados.top_centros_resultado %}
                 <tr>
                   <td>{{ item.nome }}</td>
-                  <td style="text-align:left;">{{ item.qtd }}</td>
+                  <td style="text-align:right;">{{ item.qtd }}</td>
                   <td style="text-align:right; white-space:nowrap;">
                     {% set texto_moeda = item.valor|moeda %}
                     <div style="display:flex; justify-content:space-between;">

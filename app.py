@@ -696,7 +696,8 @@ def registro_processos():
     #                    aberto - o que ainda pode ser desembolsado).
     #    Gasto         = tudo que já efetivamente saiu do caixa: valor final
     #                    pago + honorários (advogado/perícia) + custas +
-    #                    depósito recursal.
+    #                    depósito recursal - valor do alvará (o que voltou
+    #                    para o caixa).
     #    Economizado   = soma do campo "economia_gerada".
     #    Ajuste essa régua livremente se a definição da diretoria for outra.
     # ------------------------------------------------------------------
@@ -708,6 +709,7 @@ def registro_processos():
         + somar(Processo.honorarios_periciais)
         + somar(Processo.custas_processuais)
         + somar(Processo.deposito_recursal)
+        - somar(Processo.valor_alvara)
     )
     economizado = somar(Processo.economia_gerada)
 
