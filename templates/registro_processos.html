@@ -180,6 +180,7 @@
        disponível e desenhar corretamente (sem isso, o gráfico fica em branco) */
     .dash-chart-wrap{ position: relative; height: 260px; width: 100%; }
     .dash-chart-wrap.pequeno{ height: 200px; }
+    .dash-chart-wrap.grande{ height: 360px; }
 
     /* Matriz de risco */
     .dash-matriz{ width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: center; }
@@ -405,7 +406,7 @@
 
           <div class="dash-painel" style="display:flex; flex-direction:column;">
             <div class="dash-secao-titulo">Resultado dos encerrados</div>
-            <div class="dash-chart-wrap"><canvas id="graficoResultado"></canvas></div>
+            <div class="dash-chart-wrap grande"><canvas id="graficoResultado"></canvas></div>
             <div class="dash-legenda-grid" id="legendaResultado" style="flex-direction:column; align-items:flex-start; margin-top:auto;">
               <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#0f9960"></span>Procedente</span>
               <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#5bbf8a"></span>Parcialmente procedente</span>
