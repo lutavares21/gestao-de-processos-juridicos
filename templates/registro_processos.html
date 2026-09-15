@@ -445,8 +445,8 @@
             <table class="dash-tabela">
               <colgroup>
                 <col style="width:22%;">
-                <col style="width:14%;">
-                <col style="width:64%;">
+                <col style="width:17%;">
+                <col style="width:61%;">
               </colgroup>
               <thead>
                 <tr><th>Centro de resultado</th><th style="text-align:right;">Processos ativos</th><th style="text-align:right;">Valor da causa</th></tr>
@@ -458,7 +458,7 @@
                   <td style="text-align:right;">{{ item.qtd }}</td>
                   <td style="text-align:right; white-space:nowrap;">
                     {% set texto_moeda = item.valor|moeda %}
-                    <div style="display:flex; justify-content:space-between; width:120px; margin-left:auto;">
+                    <div style="display:flex; justify-content:space-between; width:155px; margin-left:auto;">
                       <span>{{ texto_moeda.split(' ')[0] }}</span>
                       <span>{{ texto_moeda.split(' ', 1)[1] }}</span>
                     </div>
