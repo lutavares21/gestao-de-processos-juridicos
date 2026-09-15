@@ -20,8 +20,9 @@
           <div class="links-bloco">
             <a href="{{ url_for('cadastro_civel') }}">Processo Cível</a>
             <a href="{{ url_for('cadastro_civel_recuperacao') }}">Processo Cível - Recuperação de Crédito</a>
-            <a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a>
             <a href="#" class="oculto-visual">Processo Licitatório</a>
+            <a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a>
+            <a href="#" class="oculto-visual">Processos Tributários</a>
           </div>
         </div>
       </div>
@@ -34,6 +35,7 @@
             <a href="#" class="oculto-visual">Processos Cível - Recuperação de Crédito</a>
             <a href="#" class="oculto-visual">Processos Licitatórios</a>
             <a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a>
+            <a href="#" class="oculto-visual">Processos Tributários</a>
           </div>
         </div>
       </div>
