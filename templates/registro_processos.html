@@ -441,13 +441,13 @@
                 <col style="width:40%;">
               </colgroup>
               <thead>
-                <tr><th>Centro de resultado</th><th>Processos ativos</th><th style="text-align:right;">Valor da causa</th></tr>
+                <tr><th>Centro de resultado</th><th style="text-align:right;">Processos ativos</th><th style="text-align:right;">Valor da causa</th></tr>
               </thead>
               <tbody>
                 {% for item in dados.top_centros_resultado %}
                 <tr>
                   <td>{{ item.nome }}</td>
-                  <td>{{ item.qtd }}</td>
+                  <td style="text-align:right;">{{ item.qtd }}</td>
                   <td style="text-align:right; white-space:nowrap;">
                     {% set texto_moeda = item.valor|moeda %}
                     <div style="display:flex; justify-content:space-between;">
