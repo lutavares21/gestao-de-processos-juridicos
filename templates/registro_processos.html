@@ -144,13 +144,13 @@
             <div class="dash-secao-titulo">Resultado dos encerrados</div>
             <div class="dash-chart-wrap grande"><canvas id="graficoResultado"></canvas></div>
             <div class="dash-legenda-grid" id="legendaResultado" style="flex-direction:column; align-items:flex-start; margin-top:auto;">
-              <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#0f9960"></span>Procedente</span>
+              <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#b3402f"></span>Procedente</span>
               <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#5bbf8a"></span>Parcialmente procedente</span>
               <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#a5d76e"></span>Acordo</span>
               <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#e3f5c9"></span>Extinto com resolução do mérito</span>
               <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#c17f3e"></span>Extinto sem resolução do mérito</span>
               <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#8b95a1"></span>Desistência</span>
-              <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#b3402f"></span>Improcedente</span>
+              <span class="dash-legenda-item"><span class="dash-legenda-cor" style="background:#0f9960"></span>Improcedente</span>
             </div>
           </div>
 
@@ -353,13 +353,13 @@
     try {
     const resultadoSent = dadosDashboard.resultado_sentenca;
     const categoriasResultado = [
-      { chave: 'procedente', cor: '#0f9960' },
+      { chave: 'procedente', cor: '#b3402f' },
       { chave: 'procedente_parcial', cor: '#5bbf8a' },
       { chave: 'acordo', cor: '#a5d76e' },
       { chave: 'extinto_com_resolucao_merito', cor: '#e3f5c9' },
       { chave: 'extinto_sem_resolucao_merito', cor: '#c17f3e' },
       { chave: 'desistencia', cor: '#8b95a1' },
-      { chave: 'improcedente', cor: '#b3402f' },
+      { chave: 'improcedente', cor: '#0f9960' },
     ];
     const totalResultado = categoriasResultado.reduce((soma, c) => soma + resultadoSent[c.chave], 0);
     if (totalResultado > 0) {
