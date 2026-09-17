@@ -32,7 +32,7 @@
           <h2>Processos Cadastrados</h2>
           <div class="links-bloco">
             <a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a>
-            <a href="#" class="oculto-visual">Processos Cível - Recuperação de Crédito</a>
+            <a href="{{ url_for('processos_civel_recuperacao') }}">Processos Cível - Recuperação de Crédito <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_recuperacao_ativos }}</span></a>
             <a href="#" class="oculto-visual">Processos Licitatórios</a>
             <a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a>
             <a href="#" class="oculto-visual">Processos Tributários</a>
