@@ -1286,7 +1286,9 @@ def agenda():
 
     processos = query.all()
 
-    data_de_obj = texto_para_data(data_de) if data_de else None
+    # Sem filtro de data explícito, considera "próxima audiência" a partir de
+    # hoje - não interessa mostrar audiências que já aconteceram.
+    data_de_obj = texto_para_data(data_de) if data_de else date.today()
     data_ate_obj = texto_para_data(data_ate) if data_ate else None
 
     audiencias = []
@@ -1309,28 +1311,38 @@ def agenda():
             (2, p.data_audiencia_2, None, None),
             (3, p.data_audiencia_3, None, None),
         ]
+        candidatos = []
         for numero_audiencia, data_aud, horario, tipo_aud in slots:
             if not data_aud:
                 continue
-            if data_de_obj and data_aud < data_de_obj:
+            if data_aud < data_de_obj:
                 continue
             if data_ate_obj and data_aud > data_ate_obj:
                 continue
             if tipo_audiencia and tipo_aud != tipo_audiencia:
                 continue
-            audiencias.append({
-                "processo_id": p.id,
-                "numero_processo": p.numero_processo,
-                "nome_parte": nome_parte,
-                "tipo_processo": tipo_processo,
-                "data": data_aud,
-                "horario": horario,
-                "tipo_audiencia": tipo_aud,
-                "numero_audiencia": numero_audiencia,
-                "juizado": p.juizado,
-                "comarca": p.comarca,
-                "uf": p.uf,
-            })
+            candidatos.append((numero_audiencia, data_aud, horario, tipo_aud))
+
+        if not candidatos:
+            continue
+
+        # De todas as audiências do processo que passaram nos filtros, só a
+        # mais próxima (menor data) entra na agenda.
+        numero_audiencia, data_aud, horario, tipo_aud = min(candidatos, key=lambda c: c[1])
+
+        audiencias.append({
+            "processo_id": p.id,
+            "numero_processo": p.numero_processo,
+            "nome_parte": nome_parte,
+            "tipo_processo": tipo_processo,
+            "data": data_aud,
+            "horario": horario,
+            "tipo_audiencia": tipo_aud,
+            "numero_audiencia": numero_audiencia,
+            "juizado": p.juizado,
+            "comarca": p.comarca,
+            "uf": p.uf,
+        })
 
     audiencias.sort(key=lambda a: (a["data"], a["horario"] or ""))
 
