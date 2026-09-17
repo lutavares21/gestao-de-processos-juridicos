@@ -1,0 +1,210 @@
+{% extends "base_painel.html" %}
+
+{% block titulo %}Agenda de Audiências{% endblock %}
+{% block cabecalho_titulo %}Agenda de Audiências{% endblock %}
+{% block container_attrs %} style="max-width: 1200px;"{% endblock %}
+
+{% block conteudo %}
+        {% set filtros = filtros|default({}) %}
+        {% set filtros_ativos = filtros_ativos|default(false) %}
+        {% set tipo_selecionado = tipo_selecionado|default('todos') %}
+
+        {% set rotulos_tipo_audiencia = {
+          'presencial': 'Presencial',
+          'telepresencial': 'Telepresencial',
+          'videoconferencia': 'Videoconferência',
+          'hibrida': 'Híbrida'
+        } %}
+
+        {% set rotulos_tipo_processo = {
+          'civel': 'Cível',
+          'civel_recuperacao': 'Cível - Recuperação',
+          'trabalhista': 'Trabalhista',
+          'tributario': 'Tributário'
+        } %}
+
+        <div class="secao" style="margin-bottom:16px;">
+          <h2>Pesquisa de Audiências</h2>
+          <form method="GET" action="{{ url_for('agenda') }}">
+
+            <div class="campo" style="margin-bottom:18px;">
+              <label>Tipo de processo</label>
+              <div class="chip-risco">
+                <label>
+                  <input type="radio" name="tipo" value="todos" {% if tipo_selecionado == 'todos' %}checked{% endif %} onchange="this.form.submit()">
+                  Todos
+                </label>
+                <label>
+                  <input type="radio" name="tipo" value="civel" {% if tipo_selecionado == 'civel' %}checked{% endif %} onchange="this.form.submit()">
+                  Cível
+                </label>
+                <label>
+                  <input type="radio" name="tipo" value="civel_recuperacao" {% if tipo_selecionado == 'civel_recuperacao' %}checked{% endif %} onchange="this.form.submit()">
+                  Cível - Recuperação
+                </label>
+                <label>
+                  <input type="radio" name="tipo" value="trabalhista" {% if tipo_selecionado == 'trabalhista' %}checked{% endif %} onchange="this.form.submit()">
+                  Trabalhista
+                </label>
+                <label>
+                  <input type="radio" name="tipo" value="tributario" {% if tipo_selecionado == 'tributario' %}checked{% endif %} onchange="this.form.submit()">
+                  Tributário
+                </label>
+              </div>
+            </div>
+
+            <div class="linha">
+              <div class="campo">
+                <label for="f_numero">Número do processo</label>
+                <input type="text" id="f_numero" name="numero_processo" value="{{ filtros.get('numero_processo', '') }}" placeholder="0000000-00.0000.0.00.0000" maxlength="25" oninput="mascararNumeroProcesso(this)">
+              </div>
+              <div class="campo">
+                <label for="f_parte">Reclamante ou Autor</label>
+                <input type="text" id="f_parte" name="parte" value="{{ filtros.get('parte', '') }}" placeholder="Nome da parte">
+              </div>
+              <div class="campo">
+                <label for="f_juizado">Vara/Juizado</label>
+                <input type="text" id="f_juizado" name="juizado" value="{{ filtros.get('juizado', '') }}">
+              </div>
+              <div class="campo">
+                <label for="f_comarca">Comarca</label>
+                <input type="text" id="f_comarca" name="comarca" value="{{ filtros.get('comarca', '') }}">
+              </div>
+            </div>
+
+            <div id="filtros_avancados" class="oculto">
+              <div class="linha">
+                <div class="campo">
+                  <label for="f_uf">UF</label>
+                  <select id="f_uf" name="uf">
+                    <option value="">Todas</option>
+                    {% for sigla in ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'] %}
+                    <option value="{{ sigla }}" {% if filtros.get('uf') == sigla %}selected{% endif %}>{{ sigla }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="campo campo-grande">
+                  <label for="f_tipo_audiencia">Tipo de audiência</label>
+                  <select id="f_tipo_audiencia" name="tipo_audiencia">
+                    <option value="">Todos</option>
+                    {% for valor, texto in rotulos_tipo_audiencia.items() %}
+                    <option value="{{ valor }}" {% if filtros.get('tipo_audiencia') == valor %}selected{% endif %}>{{ texto }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="campo">
+                  <label for="f_data_de">Data de</label>
+                  <input type="date" id="f_data_de" name="data_de" value="{{ filtros.get('data_de', '') }}">
+                </div>
+                <div class="campo">
+                  <label for="f_data_ate">Data até</label>
+                  <input type="date" id="f_data_ate" name="data_ate" value="{{ filtros.get('data_ate', '') }}">
+                </div>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-adicionar" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="document.getElementById('filtros_avancados').classList.toggle('oculto')">Filtros avançados ▾</button>
+
+            <button type="submit" class="btn btn-salvar">Buscar</button>
+
+            {% if filtros_ativos %}
+            <a href="{{ url_for('agenda') }}" class="link-voltar" style="margin-top:10px;">✕ Limpar filtros</a>
+            {% endif %}
+          </form>
+        </div>
+
+  {% if audiencias %}
+  <div class="scroll-topo" id="scrollTopo"><div id="scrollTopoInterno"></div></div>
+  <div class="tabela-wrap" id="tabelaWrap">
+    <table class="tabela-processos">
+      <thead>
+        <tr>
+          <th>Número do processo</th>
+          <th>Tipo</th>
+          <th>Reclamante/Autor</th>
+          <th>Data</th>
+          <th>Hora</th>
+          <th>Tipo de audiência</th>
+          <th>Vara/Juizado</th>
+          <th>Comarca/UF</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in audiencias %}
+        <tr>
+          <td>{{ a.numero_processo }}</td>
+          <td>{{ rotulos_tipo_processo.get(a.tipo_processo, a.tipo_processo) }}</td>
+          <td>{{ a.nome_parte }}</td>
+          <td>{{ a.data.strftime('%d/%m/%Y') }}{% if a.numero_audiencia > 1 %} <span style="color:var(--texto-suave); font-size:12px;">({{ a.numero_audiencia }}ª audiência)</span>{% endif %}</td>
+          <td>{{ a.horario or '—' }}</td>
+          <td>{{ rotulos_tipo_audiencia.get(a.tipo_audiencia, '—') }}</td>
+          <td>{{ a.juizado or '—' }}</td>
+          <td>{{ a.comarca or '—' }}{{ '/' ~ a.uf if a.uf else '' }}</td>
+          <td>
+            <a class="btn-detalhe" href="{{ url_for('processo_detalhe', processo_id=a.processo_id) }}">Ver detalhes</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="tabela-wrap">
+    <div class="estado-vazio">
+      {% if filtros_ativos %}
+      Nenhuma audiência encontrada com esses filtros. <a href="{{ url_for('agenda') }}">Limpar filtros</a>.
+      {% else %}
+      Nenhuma audiência agendada no momento.
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+    // Aplica a máscara 0000000-00.0000.0.00.0000 (padrão CNJ) conforme o usuário digita
+    function mascararNumeroProcesso(input) {
+      let digitos = input.value.replace(/\D/g, '').slice(0, 20);
+      let saida = '';
+      if (digitos.length > 0) saida = digitos.substring(0, 7);
+      if (digitos.length > 7) saida += '-' + digitos.substring(7, 9);
+      if (digitos.length > 9) saida += '.' + digitos.substring(9, 13);
+      if (digitos.length > 13) saida += '.' + digitos.substring(13, 14);
+      if (digitos.length > 14) saida += '.' + digitos.substring(14, 16);
+      if (digitos.length > 16) saida += '.' + digitos.substring(16, 20);
+      input.value = saida;
+    }
+
+    // Barra de rolagem horizontal duplicada no topo da tabela
+    document.addEventListener('DOMContentLoaded', () => {
+      const topo = document.getElementById('scrollTopo');
+      const interno = document.getElementById('scrollTopoInterno');
+      const wrap = document.getElementById('tabelaWrap');
+      const tabela = wrap ? wrap.querySelector('table') : null;
+      if (!topo || !interno || !wrap || !tabela) return;
+
+      function sincronizarLargura() {
+        interno.style.width = tabela.scrollWidth + 'px';
+      }
+      sincronizarLargura();
+      window.addEventListener('resize', sincronizarLargura);
+
+      let sincronizando = false;
+      topo.addEventListener('scroll', () => {
+        if (sincronizando) return;
+        sincronizando = true;
+        wrap.scrollLeft = topo.scrollLeft;
+        sincronizando = false;
+      });
+      wrap.addEventListener('scroll', () => {
+        if (sincronizando) return;
+        sincronizando = true;
+        topo.scrollLeft = wrap.scrollLeft;
+        sincronizando = false;
+      });
+    });
+  </script>
+{% endblock %}
