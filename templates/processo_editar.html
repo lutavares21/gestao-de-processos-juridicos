@@ -329,7 +329,7 @@
             </div>
           </div>
 
-          <!-- 6. PEDIDOS E REQUERIMENTOS / TÍTULOS EM RECUPERAÇÃO -->
+          <!-- 6. PEDIDOS E REQUERIMENTOS -->
           {% if eh_recuperacao %}
           {% set titulos = p.titulos_recuperacao|sort(attribute='ordem') %}
           {% include "_titulos_recuperacao.html" %}

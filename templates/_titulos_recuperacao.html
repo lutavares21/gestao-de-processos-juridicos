@@ -1,0 +1,345 @@
+{#
+  Seção "Títulos em recuperação" - usada tanto no cadastro
+  (cadastro_civel_recuperacao.html) quanto na edição (processo_editar.html).
+
+  Quem inclui este arquivo define antes a variável `titulos`:
+      {% set titulos = p.titulos_recuperacao|sort(attribute='ordem') %}
+      {% include "_titulos_recuperacao.html" %}
+  No cadastro novo é só passar uma lista vazia.
+#}
+{% set titulos = titulos if titulos is defined else [] %}
+
+<div class="secao">
+  <h2>Pedidos e requerimentos</h2>
+
+  <p class="texto-ajuda">
+    Anexe a planilha de títulos ou adicione as linhas manualmente.
+    Depois de importar, a tabela fica editável — dá para corrigir
+    qualquer célula antes de salvar.
+  </p>
+
+  <div class="linha linha-importacao">
+    <div class="campo campo-grande">
+      <label for="planilha_recuperacao">Planilha de títulos</label>
+      {# Sem atributo "name": este arquivo é lido por JavaScript,
+         não vai junto no submit do formulário. #}
+      <input type="file" id="planilha_recuperacao"
+             accept=".xlsx,.xlsm,.xltx,.xltm,.xls,.csv,.txt,.tsv,.ods"
+             onchange="importarPlanilhaRecuperacao()">
+    </div>
+    <div class="campo campo-pequeno">
+      <button type="button" class="btn btn-adicionar"
+              onclick="adicionarTituloRecuperacao()">+ Adicionar linha</button>
+    </div>
+    <div class="campo campo-pequeno">
+      <button type="button" class="btn btn-remover"
+              onclick="limparTitulosRecuperacao()">Limpar tabela</button>
+    </div>
+  </div>
+
+  <div id="aviso_recuperacao" class="aviso-recuperacao oculto"></div>
+
+  <div class="tabela-wrap tabela-wrap-recuperacao">
+    <table class="tabela-recuperacao">
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Cliente</th>
+          <th>Nota Fiscal</th>
+          <th>Emissão</th>
+          <th>Vencimento</th>
+          <th class="col-num">Valor</th>
+          <th class="col-num">Saldo</th>
+          <th class="col-num">Juros</th>
+          <th class="col-num">Correção</th>
+          <th class="col-num">Outros</th>
+          <th class="col-num">Total</th>
+          <th>Situação</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="corpo_titulos_recuperacao">
+        {% for t in titulos %}
+        <tr>
+          <td><input type="text" name="rec_company" value="{{ t.company or '' }}"></td>
+          <td><input type="text" name="rec_cliente" value="{{ t.cliente or '' }}"></td>
+          <td><input type="text" name="rec_nota_fiscal" value="{{ t.nota_fiscal or '' }}"></td>
+          <td><input type="date" name="rec_emissao" value="{{ t.emissao.isoformat() if t.emissao else '' }}"></td>
+          <td><input type="date" name="rec_vencimento" value="{{ t.vencimento.isoformat() if t.vencimento else '' }}"></td>
+          <td><input type="text" name="rec_valor" class="cel-num" inputmode="decimal"
+                     value="{{ (t.valor|moeda)|replace('R$ ', '') if t.valor is not none else '' }}"
+                     onblur="formatarCelulaMoeda(this)"></td>
+          <td><input type="text" name="rec_saldo" class="cel-num cel-parcela" inputmode="decimal"
+                     value="{{ (t.saldo|moeda)|replace('R$ ', '') if t.saldo is not none else '' }}"
+                     oninput="recalcularTotalLinha(this)" onblur="formatarCelulaMoeda(this)"></td>
+          <td><input type="text" name="rec_juros" class="cel-num cel-parcela" inputmode="decimal"
+                     value="{{ (t.juros|moeda)|replace('R$ ', '') if t.juros is not none else '' }}"
+                     oninput="recalcularTotalLinha(this)" onblur="formatarCelulaMoeda(this)"></td>
+          <td><input type="text" name="rec_correcao" class="cel-num cel-parcela" inputmode="decimal"
+                     value="{{ (t.correcao|moeda)|replace('R$ ', '') if t.correcao is not none else '' }}"
+                     oninput="recalcularTotalLinha(this)" onblur="formatarCelulaMoeda(this)"></td>
+          <td><input type="text" name="rec_outros" class="cel-num cel-parcela" inputmode="decimal"
+                     value="{{ (t.outros|moeda)|replace('R$ ', '') if t.outros is not none else '' }}"
+                     oninput="recalcularTotalLinha(this)" onblur="formatarCelulaMoeda(this)"></td>
+          <td><input type="text" name="rec_total" class="cel-num cel-total" inputmode="decimal"
+                     value="{{ (t.total|moeda)|replace('R$ ', '') if t.total is not none else '' }}"
+                     oninput="recalcularRodapeRecuperacao()" onblur="formatarCelulaMoeda(this)"></td>
+          <td>
+            {% set situacao = t.status or 'em_analise' %}
+            <select name="rec_status" class="selo-pedido-select {{ situacao }}"
+                    onchange="atualizarCorStatus(this)">
+              <option value="deferido" {{ 'selected' if situacao == 'deferido' else '' }}>Deferido</option>
+              <option value="em_analise" {{ 'selected' if situacao == 'em_analise' else '' }}>Em análise</option>
+              <option value="indeferido" {{ 'selected' if situacao == 'indeferido' else '' }}>Indeferido</option>
+            </select>
+          </td>
+          <td>
+            <button type="button" class="btn btn-remover"
+                    onclick="removerTituloRecuperacao(this)">Remover</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr id="rodape_titulos_recuperacao">
+          <td colspan="5" class="rodape-rotulo">
+            Totais (<span id="contador_titulos">0</span> título(s))
+          </td>
+          <td class="col-num" id="soma_valor">—</td>
+          <td class="col-num" id="soma_saldo">—</td>
+          <td class="col-num" id="soma_juros">—</td>
+          <td class="col-num" id="soma_correcao">—</td>
+          <td class="col-num" id="soma_outros">—</td>
+          <td class="col-num" id="soma_total">—</td>
+          <td colspan="2"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <p id="vazio_titulos" class="texto-ajuda">
+    Nenhum título adicionado ainda.
+  </p>
+</div>
+
+<!-- Modelo de uma linha nova (usado pelo botão "+ Adicionar linha" e pela importação) -->
+<template id="modelo_titulo_recuperacao">
+  <tr>
+    <td><input type="text" name="rec_company"></td>
+    <td><input type="text" name="rec_cliente"></td>
+    <td><input type="text" name="rec_nota_fiscal"></td>
+    <td><input type="date" name="rec_emissao"></td>
+    <td><input type="date" name="rec_vencimento"></td>
+    <td><input type="text" name="rec_valor" class="cel-num" inputmode="decimal"
+               onblur="formatarCelulaMoeda(this)"></td>
+    <td><input type="text" name="rec_saldo" class="cel-num cel-parcela" inputmode="decimal"
+               oninput="recalcularTotalLinha(this)" onblur="formatarCelulaMoeda(this)"></td>
+    <td><input type="text" name="rec_juros" class="cel-num cel-parcela" inputmode="decimal"
+               oninput="recalcularTotalLinha(this)" onblur="formatarCelulaMoeda(this)"></td>
+    <td><input type="text" name="rec_correcao" class="cel-num cel-parcela" inputmode="decimal"
+               oninput="recalcularTotalLinha(this)" onblur="formatarCelulaMoeda(this)"></td>
+    <td><input type="text" name="rec_outros" class="cel-num cel-parcela" inputmode="decimal"
+               oninput="recalcularTotalLinha(this)" onblur="formatarCelulaMoeda(this)"></td>
+    <td><input type="text" name="rec_total" class="cel-num cel-total" inputmode="decimal"
+               oninput="recalcularRodapeRecuperacao()" onblur="formatarCelulaMoeda(this)"></td>
+    <td>
+      <select name="rec_status" class="selo-pedido-select em_analise"
+              onchange="atualizarCorStatus(this)">
+        <option value="deferido">Deferido</option>
+        <option value="em_analise" selected>Em análise</option>
+        <option value="indeferido">Indeferido</option>
+      </select>
+    </td>
+    <td>
+      <button type="button" class="btn btn-remover"
+              onclick="removerTituloRecuperacao(this)">Remover</button>
+    </td>
+  </tr>
+</template>
+
+<script>
+  // ==========================================================
+  // Títulos em recuperação de crédito
+  // ==========================================================
+
+  // Converte o texto digitado numa célula de dinheiro em número.
+  // Aceita "1.234,56", "1234.56", "R$ 1.234,56" e vazio.
+  function numeroDaCelula(input) {
+    let texto = (input.value || '').trim();
+    if (!texto) return null;
+    texto = texto.replace(/[^\d,.\-]/g, '');
+    if (texto.includes(',') && texto.includes('.')) {
+      texto = texto.lastIndexOf(',') > texto.lastIndexOf('.')
+        ? texto.replace(/\./g, '').replace(',', '.')
+        : texto.replace(/,/g, '');
+    } else if (texto.includes(',')) {
+      texto = texto.replace(',', '.');
+    }
+    const numero = parseFloat(texto);
+    return isNaN(numero) ? null : numero;
+  }
+
+  function formatarNumeroBR(numero) {
+    return numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // Ao sair da célula, deixa o número no padrão 1.234,56
+  function formatarCelulaMoeda(input) {
+    const numero = numeroDaCelula(input);
+    input.value = numero === null ? '' : formatarNumeroBR(numero);
+    recalcularRodapeRecuperacao();
+  }
+
+  // Quando Saldo, Juros, Correção ou Outros é editado, o Total da linha é
+  // recalculado. Se o operador digitar direto no Total, aquele valor fica
+  // até ele mexer numa dessas quatro colunas de novo.
+  function recalcularTotalLinha(input) {
+    const linha = input.closest('tr');
+    let soma = 0;
+    let temAlgum = false;
+    linha.querySelectorAll('.cel-parcela').forEach((celula) => {
+      const numero = numeroDaCelula(celula);
+      if (numero !== null) { soma += numero; temAlgum = true; }
+    });
+    const campoTotal = linha.querySelector('.cel-total');
+    campoTotal.value = temAlgum ? formatarNumeroBR(soma) : '';
+    recalcularRodapeRecuperacao();
+  }
+
+  // Soma cada coluna numérica e atualiza a linha de totais do rodapé
+  function recalcularRodapeRecuperacao() {
+    const colunas = {
+      rec_valor: 'soma_valor', rec_saldo: 'soma_saldo', rec_juros: 'soma_juros',
+      rec_correcao: 'soma_correcao', rec_outros: 'soma_outros', rec_total: 'soma_total',
+    };
+    const corpo = document.getElementById('corpo_titulos_recuperacao');
+    if (!corpo) return;
+
+    Object.entries(colunas).forEach(([nomeCampo, idRodape]) => {
+      let soma = 0;
+      let temAlgum = false;
+      corpo.querySelectorAll('input[name="' + nomeCampo + '"]').forEach((celula) => {
+        const numero = numeroDaCelula(celula);
+        if (numero !== null) { soma += numero; temAlgum = true; }
+      });
+      document.getElementById(idRodape).textContent = temAlgum ? formatarNumeroBR(soma) : '—';
+    });
+
+    const quantidade = corpo.children.length;
+    document.getElementById('contador_titulos').textContent = quantidade;
+    document.getElementById('vazio_titulos').classList.toggle('oculto', quantidade > 0);
+    document.querySelector('.tabela-wrap-recuperacao').classList.toggle('oculto', quantidade === 0);
+  }
+
+  // Mantém a cor do seletor de situação igual à dos selos de pedidos
+  function atualizarCorStatus(select) {
+    select.className = 'selo-pedido-select ' + select.value;
+  }
+
+  // Adiciona uma linha. Se vier um objeto "dados" (linha da planilha),
+  // já preenche as células; senão entra uma linha em branco.
+  function adicionarTituloRecuperacao(dados) {
+    const corpo = document.getElementById('corpo_titulos_recuperacao');
+    const modelo = document.getElementById('modelo_titulo_recuperacao').content.cloneNode(true);
+
+    if (dados) {
+      ['company', 'cliente', 'nota_fiscal', 'emissao', 'vencimento'].forEach((campo) => {
+        const alvo = modelo.querySelector('input[name="rec_' + campo + '"]');
+        if (alvo && dados[campo]) alvo.value = dados[campo];
+      });
+      ['valor', 'saldo', 'juros', 'correcao', 'outros', 'total'].forEach((campo) => {
+        const alvo = modelo.querySelector('input[name="rec_' + campo + '"]');
+        if (alvo && dados[campo] !== null && dados[campo] !== undefined) {
+          alvo.value = formatarNumeroBR(dados[campo]);
+        }
+      });
+      const seletor = modelo.querySelector('select[name="rec_status"]');
+      if (seletor && dados.status) {
+        seletor.value = dados.status;
+        atualizarCorStatus(seletor);
+      }
+    }
+
+    corpo.appendChild(modelo);
+    recalcularRodapeRecuperacao();
+  }
+
+  function removerTituloRecuperacao(botao) {
+    botao.closest('tr').remove();
+    recalcularRodapeRecuperacao();
+  }
+
+  function limparTitulosRecuperacao() {
+    const corpo = document.getElementById('corpo_titulos_recuperacao');
+    if (!corpo.children.length) return;
+    if (!confirm('Remover todas as linhas da tabela de títulos?')) return;
+    corpo.innerHTML = '';
+    document.getElementById('planilha_recuperacao').value = '';
+    mostrarAvisoRecuperacao('', null);
+    recalcularRodapeRecuperacao();
+  }
+
+  // Caixa de mensagens da seção (erro de leitura, avisos de importação)
+  function mostrarAvisoRecuperacao(html, tipo) {
+    const caixa = document.getElementById('aviso_recuperacao');
+    if (!html) {
+      caixa.className = 'aviso-recuperacao oculto';
+      caixa.innerHTML = '';
+      return;
+    }
+    caixa.className = 'aviso-recuperacao ' + (tipo || 'info');
+    caixa.innerHTML = html;
+  }
+
+  // Envia só a planilha para o servidor, recebe as linhas em JSON e monta
+  // a tabela. A página não recarrega, então nada do que já foi digitado
+  // nas outras seções se perde.
+  async function importarPlanilhaRecuperacao() {
+    const campoArquivo = document.getElementById('planilha_recuperacao');
+    const arquivo = campoArquivo.files[0];
+    if (!arquivo) return;
+
+    const corpo = document.getElementById('corpo_titulos_recuperacao');
+    if (corpo.children.length &&
+        !confirm('A tabela já tem linhas. Substituir pelo conteúdo da planilha?')) {
+      campoArquivo.value = '';
+      return;
+    }
+
+    mostrarAvisoRecuperacao('Lendo a planilha…', 'info');
+
+    const dados = new FormData();
+    dados.append('planilha', arquivo);
+
+    try {
+      const resposta = await fetch('{{ url_for("recuperacao_ler_planilha") }}', {
+        method: 'POST',
+        body: dados,
+      });
+      const resultado = await resposta.json();
+
+      if (!resultado.ok) {
+        mostrarAvisoRecuperacao(resultado.erro, 'erro');
+        campoArquivo.value = '';
+        return;
+      }
+
+      corpo.innerHTML = '';
+      resultado.linhas.forEach((linha) => adicionarTituloRecuperacao(linha));
+
+      let mensagem = '<strong>' + resultado.linhas.length +
+                     ' título(s) importado(s).</strong> Confira e corrija o que precisar antes de salvar.';
+      if (resultado.avisos && resultado.avisos.length) {
+        mensagem += '<ul><li>' + resultado.avisos.join('</li><li>') + '</li></ul>';
+      }
+      mostrarAvisoRecuperacao(mensagem, resultado.avisos && resultado.avisos.length ? 'atencao' : 'ok');
+    } catch (erro) {
+      mostrarAvisoRecuperacao(
+        'Não consegui falar com o servidor para ler a planilha. Verifique a conexão e tente de novo.',
+        'erro'
+      );
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', recalcularRodapeRecuperacao);
+</script>
