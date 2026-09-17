@@ -6,18 +6,18 @@
 
 {% block conteudo %}
         <div style="display:flex; flex-wrap:wrap; gap:18px; align-items:center; background:var(--papel-cartao); border:1px solid var(--borda); border-radius:4px; padding:10px 16px; margin-bottom:16px; font-size:13px; color:var(--texto-suave);">
-          <span><strong>Situação dos títulos:</strong></span>
+          <span><strong>Risco:</strong></span>
           <span style="display:flex; align-items:center; gap:7px;">
-            <span style="width:11px; height:11px; border-radius:50%; display:inline-block; background:var(--risco-remoto);"></span>
-            Deferido
+            <span style="width:11px; height:11px; border-radius:50%; display:inline-block; background:var(--risco-provavel);"></span>
+            Provável — acima de 50%
           </span>
           <span style="display:flex; align-items:center; gap:7px;">
             <span style="width:11px; height:11px; border-radius:50%; display:inline-block; background:var(--risco-possivel);"></span>
-            Em análise
+            Possível — 35% a 50%
           </span>
           <span style="display:flex; align-items:center; gap:7px;">
-            <span style="width:11px; height:11px; border-radius:50%; display:inline-block; background:var(--risco-provavel);"></span>
-            Indeferido
+            <span style="width:11px; height:11px; border-radius:50%; display:inline-block; background:var(--risco-remoto);"></span>
+            Remoto — abaixo de 35%
           </span>
         </div>
 
@@ -28,10 +28,6 @@
           'stf': 'STF',
           'nao_informado': 'Não informado'
         } %}
-        {% set rotulos_cor_titulos = {
-          'verde': 'Deferidos', 'amarelo': 'Em análise', 'vermelho': 'Com indeferimento'
-        } %}
-
         <div class="secao" style="margin-bottom:16px;">
           <h2>Pesquisa Processual</h2>
           <form method="GET" action="{{ url_for('processos_civel_recuperacao') }}">
@@ -221,7 +217,7 @@
                 <th>Réu</th>
                 <th>Clientes dos títulos</th>
                 <th>Títulos</th>
-                <th>Situação dos títulos</th>
+                <th>Risco</th>
                 <th>Status</th>
                 <th>Tempo de tramitação</th>
                 <th>Valor total dos títulos</th>
@@ -242,9 +238,7 @@
                 </td>
                 <td style="text-align:center;">{{ p.titulos_recuperacao|length or '—' }}</td>
                 <td>
-                  {% if p.cor_titulos %}
-                  <span class="selo-pedido titulos-{{ p.cor_titulos }}">{{ rotulos_cor_titulos[p.cor_titulos] }}</span>
-                  {% else %}—{% endif %}
+                  {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif %}
                 </td>
                 <td><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></td>
                 <td>{{ p.dias_ativos if p.dias_ativos is not none else '—' }}{{ ' dias' if p.dias_ativos is not none else '' }}</td>

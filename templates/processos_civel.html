@@ -2,11 +2,172 @@
 
 {% block titulo %}Processos Cível{% endblock %}
 {% block cabecalho_titulo %}Processos Cível{% endblock %}
+{% block container_attrs %} style="max-width: 1200px;"{% endblock %}
 
 {% block conteudo %}
+        <div style="display:flex; flex-wrap:wrap; gap:18px; align-items:center; background:var(--papel-cartao); border:1px solid var(--borda); border-radius:4px; padding:10px 16px; margin-bottom:16px; font-size:13px; color:var(--texto-suave);">
+          <span><strong>Risco:</strong></span>
+          <span style="display:flex; align-items:center; gap:7px;">
+            <span style="width:11px; height:11px; border-radius:50%; display:inline-block; background:var(--risco-provavel);"></span>
+            Provável — acima de 50%
+          </span>
+          <span style="display:flex; align-items:center; gap:7px;">
+            <span style="width:11px; height:11px; border-radius:50%; display:inline-block; background:var(--risco-possivel);"></span>
+            Possível — 35% a 50%
+          </span>
+          <span style="display:flex; align-items:center; gap:7px;">
+            <span style="width:11px; height:11px; border-radius:50%; display:inline-block; background:var(--risco-remoto);"></span>
+            Remoto — abaixo de 35%
+          </span>
+        </div>
+
+        {% set graus_instancia = {
+          'primeira_instancia': '1ª Instância',
+          'segunda_instancia_trt': '2ª Instância - Recurso',
+          'tst': 'TST',
+          'stf': 'STF',
+          'nao_informado': 'Não informado'
+        } %}
+
+        <div class="secao" style="margin-bottom:16px;">
+          <h2>Pesquisa Processual</h2>
+          <form method="GET" action="{{ url_for('processos_civel') }}">
+            <div class="linha">
+              <div class="campo">
+                <label for="f_numero">Número do processo</label>
+                <input type="text" id="f_numero" name="numero_processo" value="{{ filtros.get('numero_processo', '') }}" placeholder="0000000-00.0000.0.00.0000" maxlength="25" oninput="mascararNumeroProcesso(this)">
+              </div>
+              <div class="campo">
+                <label for="f_parte">Autor ou Réu</label>
+                <input type="text" id="f_parte" name="parte" value="{{ filtros.get('parte', '') }}" placeholder="Nome da parte">
+              </div>
+              <div class="campo">
+                <label for="f_juizado">Juizado</label>
+                <input type="text" id="f_juizado" name="juizado" value="{{ filtros.get('juizado', '') }}">
+              </div>
+              <div class="campo">
+                <label for="f_comarca">Comarca</label>
+                <input type="text" id="f_comarca" name="comarca" value="{{ filtros.get('comarca', '') }}">
+              </div>
+            </div>
+
+            <div id="filtros_avancados" class="oculto">
+              <div class="linha">
+                <div class="campo">
+                  <label for="f_uf">UF</label>
+                  <select id="f_uf" name="uf">
+                    <option value="">Todas</option>
+                    {% for sigla in ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'] %}
+                    <option value="{{ sigla }}" {% if filtros.get('uf') == sigla %}selected{% endif %}>{{ sigla }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="campo campo-grande">
+                  <label for="f_tipo">Tipo de ação</label>
+                  <select id="f_tipo" name="tipo_acao">
+                    <option value="">Todos</option>
+                    {% for valor, texto in [
+                      ('acao_civel','Ação Cível'), ('acao_trabalhista','Ação Trabalhista'),
+                      ('cobranca_extrajudicial','Cobrança Extrajudicial'), ('cobranca_judicial','Cobrança Judicial')
+                    ] %}
+                    <option value="{{ valor }}" {% if filtros.get('tipo_acao') == valor %}selected{% endif %}>{{ texto }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="campo">
+                  <label for="f_status">Status</label>
+                  <select id="f_status" name="status">
+                    <option value="">Todos</option>
+                    <option value="arquivado" {% if filtros.get('status') == 'arquivado' %}selected{% endif %}>Arquivado</option>
+                    <option value="ativo" {% if filtros.get('status') == 'ativo' %}selected{% endif %}>Ativo</option>
+                    <option value="suspenso" {% if filtros.get('status') == 'suspenso' %}selected{% endif %}>Suspenso</option>
+                  </select>
+                </div>
+                <div class="campo">
+                  <label for="f_risco">Risco</label>
+                  <select id="f_risco" name="risco">
+                    <option value="">Todos</option>
+                    <option value="possivel" {% if filtros.get('risco') == 'possivel' %}selected{% endif %}>Possível</option>
+                    <option value="provavel" {% if filtros.get('risco') == 'provavel' %}selected{% endif %}>Provável</option>
+                    <option value="remoto" {% if filtros.get('risco') == 'remoto' %}selected{% endif %}>Remoto</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="linha">
+                <div class="campo">
+                  <label for="f_grau">Grau/Instância</label>
+                  <select id="f_grau" name="grau_instancia">
+                    <option value="">Todos</option>
+                    {% for valor, texto in graus_instancia.items() %}
+                    <option value="{{ valor }}" {% if filtros.get('grau_instancia') == valor %}selected{% endif %}>{{ texto }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="campo">
+                  <label for="f_resultado">Resultado</label>
+                  <select id="f_resultado" name="resultado">
+                    <option value="">Todos</option>
+                    <option value="acordo" {% if filtros.get('resultado') == 'acordo' %}selected{% endif %}>Acordo</option>
+                    <option value="extinto_sem_resolucao_merito" {% if filtros.get('resultado') == 'extinto_sem_resolucao_merito' %}selected{% endif %}>Extinto Sem Resolução do Mérito</option>
+                    <option value="ganhamos" {% if filtros.get('resultado') == 'ganhamos' %}selected{% endif %}>Ganhamos</option>
+                    <option value="perdemos" {% if filtros.get('resultado') == 'perdemos' %}selected{% endif %}>Perdemos</option>
+                  </select>
+                </div>
+                <div class="campo campo-grande">
+                  <label for="f_cr">Centro de Resultados (CR)</label>
+                  <select id="f_cr" name="centro_resultado">
+                    <option value="">Todos</option>
+                    {% for codigo, nome in [
+                      ('271','Audiologia'), ('290','Bernafon'), ('245','Call Center'), ('220','Departamento Financeiro'),
+                      ('273','Diatec'), ('211','Diretoria Executiva'), ('501','Distribuidores'), ('302','Expansão'),
+                      ('800','Expatriados'), ('246','Hub Teleconsulta'), ('253','Interacoustics - Distribuidores'),
+                      ('1111','Laboratório'), ('237','Licitação e Legalização'), ('234','Logística'), ('242','Marketing'),
+                      ('601','Marketing B2B'), ('700','México'), ('402','Neurelec'), ('254','Oticon Governo'),
+                      ('400','Oticon Medical'), ('301','Philips'), ('281','Produtos e Regulatórios'), ('249','Programa Parceria'),
+                      ('251','RH/Depto.Pessoal'), ('258','Sonic'), ('502','Sonic Distribuidores'), ('236','Suprimentos'),
+                      ('213','Telex Licença'), ('261','TI - Informática')
+                    ] %}
+                    <option value="{{ codigo }}" {% if filtros.get('centro_resultado') == codigo %}selected{% endif %}>{{ codigo }} - {{ nome }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <div class="linha">
+                <div class="campo campo-grande">
+                  <label for="f_escritorio">Escritório</label>
+                  <select id="f_escritorio" name="escritorio">
+                    <option value="">Todos</option>
+                    {% for nome in ['Dr. Fernando Ximenes', 'Dr. Luiz Antônio Correa', 'Dr. Rolim', 'Dra. Cláudia Mello', 'Escritório Dannemann', 'Escritório Vra Advogados'] %}
+                    <option value="{{ nome }}" {% if filtros.get('escritorio') == nome %}selected{% endif %}>{{ nome }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="campo">
+                  <label for="f_dist_de">Distribuição de</label>
+                  <input type="date" id="f_dist_de" name="data_distribuicao_de" value="{{ filtros.get('data_distribuicao_de', '') }}">
+                </div>
+                <div class="campo">
+                  <label for="f_dist_ate">Distribuição até</label>
+                  <input type="date" id="f_dist_ate" name="data_distribuicao_ate" value="{{ filtros.get('data_distribuicao_ate', '') }}">
+                </div>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-adicionar" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="document.getElementById('filtros_avancados').classList.toggle('oculto')">Filtros avançados ▾</button>
+
+            <button type="submit" class="btn btn-salvar">Buscar</button>
+
+            {% if filtros_ativos %}
+            <a href="{{ url_for('processos_civel') }}" class="link-voltar" style="margin-top:10px;">✕ Limpar filtros</a>
+            {% endif %}
+          </form>
+        </div>
 
   {% if processos %}
-  <div class="tabela-wrap">
+  <div class="scroll-topo" id="scrollTopo"><div id="scrollTopoInterno"></div></div>
+  <div class="tabela-wrap" id="tabelaWrap">
     <table class="tabela-processos">
       <thead>
         <tr>
@@ -46,9 +207,59 @@
   {% else %}
   <div class="tabela-wrap">
     <div class="estado-vazio">
+      {% if filtros_ativos %}
+      Nenhum processo encontrado com esses filtros. <a href="{{ url_for('processos_civel') }}">Limpar filtros</a>.
+      {% else %}
       Nenhum processo cível cadastrado ainda. <a href="{{ url_for('cadastro_civel') }}">Cadastrar o primeiro</a>.
+      {% endif %}
     </div>
   </div>
   {% endif %}
 
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+    // Aplica a máscara 0000000-00.0000.0.00.0000 (padrão CNJ) conforme o usuário digita
+    function mascararNumeroProcesso(input) {
+      let digitos = input.value.replace(/\D/g, '').slice(0, 20);
+      let saida = '';
+      if (digitos.length > 0) saida = digitos.substring(0, 7);
+      if (digitos.length > 7) saida += '-' + digitos.substring(7, 9);
+      if (digitos.length > 9) saida += '.' + digitos.substring(9, 13);
+      if (digitos.length > 13) saida += '.' + digitos.substring(13, 14);
+      if (digitos.length > 14) saida += '.' + digitos.substring(14, 16);
+      if (digitos.length > 16) saida += '.' + digitos.substring(16, 20);
+      input.value = saida;
+    }
+
+    // Barra de rolagem horizontal duplicada no topo da tabela
+    document.addEventListener('DOMContentLoaded', () => {
+      const topo = document.getElementById('scrollTopo');
+      const interno = document.getElementById('scrollTopoInterno');
+      const wrap = document.getElementById('tabelaWrap');
+      const tabela = wrap ? wrap.querySelector('table') : null;
+      if (!topo || !interno || !wrap || !tabela) return;
+
+      function sincronizarLargura() {
+        interno.style.width = tabela.scrollWidth + 'px';
+      }
+      sincronizarLargura();
+      window.addEventListener('resize', sincronizarLargura);
+
+      let sincronizando = false;
+      topo.addEventListener('scroll', () => {
+        if (sincronizando) return;
+        sincronizando = true;
+        wrap.scrollLeft = topo.scrollLeft;
+        sincronizando = false;
+      });
+      wrap.addEventListener('scroll', () => {
+        if (sincronizando) return;
+        sincronizando = true;
+        topo.scrollLeft = wrap.scrollLeft;
+        sincronizando = false;
+      });
+    });
+  </script>
 {% endblock %}
