@@ -1227,6 +1227,128 @@ def processos_civel_recuperacao():
     )
 
 
+@app.route("/agenda")
+@login_required
+def agenda():
+    """Agenda de audiências: reúne as audiências (1, 2 e 3) de todos os
+    processos cíveis, cíveis-recuperação, trabalhistas e tributários
+    (estes últimos ainda são processos cíveis com tipo_acao='tributario',
+    já que não existe cadastro próprio para tributário)."""
+    f = request.args
+
+    def texto(chave):
+        return f.get(chave, "").strip()
+
+    tipo = texto("tipo") or "todos"
+    numero_processo = texto("numero_processo")
+    parte = texto("parte")
+    juizado = texto("juizado")
+    comarca = texto("comarca")
+    uf = texto("uf")
+    tipo_audiencia = texto("tipo_audiencia")
+    data_de = texto("data_de")
+    data_ate = texto("data_ate")
+
+    query = Processo.query
+
+    if tipo == "civel":
+        query = query.filter(
+            Processo.origem_cadastro == "civel", Processo.tipo_acao != "tributario"
+        )
+    elif tipo == "civel_recuperacao":
+        query = query.filter(Processo.origem_cadastro == "civel_recuperacao")
+    elif tipo == "trabalhista":
+        query = query.filter(Processo.origem_cadastro == "trabalhista")
+    elif tipo == "tributario":
+        query = query.filter(
+            Processo.origem_cadastro == "civel", Processo.tipo_acao == "tributario"
+        )
+    # tipo == "todos" -> sem filtro de origem
+
+    if numero_processo:
+        query = query.filter(Processo.numero_processo.ilike(f"%{numero_processo}%"))
+    if parte:
+        query = query.filter(Processo.partes.any(Parte.nome.ilike(f"%{parte}%")))
+    if juizado:
+        query = query.filter(Processo.juizado.ilike(f"%{juizado}%"))
+    if comarca:
+        query = query.filter(Processo.comarca.ilike(f"%{comarca}%"))
+    if uf:
+        query = query.filter(Processo.uf == uf)
+
+    query = query.filter(
+        db.or_(
+            Processo.data_audiencia_1.isnot(None),
+            Processo.data_audiencia_2.isnot(None),
+            Processo.data_audiencia_3.isnot(None),
+        )
+    )
+
+    processos = query.all()
+
+    data_de_obj = texto_para_data(data_de) if data_de else None
+    data_ate_obj = texto_para_data(data_ate) if data_ate else None
+
+    audiencias = []
+    for p in processos:
+        tipo_parte = "reclamante" if p.origem_cadastro == "trabalhista" else "autor"
+        nomes_partes = [parte_obj.nome for parte_obj in p.partes if parte_obj.tipo == tipo_parte]
+        nome_parte = ", ".join(nomes_partes) if nomes_partes else "—"
+
+        if p.origem_cadastro == "trabalhista":
+            tipo_processo = "trabalhista"
+        elif p.origem_cadastro == "civel_recuperacao":
+            tipo_processo = "civel_recuperacao"
+        elif p.tipo_acao == "tributario":
+            tipo_processo = "tributario"
+        else:
+            tipo_processo = "civel"
+
+        slots = [
+            (1, p.data_audiencia_1, p.audiencia_1_horario, p.audiencia_1_tipo),
+            (2, p.data_audiencia_2, None, None),
+            (3, p.data_audiencia_3, None, None),
+        ]
+        for numero_audiencia, data_aud, horario, tipo_aud in slots:
+            if not data_aud:
+                continue
+            if data_de_obj and data_aud < data_de_obj:
+                continue
+            if data_ate_obj and data_aud > data_ate_obj:
+                continue
+            if tipo_audiencia and tipo_aud != tipo_audiencia:
+                continue
+            audiencias.append({
+                "processo_id": p.id,
+                "numero_processo": p.numero_processo,
+                "nome_parte": nome_parte,
+                "tipo_processo": tipo_processo,
+                "data": data_aud,
+                "horario": horario,
+                "tipo_audiencia": tipo_aud,
+                "numero_audiencia": numero_audiencia,
+                "juizado": p.juizado,
+                "comarca": p.comarca,
+                "uf": p.uf,
+            })
+
+    audiencias.sort(key=lambda a: (a["data"], a["horario"] or ""))
+
+    campos_filtro = [
+        "numero_processo", "parte", "juizado", "comarca", "uf",
+        "tipo_audiencia", "data_de", "data_ate",
+    ]
+    filtros_ativos = tipo != "todos" or any(f.get(c, "").strip() for c in campos_filtro)
+
+    return render_template(
+        "agenda.html",
+        audiencias=audiencias,
+        filtros=f,
+        filtros_ativos=filtros_ativos,
+        tipo_selecionado=tipo,
+    )
+
+
 @app.route("/processo/<int:processo_id>")
 @login_required
 def processo_detalhe(processo_id):

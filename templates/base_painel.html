@@ -30,6 +30,8 @@
           </ul>
         </div>
 
+        <a href="{{ url_for('agenda') }}" class="{{ 'ativo' if request.endpoint == 'agenda' else '' }}">Agenda de Audiências</a>
+
         <a href="{{ url_for('registro_processos') }}" class="{{ 'ativo' if request.endpoint == 'registro_processos' else '' }}">Panorama Jurídico</a>
 
         {% if current_user.eh_administrador %}
