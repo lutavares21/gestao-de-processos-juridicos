@@ -234,21 +234,52 @@ body {
   flex-wrap: wrap;
 }
 
-/* --- Linhas do filtro de pesquisa: grade fixa de 4 colunas iguais --- */
+/* --- Linhas do filtro de pesquisa: grade fixa de 4 colunas iguais --------
+   Todos os campos de busca ficam numa mesma grade, então rótulos e caixas
+   sempre batem coluna a coluna, independente do tamanho do texto. -------- */
 .linha-filtro {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: 14px 16px;
+  margin-bottom: 14px;
+  align-items: end;
 }
 
-.linha-filtro .campo {
+.linha-filtro .campo,
+.linha-filtro .campo-grande,
+.linha-filtro .campo-pequeno {
   flex: unset;
   min-width: 0;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-@media (max-width: 900px) {
+/* Se um rótulo quebrar em duas linhas, a caixa continua alinhada com as
+   das outras colunas (encostada na base da célula). */
+.linha-filtro .campo > input,
+.linha-filtro .campo > select,
+.linha-filtro .campo > textarea {
+  margin-top: auto;
+}
+
+/* Campo que ocupa duas colunas da grade (selects com textos longos). */
+.linha-filtro .campo-largura-2 {
+  grid-column: span 2;
+}
+
+@media (max-width: 1000px) {
   .linha-filtro {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  .linha-filtro {
+    grid-template-columns: 1fr;
+  }
+  .linha-filtro .campo-largura-2 {
+    grid-column: span 1;
   }
 }
 
