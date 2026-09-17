@@ -41,33 +41,21 @@
                 <input type="text" id="f_numero" name="numero_processo" value="{{ filtros.get('numero_processo', '') }}" placeholder="0000000-00.0000.0.00.0000" maxlength="25" oninput="mascararNumeroProcesso(this)">
               </div>
               <div class="campo">
-                <label for="f_cliente">Cliente (do título)</label>
-                <input type="text" id="f_cliente" name="cliente" value="{{ filtros.get('cliente', '') }}" placeholder="Nome do cliente">
+                <label for="f_parte">Autor ou Réu</label>
+                <input type="text" id="f_parte" name="parte" value="{{ filtros.get('parte', '') }}" placeholder="Nome da parte">
               </div>
               <div class="campo">
-                <label for="f_nf">Nota Fiscal</label>
-                <input type="text" id="f_nf" name="nota_fiscal" value="{{ filtros.get('nota_fiscal', '') }}">
+                <label for="f_juizado">Juizado</label>
+                <input type="text" id="f_juizado" name="juizado" value="{{ filtros.get('juizado', '') }}">
               </div>
               <div class="campo">
-                <label for="f_company">Company</label>
-                <input type="text" id="f_company" name="company" value="{{ filtros.get('company', '') }}">
+                <label for="f_comarca">Comarca</label>
+                <input type="text" id="f_comarca" name="comarca" value="{{ filtros.get('comarca', '') }}">
               </div>
             </div>
 
             <div id="filtros_avancados" class="oculto">
               <div class="linha">
-                <div class="campo">
-                  <label for="f_parte">Autor ou Réu</label>
-                  <input type="text" id="f_parte" name="parte" value="{{ filtros.get('parte', '') }}" placeholder="Nome da parte">
-                </div>
-                <div class="campo">
-                  <label for="f_juizado">Juizado</label>
-                  <input type="text" id="f_juizado" name="juizado" value="{{ filtros.get('juizado', '') }}">
-                </div>
-                <div class="campo">
-                  <label for="f_comarca">Comarca</label>
-                  <input type="text" id="f_comarca" name="comarca" value="{{ filtros.get('comarca', '') }}">
-                </div>
                 <div class="campo">
                   <label for="f_uf">UF</label>
                   <select id="f_uf" name="uf">
@@ -77,9 +65,6 @@
                     {% endfor %}
                   </select>
                 </div>
-              </div>
-
-              <div class="linha">
                 <div class="campo campo-grande">
                   <label for="f_tipo">Tipo de ação</label>
                   <select id="f_tipo" name="tipo_acao">
@@ -110,15 +95,6 @@
                     <option value="remoto" {% if filtros.get('risco') == 'remoto' %}selected{% endif %}>Remoto</option>
                   </select>
                 </div>
-                <div class="campo">
-                  <label for="f_titulo_status">Situação dos títulos</label>
-                  <select id="f_titulo_status" name="titulo_status">
-                    <option value="">Todas</option>
-                    <option value="deferido" {% if filtros.get('titulo_status') == 'deferido' %}selected{% endif %}>Deferido</option>
-                    <option value="em_analise" {% if filtros.get('titulo_status') == 'em_analise' %}selected{% endif %}>Em análise</option>
-                    <option value="indeferido" {% if filtros.get('titulo_status') == 'indeferido' %}selected{% endif %}>Indeferido</option>
-                  </select>
-                </div>
               </div>
 
               <div class="linha">
@@ -141,6 +117,18 @@
                     <option value="perdemos" {% if filtros.get('resultado') == 'perdemos' %}selected{% endif %}>Perdemos</option>
                   </select>
                 </div>
+                <div class="campo">
+                  <label for="f_titulo_status">Situação dos títulos</label>
+                  <select id="f_titulo_status" name="titulo_status">
+                    <option value="">Todas</option>
+                    <option value="deferido" {% if filtros.get('titulo_status') == 'deferido' %}selected{% endif %}>Deferido</option>
+                    <option value="em_analise" {% if filtros.get('titulo_status') == 'em_analise' %}selected{% endif %}>Em análise</option>
+                    <option value="indeferido" {% if filtros.get('titulo_status') == 'indeferido' %}selected{% endif %}>Indeferido</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="linha">
                 <div class="campo">
                   <label for="f_venc_de">Vencimento de</label>
                   <input type="date" id="f_venc_de" name="vencimento_de" value="{{ filtros.get('vencimento_de', '') }}">
@@ -186,6 +174,21 @@
                 <div class="campo">
                   <label for="f_dist_ate">Distribuição até</label>
                   <input type="date" id="f_dist_ate" name="data_distribuicao_ate" value="{{ filtros.get('data_distribuicao_ate', '') }}">
+                </div>
+              </div>
+
+              <div class="linha">
+                <div class="campo">
+                  <label for="f_company">Company</label>
+                  <input type="text" id="f_company" name="company" value="{{ filtros.get('company', '') }}">
+                </div>
+                <div class="campo">
+                  <label for="f_cliente">Cliente (do título)</label>
+                  <input type="text" id="f_cliente" name="cliente" value="{{ filtros.get('cliente', '') }}" placeholder="Nome do cliente">
+                </div>
+                <div class="campo">
+                  <label for="f_nf">Nota Fiscal</label>
+                  <input type="text" id="f_nf" name="nota_fiscal" value="{{ filtros.get('nota_fiscal', '') }}">
                 </div>
               </div>
             </div>
