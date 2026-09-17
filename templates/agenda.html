@@ -126,7 +126,8 @@
           <th>Hora</th>
           <th>Tipo de audiência</th>
           <th>Vara/Juizado</th>
-          <th>Comarca/UF</th>
+          <th style="min-width:220px;">Comarca</th>
+          <th style="width:60px;">UF</th>
           <th>Ações</th>
         </tr>
       </thead>
@@ -140,7 +141,8 @@
           <td>{{ a.horario or '—' }}</td>
           <td>{{ rotulos_tipo_audiencia.get(a.tipo_audiencia, '—') }}</td>
           <td>{{ a.juizado or '—' }}</td>
-          <td>{{ a.comarca or '—' }}{{ '/' ~ a.uf if a.uf else '' }}</td>
+          <td>{{ a.comarca or '—' }}</td>
+          <td>{{ a.uf or '—' }}</td>
           <td>
             <a class="btn-detalhe" href="{{ url_for('processo_detalhe', processo_id=a.processo_id) }}">Ver detalhes</a>
           </td>
