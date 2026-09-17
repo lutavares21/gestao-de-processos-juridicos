@@ -27,6 +27,7 @@
 {% endmacro %}
 
 {% set eh_trabalhista = p.origem_cadastro == 'trabalhista' %}
+{% set eh_recuperacao = p.origem_cadastro == 'civel_recuperacao' %}
 {% set rotulo_ativo = 'Reclamante(s)' if eh_trabalhista else 'Autor(es)' %}
 {% set rotulo_passivo = 'Reclamada' if eh_trabalhista else 'Réu' %}
 {% set rotulo_adv_ativo = 'Advogado(s) do reclamante' if eh_trabalhista else 'Advogado(s) do autor' %}
@@ -94,7 +95,7 @@
 {% endblock %}
 
 {% block conteudo %}
-        <a class="link-voltar" href="{{ url_for('processos_trabalhista') if eh_trabalhista else url_for('processos_civel') }}">← Voltar para a listagem</a>
+        <a class="link-voltar" href="{{ url_for('processos_trabalhista') if eh_trabalhista else (url_for('processos_civel_recuperacao') if eh_recuperacao else url_for('processos_civel')) }}">← Voltar para a listagem</a>
 
         <!-- 1. IDENTIFICAÇÃO -->
         <div class="secao">
@@ -204,7 +205,7 @@
 
         <!-- 6. PEDIDOS E REQUERIMENTOS -->
         <div class="secao">
-          <h2>Pedidos e requerimentos</h2>
+          <h2>{{ 'Títulos em recuperação' if eh_recuperacao else 'Pedidos e requerimentos' }}</h2>
           {% if eh_trabalhista %}
             {% if p.pedidos_trabalhistas %}
             <div class="tabela-wrap">
@@ -233,6 +234,50 @@
             </div>
             {% else %}
             <p class="texto-vazio">Nenhum pedido cadastrado.</p>
+            {% endif %}
+          {% elif eh_recuperacao %}
+            {% if p.titulos_recuperacao %}
+            <div class="tabela-wrap">
+              <table class="tabela-processos tabela-titulos-detalhe">
+                <thead>
+                  <tr>
+                    <th>Company</th><th>Cliente</th><th>Nota Fiscal</th>
+                    <th>Emissão</th><th>Vencimento</th>
+                    <th class="col-num">Valor</th><th class="col-num">Saldo</th>
+                    <th class="col-num">Juros</th><th class="col-num">Correção</th>
+                    <th class="col-num">Outros</th><th class="col-num">Total</th>
+                    <th>Situação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for t in p.titulos_recuperacao|sort(attribute='ordem') %}
+                  <tr>
+                    <td>{{ t.company or '—' }}</td>
+                    <td>{{ t.cliente or '—' }}</td>
+                    <td>{{ t.nota_fiscal or '—' }}</td>
+                    <td>{{ t.emissao.strftime('%d/%m/%Y') if t.emissao else '—' }}</td>
+                    <td>{{ t.vencimento.strftime('%d/%m/%Y') if t.vencimento else '—' }}</td>
+                    {% for numero in [t.valor, t.saldo, t.juros, t.correcao, t.outros, t.total] %}
+                    <td class="col-num">{{ (numero|moeda)|replace('R$ ', '') if numero is not none else '—' }}</td>
+                    {% endfor %}
+                    <td><span class="selo-pedido {{ t.status or 'em_analise' }}">{{ rotulos_status_pedido.get(t.status, 'Em análise') }}</span></td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="5" class="rodape-rotulo">Totais ({{ p.titulos_recuperacao|length }} título(s))</td>
+                    {% for campo in ['valor', 'saldo', 'juros', 'correcao', 'outros', 'total'] %}
+                    {% set soma = p.titulos_recuperacao|map(attribute=campo)|reject('none')|sum %}
+                    <td class="col-num">{{ (soma|moeda)|replace('R$ ', '') }}</td>
+                    {% endfor %}
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            {% else %}
+            <p class="texto-vazio">Nenhum título cadastrado.</p>
             {% endif %}
           {% else %}
             {{ cv('Pedidos marcados', p.pedidos_civeis|map(attribute='descricao')|join(', ')) }}

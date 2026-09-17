@@ -3,16 +3,24 @@
 App Flask - Gestão de Processos Jurídicos
 """
 
+import csv
+import io
+import os
+import re
+import unicodedata
 from datetime import datetime, date
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify
 from flask_login import (
     LoginManager, login_user, logout_user, login_required, current_user,
 )
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, case
 from werkzeug.security import check_password_hash, generate_password_hash
-from models import db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR, PedidoCivel, Operador, RegistroAtividade
+from models import (
+    db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR,
+    PedidoCivel, TituloRecuperacao, Operador, RegistroAtividade,
+)
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///processos.db"
@@ -379,6 +387,7 @@ def injetar_contadores_menu():
     return dict(
         contagem_civel_ativos=Processo.query.filter_by(origem_cadastro="civel", status="ativo").count(),
         contagem_trabalhista_ativos=Processo.query.filter_by(origem_cadastro="trabalhista", status="ativo").count(),
+        contagem_recuperacao_ativos=Processo.query.filter_by(origem_cadastro="civel_recuperacao", status="ativo").count(),
     )
 
 
@@ -436,6 +445,441 @@ def cadastro_civel():
     return redirect(url_for("cadastro_civel", sucesso=1))
 
 
+# ---------------------------------------------------------------------------
+# Recuperação de Crédito - leitura da planilha de títulos
+# ---------------------------------------------------------------------------
+#
+# A planilha é lida por uma rota separada (/recuperacao/ler-planilha), chamada
+# por JavaScript. Ela devolve as linhas em JSON e o navegador monta a tabela
+# editável na tela. Assim o operador pode corrigir qualquer célula antes de
+# salvar, e a página do cadastro não recarrega (não se perde o que já foi
+# digitado nas outras seções).
+
+
+class PlanilhaErro(Exception):
+    """Erro de leitura que já tem uma mensagem pronta para mostrar ao operador."""
+
+
+# Nomes de coluna aceitos para cada campo. A comparação ignora acentos,
+# maiúsculas e espaços sobrando, então "Correção", "correcao" e "CORREÇÃO "
+# caem todos no mesmo lugar.
+COLUNAS_RECUPERACAO = {
+    "company": ["company", "companhia", "empresa", "filial"],
+    "cliente": ["cliente", "sacado", "devedor", "razao social"],
+    "nota_fiscal": ["nota fiscal", "notafiscal", "nf", "nfe", "nf-e",
+                    "numero da nota", "numero nf", "no nf", "documento", "titulo"],
+    "emissao": ["emissao", "data emissao", "data de emissao", "dt emissao"],
+    "vencimento": ["vencimento", "data vencimento", "data de vencimento", "dt vencimento"],
+    "valor": ["valor", "valor original", "valor da nota", "valor nf"],
+    "saldo": ["saldo", "saldo devedor", "saldo em aberto"],
+    "juros": ["juros", "juros de mora", "mora"],
+    "correcao": ["correcao", "correcao monetaria", "atualizacao", "atualizacao monetaria"],
+    "outros": ["outros", "outras despesas", "despesas", "acrescimos"],
+    "total": ["total", "valor total", "total geral", "total atualizado"],
+}
+
+CAMPOS_NUMERICOS_RECUPERACAO = ["valor", "saldo", "juros", "correcao", "outros", "total"]
+CAMPOS_DATA_RECUPERACAO = ["emissao", "vencimento"]
+
+EXTENSOES_PLANILHA = (
+    ".xlsx", ".xlsm", ".xltx", ".xltm",   # Excel moderno (openpyxl)
+    ".xls",                                # Excel antigo (xlrd)
+    ".csv", ".txt", ".tsv",                # texto separado (módulo csv)
+    ".ods",                                # LibreOffice / OpenOffice (odfpy)
+)
+
+
+def normalizar_rotulo(texto):
+    """Deixa um nome de coluna comparável: sem acento, minúsculo, sem
+    pontuação e sem espaços repetidos."""
+    if texto is None:
+        return ""
+    texto = str(texto)
+    texto = unicodedata.normalize("NFKD", texto)
+    texto = "".join(c for c in texto if not unicodedata.combining(c))
+    texto = texto.lower().replace("º", "").replace("°", "")
+    texto = re.sub(r"[^a-z0-9]+", " ", texto)
+    return texto.strip()
+
+
+def valor_para_numero_planilha(valor):
+    """Converte o conteúdo de uma célula em número (float) ou None.
+
+    Aceita número puro vindo do Excel, e também texto em formato brasileiro
+    ('1.234,56', 'R$ 1.234,56', '(1.234,56)' para negativo) ou americano
+    ('1,234.56')."""
+    if valor is None:
+        return None
+    if isinstance(valor, (int, float)) and not isinstance(valor, bool):
+        return float(valor)
+
+    texto = str(valor).strip()
+    if not texto:
+        return None
+
+    negativo = texto.startswith("(") and texto.endswith(")")
+    texto = texto.strip("()")
+    texto = re.sub(r"[^\d,.\-]", "", texto)  # tira "R$", espaços, etc.
+    if not texto or texto in {"-", ".", ","}:
+        return None
+
+    if "," in texto and "." in texto:
+        # O separador decimal é o que aparece por último.
+        if texto.rfind(",") > texto.rfind("."):
+            texto = texto.replace(".", "").replace(",", ".")
+        else:
+            texto = texto.replace(",", "")
+    elif "," in texto:
+        texto = texto.replace(",", ".")
+    else:
+        # Só pontos: se houver mais de um, ou se o último grupo tiver 3
+        # dígitos, é separador de milhar (1.234 / 1.234.567).
+        partes = texto.split(".")
+        if len(partes) > 2 or (len(partes) == 2 and len(partes[1]) == 3):
+            texto = "".join(partes)
+
+    try:
+        numero = float(texto)
+    except ValueError:
+        return None
+    return -numero if negativo else numero
+
+
+def valor_para_data_planilha(valor):
+    """Converte o conteúdo de uma célula em date, ou None se não der.
+
+    Aceita datetime/date vindos do Excel, texto em vários formatos e também
+    o número serial de data do Excel (ex.: 45000)."""
+    if valor is None:
+        return None
+    if isinstance(valor, datetime):
+        return valor.date()
+    if isinstance(valor, date):
+        return valor
+
+    # Número serial do Excel (contado a partir de 30/12/1899).
+    if isinstance(valor, (int, float)) and not isinstance(valor, bool):
+        try:
+            from datetime import timedelta
+            return (datetime(1899, 12, 30) + timedelta(days=float(valor))).date()
+        except (ValueError, OverflowError):
+            return None
+
+    texto = str(valor).strip()
+    if not texto:
+        return None
+    texto = texto.split(" ")[0].split("T")[0]  # descarta a hora, se vier junto
+
+    for formato in ("%d/%m/%Y", "%d/%m/%y", "%Y-%m-%d", "%d-%m-%Y",
+                    "%d.%m.%Y", "%m/%d/%Y"):
+        try:
+            return datetime.strptime(texto, formato).date()
+        except ValueError:
+            continue
+    return None
+
+
+def _linhas_xlsx(stream):
+    try:
+        from openpyxl import load_workbook
+    except ImportError:
+        raise PlanilhaErro(
+            "A biblioteca openpyxl não está instalada no servidor. "
+            "Rode: pip3.10 install --user openpyxl"
+        )
+    # data_only=True traz o resultado das fórmulas, não a fórmula em si.
+    planilha = load_workbook(stream, data_only=True, read_only=True)
+    aba = planilha.active
+    return [list(linha) for linha in aba.iter_rows(values_only=True)]
+
+
+def _linhas_xls(conteudo):
+    try:
+        import xlrd
+    except ImportError:
+        raise PlanilhaErro(
+            "Este é um Excel antigo (.xls) e a biblioteca xlrd não está "
+            "instalada no servidor. Rode: pip3.10 install --user xlrd  "
+            "(ou salve a planilha como .xlsx e anexe de novo)."
+        )
+    livro = xlrd.open_workbook(file_contents=conteudo)
+    aba = livro.sheet_by_index(0)
+    linhas = []
+    for indice in range(aba.nrows):
+        celulas = []
+        for celula in aba.row(indice):
+            if celula.ctype == xlrd.XL_CELL_DATE:
+                ano, mes, dia, *_ = xlrd.xldate_as_tuple(celula.value, livro.datemode)
+                celulas.append(date(ano, mes, dia) if ano else None)
+            else:
+                celulas.append(celula.value)
+        linhas.append(celulas)
+    return linhas
+
+
+def _linhas_csv(conteudo):
+    texto = None
+    for codificacao in ("utf-8-sig", "utf-8", "cp1252", "latin-1"):
+        try:
+            texto = conteudo.decode(codificacao)
+            break
+        except UnicodeDecodeError:
+            continue
+    if texto is None:
+        raise PlanilhaErro("Não foi possível identificar a codificação do arquivo de texto.")
+
+    amostra = texto[:4000]
+    try:
+        separador = csv.Sniffer().sniff(amostra, delimiters=";,\t|").delimiter
+    except csv.Error:
+        # Chute razoável: no Brasil o Excel exporta CSV com ponto e vírgula.
+        separador = ";" if amostra.count(";") >= amostra.count(",") else ","
+    return [linha for linha in csv.reader(io.StringIO(texto), delimiter=separador)]
+
+
+def _linhas_ods(stream):
+    try:
+        from odf.opendocument import load
+        from odf.table import Table, TableRow, TableCell
+        from odf.text import P
+    except ImportError:
+        raise PlanilhaErro(
+            "Este arquivo é .ods e a biblioteca odfpy não está instalada no "
+            "servidor. Rode: pip3.10 install --user odfpy  (ou salve a "
+            "planilha como .xlsx e anexe de novo)."
+        )
+    documento = load(stream)
+    tabelas = documento.spreadsheet.getElementsByType(Table)
+    if not tabelas:
+        raise PlanilhaErro("O arquivo .ods não tem nenhuma aba com dados.")
+
+    linhas = []
+    for linha_ods in tabelas[0].getElementsByType(TableRow):
+        celulas = []
+        for celula in linha_ods.getElementsByType(TableCell):
+            repeticoes = int(celula.getAttribute("numbercolumnsrepeated") or 1)
+            bruto = (celula.getAttribute("value")
+                     or celula.getAttribute("datevalue")
+                     or "".join(str(paragrafo) for paragrafo in celula.getElementsByType(P)))
+            celulas.extend([bruto or None] * min(repeticoes, 60))
+        linhas.append(celulas)
+    return linhas
+
+
+def ler_linhas_brutas(arquivo):
+    """Abre o arquivo enviado e devolve uma lista de listas com o conteúdo
+    cru das células, escolhendo o leitor certo pela extensão."""
+    nome = (arquivo.filename or "").strip()
+    extensao = os.path.splitext(nome)[1].lower()
+
+    if extensao not in EXTENSOES_PLANILHA:
+        raise PlanilhaErro(
+            f"Formato não suportado ({extensao or 'sem extensão'}). "
+            "Aceitos: " + ", ".join(EXTENSOES_PLANILHA)
+        )
+
+    conteudo = arquivo.read()
+    if not conteudo:
+        raise PlanilhaErro("O arquivo enviado está vazio.")
+
+    if extensao in (".xlsx", ".xlsm", ".xltx", ".xltm"):
+        return _linhas_xlsx(io.BytesIO(conteudo))
+    if extensao == ".xls":
+        return _linhas_xls(conteudo)
+    if extensao == ".ods":
+        return _linhas_ods(io.BytesIO(conteudo))
+    return _linhas_csv(conteudo)
+
+
+def localizar_cabecalho(linhas):
+    """Procura a linha de cabeçalho e devolve (índice da linha, mapa de
+    coluna -> posição). Percorre as 15 primeiras linhas porque muita planilha
+    vem com título, logotipo ou linhas em branco antes da tabela."""
+    melhor_indice = None
+    melhor_mapa = {}
+
+    for indice, linha in enumerate(linhas[:15]):
+        rotulos = [normalizar_rotulo(celula) for celula in linha]
+        mapa = {}
+        for campo, aceitos in COLUNAS_RECUPERACAO.items():
+            for posicao, rotulo in enumerate(rotulos):
+                if not rotulo or posicao in mapa.values():
+                    continue
+                if rotulo in aceitos:
+                    mapa[campo] = posicao
+                    break
+        if len(mapa) > len(melhor_mapa):
+            melhor_indice, melhor_mapa = indice, mapa
+
+    # Com menos de 3 colunas reconhecidas provavelmente não achamos a tabela.
+    if melhor_indice is None or len(melhor_mapa) < 3:
+        raise PlanilhaErro(
+            "Não encontrei a linha de cabeçalho na planilha. Ela precisa ter "
+            "uma linha com os nomes das colunas (Company, Cliente, Nota Fiscal, "
+            "Emissão, Vencimento, Valor, Saldo, Juros, Correção, Outros, Total)."
+        )
+    return melhor_indice, melhor_mapa
+
+
+def ler_planilha_recuperacao(arquivo):
+    """Lê a planilha de títulos e devolve (linhas, avisos, colunas_faltando).
+
+    Cada linha é um dicionário pronto para virar JSON: textos como string,
+    datas em 'AAAA-MM-DD' (formato que o <input type=date> entende) e números
+    como float. Nada é gravado no banco aqui - isso só acontece quando o
+    operador salva o processo."""
+    linhas_brutas = ler_linhas_brutas(arquivo)
+    if not linhas_brutas:
+        raise PlanilhaErro("A planilha não tem nenhuma linha.")
+
+    indice_cabecalho, mapa = localizar_cabecalho(linhas_brutas)
+    colunas_faltando = [campo for campo in COLUNAS_RECUPERACAO if campo not in mapa]
+
+    linhas = []
+    avisos = []
+
+    for deslocamento, linha in enumerate(linhas_brutas[indice_cabecalho + 1:], start=1):
+        numero_linha = indice_cabecalho + 1 + deslocamento  # como o operador vê no Excel
+
+        # Pula linhas totalmente vazias.
+        if not any(str(celula).strip() for celula in linha if celula is not None):
+            continue
+
+        registro = {}
+        for campo, posicao in mapa.items():
+            registro[campo] = linha[posicao] if posicao < len(linha) else None
+
+        # Pula a linha de totais que costuma vir no rodapé da planilha
+        # (sem Company/Cliente/NF, só com números).
+        identificacao = " ".join(
+            str(registro.get(campo) or "") for campo in ("company", "cliente", "nota_fiscal")
+        ).strip()
+        if not identificacao:
+            continue
+        if normalizar_rotulo(identificacao) in {"total", "total geral", "totais", "soma"}:
+            continue
+
+        saida = {"status": "em_analise"}
+        for campo in ("company", "cliente", "nota_fiscal"):
+            bruto = registro.get(campo)
+            if isinstance(bruto, float) and bruto.is_integer():
+                bruto = int(bruto)  # nota fiscal 1234.0 vira 1234
+            saida[campo] = str(bruto).strip() if bruto is not None else ""
+
+        for campo in CAMPOS_DATA_RECUPERACAO:
+            bruto = registro.get(campo)
+            convertida = valor_para_data_planilha(bruto)
+            saida[campo] = convertida.isoformat() if convertida else ""
+            if convertida is None and bruto not in (None, ""):
+                avisos.append(
+                    f"Linha {numero_linha}: não consegui entender a data de "
+                    f"{'emissão' if campo == 'emissao' else 'vencimento'} "
+                    f"(\"{str(bruto).strip()}\") - preencha na tela."
+                )
+
+        for campo in CAMPOS_NUMERICOS_RECUPERACAO:
+            saida[campo] = valor_para_numero_planilha(registro.get(campo))
+
+        linhas.append(saida)
+
+    if not linhas:
+        raise PlanilhaErro(
+            "Encontrei o cabeçalho, mas nenhuma linha de título abaixo dele."
+        )
+
+    # Só os 12 primeiros avisos, para não virar uma parede de texto.
+    if len(avisos) > 12:
+        restantes = len(avisos) - 12
+        avisos = avisos[:12] + [f"...e mais {restantes} aviso(s) do mesmo tipo."]
+
+    return linhas, avisos, colunas_faltando
+
+
+@app.route("/recuperacao/ler-planilha", methods=["POST"])
+@login_required
+def recuperacao_ler_planilha():
+    """Recebe só o arquivo da planilha (via JavaScript), devolve as linhas em
+    JSON. Não grava nada - quem grava é o submit do formulário."""
+    arquivo = request.files.get("planilha")
+    if not arquivo or not arquivo.filename:
+        return jsonify({"ok": False, "erro": "Nenhum arquivo foi selecionado."}), 400
+
+    try:
+        linhas, avisos, colunas_faltando = ler_planilha_recuperacao(arquivo)
+    except PlanilhaErro as erro:
+        return jsonify({"ok": False, "erro": str(erro)}), 400
+    except Exception:
+        app.logger.exception("Falha ao ler planilha de recuperação de crédito")
+        return jsonify({
+            "ok": False,
+            "erro": "Não consegui ler este arquivo. Confira se ele abre normalmente "
+                    "no Excel e se a primeira aba é a que tem a tabela de títulos.",
+        }), 400
+
+    if colunas_faltando:
+        nomes = {
+            "company": "Company", "cliente": "Cliente", "nota_fiscal": "Nota Fiscal",
+            "emissao": "Emissão", "vencimento": "Vencimento", "valor": "Valor",
+            "saldo": "Saldo", "juros": "Juros", "correcao": "Correção",
+            "outros": "Outros", "total": "Total",
+        }
+        avisos.insert(0, "Colunas não encontradas na planilha (ficaram em branco): "
+                         + ", ".join(nomes[campo] for campo in colunas_faltando) + ".")
+
+    return jsonify({"ok": True, "linhas": linhas, "avisos": avisos})
+
+
+def preencher_titulos_recuperacao(processo, form):
+    """Lê os campos repetidos da tabela de títulos (pareados pela posição,
+    igual aos pedidos/verbas do trabalhista) e monta os objetos
+    TituloRecuperacao."""
+    colunas = {
+        "company": form.getlist("rec_company"),
+        "cliente": form.getlist("rec_cliente"),
+        "nota_fiscal": form.getlist("rec_nota_fiscal"),
+        "emissao": form.getlist("rec_emissao"),
+        "vencimento": form.getlist("rec_vencimento"),
+        "valor": form.getlist("rec_valor"),
+        "saldo": form.getlist("rec_saldo"),
+        "juros": form.getlist("rec_juros"),
+        "correcao": form.getlist("rec_correcao"),
+        "outros": form.getlist("rec_outros"),
+        "total": form.getlist("rec_total"),
+        "status": form.getlist("rec_status"),
+    }
+    quantidade = max((len(lista) for lista in colunas.values()), default=0)
+
+    def pegar(campo, indice):
+        lista = colunas[campo]
+        return lista[indice].strip() if indice < len(lista) and lista[indice] else ""
+
+    for indice in range(quantidade):
+        textos = [pegar(campo, indice) for campo in
+                  ("company", "cliente", "nota_fiscal", "emissao", "vencimento")]
+        numeros = [valor_para_numero_planilha(pegar(campo, indice))
+                   for campo in CAMPOS_NUMERICOS_RECUPERACAO]
+
+        # Linha completamente em branco: ignora.
+        if not any(textos) and not any(n is not None for n in numeros):
+            continue
+
+        processo.titulos_recuperacao.append(TituloRecuperacao(
+            company=textos[0] or None,
+            cliente=textos[1] or None,
+            nota_fiscal=textos[2] or None,
+            emissao=valor_para_data_planilha(textos[3]),
+            vencimento=valor_para_data_planilha(textos[4]),
+            valor=numeros[0],
+            saldo=numeros[1],
+            juros=numeros[2],
+            correcao=numeros[3],
+            outros=numeros[4],
+            total=numeros[5],
+            status=pegar("status", indice) or "em_analise",
+            ordem=indice,
+        ))
+
+
 @app.route("/cadastro/civel-recuperacao", methods=["GET", "POST"])
 @login_required
 def cadastro_civel_recuperacao():
@@ -456,13 +900,16 @@ def cadastro_civel_recuperacao():
     processo.origem_cadastro = "civel_recuperacao"
     preencher_partes_e_advogados(processo, form)
 
-    # Pedidos e requerimentos (cível) - checkboxes marcados
-    for descricao in form.getlist("pedido_civel"):
-        if descricao.strip():
-            processo.pedidos_civeis.append(PedidoCivel(descricao=descricao.strip()))
+    # Títulos em recuperação (linhas da tabela editável)
+    preencher_titulos_recuperacao(processo, form)
 
     db.session.add(processo)
-    registrar_atividade("processo_criado", f"Cadastrou o processo cível - recuperação de crédito {numero_processo}")
+    quantidade_titulos = len(processo.titulos_recuperacao)
+    registrar_atividade(
+        "processo_criado",
+        f"Cadastrou o processo cível - recuperação de crédito {numero_processo}"
+        + (f" ({quantidade_titulos} título(s))" if quantidade_titulos else "")
+    )
     try:
         db.session.commit()
     except IntegrityError:
@@ -602,6 +1049,123 @@ def processos_trabalhista():
     )
 
 
+@app.route("/processos/civel-recuperacao")
+@login_required
+def processos_civel_recuperacao():
+    """Listagem dos processos de Recuperação de Crédito, com a mesma
+    pesquisa processual da trabalhista + os filtros próprios dos títulos
+    (Company, Cliente, Nota Fiscal, vencimento e situação)."""
+    query = Processo.query.filter_by(origem_cadastro="civel_recuperacao")
+    f = request.args
+
+    def texto(chave):
+        return f.get(chave, "").strip()
+
+    numero_processo = texto("numero_processo")
+    parte = texto("parte")
+    company = texto("company")
+    cliente = texto("cliente")
+    nota_fiscal = texto("nota_fiscal")
+    juizado = texto("juizado")
+    comarca = texto("comarca")
+    uf = texto("uf")
+    tipo_acao = texto("tipo_acao")
+    centro_resultado = texto("centro_resultado")
+    escritorio = texto("escritorio")
+    resultado = texto("resultado")
+    status = texto("status")
+    risco = texto("risco")
+    grau_instancia = texto("grau_instancia")
+    titulo_status = texto("titulo_status")
+    data_distribuicao_de = texto("data_distribuicao_de")
+    data_distribuicao_ate = texto("data_distribuicao_ate")
+    vencimento_de = texto("vencimento_de")
+    vencimento_ate = texto("vencimento_ate")
+
+    if numero_processo:
+        query = query.filter(Processo.numero_processo.ilike(f"%{numero_processo}%"))
+    if parte:
+        query = query.filter(Processo.partes.any(Parte.nome.ilike(f"%{parte}%")))
+    if company:
+        query = query.filter(Processo.titulos_recuperacao.any(
+            TituloRecuperacao.company.ilike(f"%{company}%")))
+    if cliente:
+        query = query.filter(Processo.titulos_recuperacao.any(
+            TituloRecuperacao.cliente.ilike(f"%{cliente}%")))
+    if nota_fiscal:
+        query = query.filter(Processo.titulos_recuperacao.any(
+            TituloRecuperacao.nota_fiscal.ilike(f"%{nota_fiscal}%")))
+    if juizado:
+        query = query.filter(Processo.juizado.ilike(f"%{juizado}%"))
+    if comarca:
+        query = query.filter(Processo.comarca.ilike(f"%{comarca}%"))
+    if uf:
+        query = query.filter(Processo.uf == uf)
+    if tipo_acao:
+        query = query.filter(Processo.tipo_acao == tipo_acao)
+    if centro_resultado:
+        query = query.filter(Processo.centro_resultado == centro_resultado)
+    if escritorio:
+        query = query.filter(Processo.escritorio == escritorio)
+    if resultado:
+        query = query.filter(Processo.resultado == resultado)
+    if status:
+        query = query.filter(Processo.status == status)
+    if risco:
+        query = query.filter(Processo.risco == risco)
+    if grau_instancia:
+        query = query.filter(Processo.grau_instancia == grau_instancia)
+    if titulo_status:
+        query = query.filter(Processo.titulos_recuperacao.any(
+            TituloRecuperacao.status == titulo_status))
+    if data_distribuicao_de:
+        data_de = texto_para_data(data_distribuicao_de)
+        if data_de:
+            query = query.filter(Processo.data_distribuicao >= data_de)
+    if data_distribuicao_ate:
+        data_ate = texto_para_data(data_distribuicao_ate)
+        if data_ate:
+            query = query.filter(Processo.data_distribuicao <= data_ate)
+    if vencimento_de:
+        data_de = texto_para_data(vencimento_de)
+        if data_de:
+            query = query.filter(Processo.titulos_recuperacao.any(
+                TituloRecuperacao.vencimento >= data_de))
+    if vencimento_ate:
+        data_ate = texto_para_data(vencimento_ate)
+        if data_ate:
+            query = query.filter(Processo.titulos_recuperacao.any(
+                TituloRecuperacao.vencimento <= data_ate))
+
+    processos = query.order_by(Processo.data_cadastro.desc()).all()
+
+    campos_filtro = [
+        "numero_processo", "parte", "company", "cliente", "nota_fiscal",
+        "juizado", "comarca", "uf", "tipo_acao", "centro_resultado",
+        "escritorio", "resultado", "status", "risco", "grau_instancia",
+        "titulo_status", "data_distribuicao_de", "data_distribuicao_ate",
+        "vencimento_de", "vencimento_ate",
+    ]
+    filtros_ativos = any(f.get(c, "").strip() for c in campos_filtro)
+
+    # Totais do rodapé da listagem (soma de todos os títulos exibidos).
+    total_titulos = sum(len(processo.titulos_recuperacao) for processo in processos)
+    total_geral = sum(
+        float(titulo.total or 0)
+        for processo in processos
+        for titulo in processo.titulos_recuperacao
+    )
+
+    return render_template(
+        "processos_civel_recuperacao.html",
+        processos=processos,
+        filtros=f,
+        filtros_ativos=filtros_ativos,
+        total_titulos=total_titulos,
+        total_geral=total_geral,
+    )
+
+
 @app.route("/processo/<int:processo_id>")
 @login_required
 def processo_detalhe(processo_id):
@@ -652,6 +1216,11 @@ def processo_editar(processo_id):
                 processo.pedidos_trabalhistas.append(
                     PedidoTrabalhista(verba=verba.strip(), valor=texto_para_numero(valor), status=status or "em_analise")
                 )
+    elif processo.origem_cadastro == "civel_recuperacao":
+        # Mesma estratégia dos demais: troca a lista inteira pelo que veio
+        # da tabela editável.
+        processo.titulos_recuperacao = []
+        preencher_titulos_recuperacao(processo, form)
     else:
         processo.pedidos_civeis = []
         for descricao in form.getlist("pedido_civel"):

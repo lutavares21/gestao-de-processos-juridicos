@@ -1,6 +1,7 @@
 {% extends "base_painel.html" %}
 
 {% set eh_trabalhista = p.origem_cadastro == 'trabalhista' %}
+{% set eh_recuperacao = p.origem_cadastro == 'civel_recuperacao' %}
 {% set rotulo_ativo = 'Reclamante(s)' if eh_trabalhista else 'Autor(es)' %}
 {% set rotulo_passivo = 'Reclamada' if eh_trabalhista else 'Réu' %}
 {% set rotulo_adv_ativo = 'Advogado(s) do reclamante' if eh_trabalhista else 'Advogado(s) do autor' %}
@@ -34,7 +35,7 @@
 {% block cabecalho_titulo %}Editar Processo {{ p.numero_processo }}{% endblock %}
 
 {% block conteudo %}
-        <a class="link-voltar" href="{{ url_for('processos_trabalhista') if eh_trabalhista else url_for('processos_civel') }}">← Voltar para a listagem</a>
+        <a class="link-voltar" href="{{ url_for('processos_trabalhista') if eh_trabalhista else (url_for('processos_civel_recuperacao') if eh_recuperacao else url_for('processos_civel')) }}">← Voltar para a listagem</a>
 
         {% if erro_numero_duplicado %}
           <div class="flash flash-erro">Já existe um processo cadastrado com o número <strong>{{ erro_numero_duplicado }}</strong>. Verifique o número e tente novamente.</div>
@@ -328,7 +329,11 @@
             </div>
           </div>
 
-          <!-- 6. PEDIDOS E REQUERIMENTOS -->
+          <!-- 6. PEDIDOS E REQUERIMENTOS / TÍTULOS EM RECUPERAÇÃO -->
+          {% if eh_recuperacao %}
+          {% set titulos = p.titulos_recuperacao|sort(attribute='ordem') %}
+          {% include "_titulos_recuperacao.html" %}
+          {% else %}
           <div class="secao">
             <h2>Pedidos e requerimentos</h2>
             {% if eh_trabalhista %}
@@ -398,6 +403,7 @@
               </div>
             {% endif %}
           </div>
+          {% endif %}
 
           <!-- 7. ACOMPANHAMENTO -->
           <div class="secao">
