@@ -136,7 +136,7 @@
           <td>{{ a.numero_processo }}</td>
           <td>{{ rotulos_tipo_processo.get(a.tipo_processo, a.tipo_processo) }}</td>
           <td>{{ a.nome_parte }}</td>
-          <td>{{ a.data.strftime('%d/%m/%Y') }}{% if a.numero_audiencia > 1 %} <span style="color:var(--texto-suave); font-size:12px;">({{ a.numero_audiencia }}ª audiência)</span>{% endif %}</td>
+          <td>{{ a.data.strftime('%d/%m/%Y') }}</td>
           <td>{{ a.horario or '—' }}</td>
           <td>{{ rotulos_tipo_audiencia.get(a.tipo_audiencia, '—') }}</td>
           <td>{{ a.juizado or '—' }}</td>
