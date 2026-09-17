@@ -5,6 +5,8 @@
 {% block container_attrs %} style="max-width: 1200px;"{% endblock %}
 
 {% block conteudo %}
+        {% set filtros = filtros|default({}) %}
+        {% set filtros_ativos = filtros_ativos|default(false) %}
         <div style="display:flex; flex-wrap:wrap; gap:18px; align-items:center; background:var(--papel-cartao); border:1px solid var(--borda); border-radius:4px; padding:10px 16px; margin-bottom:16px; font-size:13px; color:var(--texto-suave);">
           <span><strong>Risco:</strong></span>
           <span style="display:flex; align-items:center; gap:7px;">
@@ -67,8 +69,9 @@
                   <select id="f_tipo" name="tipo_acao">
                     <option value="">Todos</option>
                     {% for valor, texto in [
-                      ('acao_civel','Ação Cível'), ('acao_trabalhista','Ação Trabalhista'),
-                      ('cobranca_extrajudicial','Cobrança Extrajudicial'), ('cobranca_judicial','Cobrança Judicial')
+                      ('civel','Cível'), ('juizado_especial_civel','Juizado Especial Cível'),
+                      ('tributario','Tributário'), ('procon','Procon'),
+                      ('acao_monitoria','Ação Monitória'), ('acao_execucao','Ação de Execução')
                     ] %}
                     <option value="{{ valor }}" {% if filtros.get('tipo_acao') == valor %}selected{% endif %}>{{ texto }}</option>
                     {% endfor %}
