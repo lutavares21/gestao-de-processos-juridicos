@@ -333,24 +333,9 @@
             </div>
           </div>
 
-          <!-- 6. PEDIDOS E REQUERIMENTOS -->
-          <div class="secao">
-            <h2>Pedidos e requerimentos</h2>
-            <div class="grid-requerimentos">
-              <label><input type="checkbox" name="pedido_civel" value="Atendimento Loja"> Atendimento Loja</label>
-              <label><input type="checkbox" name="pedido_civel" value="Cancelamento da compra"> Cancelamento da compra</label>
-              <label><input type="checkbox" name="pedido_civel" value="Devolução do valor pago"> Devolução do valor pago</label>
-              <label><input type="checkbox" name="pedido_civel" value="Indenização danos materiais"> Indenização danos materiais</label>
-              <label><input type="checkbox" name="pedido_civel" value="Indenização danos morais"> Indenização danos morais</label>
-              <label><input type="checkbox" name="pedido_civel" value="Não recebeu produto do conserto"> Não recebeu produto do conserto</label>
-              <label><input type="checkbox" name="pedido_civel" value="Perícia Técnica"> Perícia Técnica</label>
-              <label><input type="checkbox" name="pedido_civel" value="Produto com defeito"> Produto com defeito</label>
-              <label><input type="checkbox" name="pedido_civel" value="Responsabilidade solidária"> Responsabilidade solidária</label>
-              <label><input type="checkbox" name="pedido_civel" value="Responsabilidade subsidiária"> Responsabilidade subsidiária</label>
-              <label><input type="checkbox" name="pedido_civel" value="Tempo de retorno garantia"> Tempo de retorno garantia</label>
-              <label><input type="checkbox" name="pedido_civel" value="Tutela antecipada"> Tutela antecipada</label>
-            </div>
-          </div>
+          <!-- 6. TÍTULOS EM RECUPERAÇÃO -->
+          {% set titulos = [] %}
+          {% include "_titulos_recuperacao.html" %}
 
           <!-- 7. ACOMPANHAMENTO -->
           <div class="secao">

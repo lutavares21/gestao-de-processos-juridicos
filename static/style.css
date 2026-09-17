@@ -1140,3 +1140,186 @@ select.selo-pedido-select.indeferido { background: #fff; color: var(--risco-remo
 }
 
 canvas{ max-width: 100%; }
+
+/* -----------------------------------------------------------
+   Recuperação de Crédito - tabela editável de títulos
+   ----------------------------------------------------------- */
+
+.texto-ajuda {
+  font-size: 13px;
+  color: var(--texto-suave);
+  margin: 0 0 14px 0;
+}
+
+.linha-importacao {
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.linha-importacao .btn {
+  margin-top: 0;
+}
+
+/* Caixa de mensagem da seção (resultado da importação, erros, avisos) */
+.aviso-recuperacao {
+  border-radius: 4px;
+  padding: 11px 14px;
+  margin: 4px 0 14px 0;
+  font-size: 13px;
+  line-height: 1.5;
+  border-left: 4px solid var(--borda);
+  background: #f2f0ea;
+  color: var(--texto);
+}
+
+.aviso-recuperacao ul {
+  margin: 8px 0 0 0;
+  padding-left: 18px;
+}
+
+.aviso-recuperacao li {
+  margin-bottom: 3px;
+}
+
+.aviso-recuperacao.ok       { border-left-color: var(--risco-remoto);   background: #e3f0e6; }
+.aviso-recuperacao.atencao  { border-left-color: var(--risco-possivel); background: #fbeecb; }
+.aviso-recuperacao.erro     { border-left-color: var(--risco-provavel); background: #f6dede; }
+.aviso-recuperacao.info     { border-left-color: var(--azul-claro);     background: #eef3f7; }
+
+.tabela-wrap-recuperacao {
+  margin-bottom: 10px;
+}
+
+.tabela-recuperacao {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tabela-recuperacao th {
+  text-align: left;
+  background: var(--tinta);
+  color: #fff;
+  padding: 9px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.tabela-recuperacao th.col-num,
+.tabela-recuperacao td.col-num {
+  text-align: right;
+}
+
+.tabela-recuperacao td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--borda);
+  vertical-align: middle;
+}
+
+.tabela-recuperacao tbody tr:hover td {
+  background: #f6f5f1;
+}
+
+/* Os campos ocupam a célula inteira e ficam discretos até receberem foco,
+   para a tabela continuar parecendo uma planilha. */
+.tabela-recuperacao td input[type="text"],
+.tabela-recuperacao td input[type="date"] {
+  width: 100%;
+  min-width: 96px;
+  margin: 0;
+  padding: 6px 7px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  font-family: var(--fonte-corpo);
+  font-size: 13px;
+  color: var(--texto);
+}
+
+.tabela-recuperacao td input:hover {
+  border-color: var(--borda);
+}
+
+.tabela-recuperacao td input:focus {
+  outline: none;
+  border-color: var(--tinta-clara);
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(46, 68, 112, 0.12);
+}
+
+.tabela-recuperacao td input.cel-num {
+  text-align: right;
+  min-width: 92px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabela-recuperacao td input.cel-total {
+  font-weight: 600;
+}
+
+.tabela-recuperacao td .selo-pedido-select {
+  min-width: 118px;
+  margin: 0;
+  padding: 5px 8px;
+  font-size: 12.5px;
+}
+
+.tabela-recuperacao td .btn-remover {
+  margin: 0;
+  padding: 5px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Linha de totais */
+.tabela-recuperacao tfoot td {
+  padding: 10px;
+  border-top: 2px solid var(--tinta);
+  background: #f2f0ea;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta);
+}
+
+.tabela-recuperacao tfoot .rodape-rotulo {
+  text-transform: uppercase;
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+/* Selo da situação geral dos títulos, na listagem de Recuperação de Crédito.
+   A leitura é invertida em relação ao trabalhista: aqui a empresa é quem
+   cobra, então título deferido é bom (verde) e indeferido é ruim (vermelho). */
+.selo-pedido.titulos-verde    { background: #e3f0e6; color: var(--risco-remoto); }
+.selo-pedido.titulos-amarelo  { background: #fbeecb; color: var(--risco-possivel); }
+.selo-pedido.titulos-vermelho { background: #f6dede; color: var(--risco-provavel); }
+
+/* Tabela de títulos na página de detalhes do processo (só leitura) */
+.tabela-processos th.col-num,
+.tabela-processos td.col-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tabela-titulos-detalhe tfoot td {
+  padding: 11px 14px;
+  border-top: 2px solid var(--tinta);
+  background: #f2f0ea;
+  font-weight: 700;
+  color: var(--tinta);
+}
+
+.tabela-titulos-detalhe tfoot .rodape-rotulo {
+  text-transform: uppercase;
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+  color: var(--texto-suave);
+}

@@ -137,6 +137,9 @@ class Processo(db.Model):
     pedidos_civeis = db.relationship(
         "PedidoCivel", backref="processo", cascade="all, delete-orphan"
     )
+    titulos_recuperacao = db.relationship(
+        "TituloRecuperacao", backref="processo", cascade="all, delete-orphan"
+    )
 
     @property
     def dias_ativos(self):
@@ -163,6 +166,28 @@ class Processo(db.Model):
         if "em_analise" in situacoes:
             return "amarelo"
         return "verde"
+
+    @property
+    def cor_titulos(self):
+        """Mesma lógica de cor_pedidos, mas para os títulos de Recuperação
+        de Crédito. Aqui a leitura é invertida em relação ao trabalhista:
+        aqui a empresa é quem cobra, então 'deferido' é bom (verde) e
+        'indeferido' é ruim (vermelho)."""
+        if not self.titulos_recuperacao:
+            return None
+        situacoes = {titulo.status for titulo in self.titulos_recuperacao}
+        if "indeferido" in situacoes:
+            return "vermelho"
+        if "em_analise" in situacoes:
+            return "amarelo"
+        return "verde"
+
+    @property
+    def total_titulos_recuperacao(self):
+        """Soma a coluna Total de todos os títulos em recuperação."""
+        if not self.titulos_recuperacao:
+            return None
+        return sum((titulo.total or 0) for titulo in self.titulos_recuperacao)
 
 
 class Parte(db.Model):
@@ -228,6 +253,39 @@ class RateioCR(db.Model):
     processo_id = db.Column(db.Integer, db.ForeignKey("processos.id"), nullable=False)
 
     centro_resultado = db.Column(db.String(120), nullable=False)
+
+
+class TituloRecuperacao(db.Model):
+    """Títulos (notas fiscais) cobrados em um processo de Recuperação de
+    Crédito. Cada linha vem de uma planilha importada na tela de cadastro
+    ou é digitada manualmente, e pode ser corrigida em tela antes de salvar.
+
+    As colunas espelham a planilha usada pelo escritório:
+    Company, Cliente, Nota Fiscal, Emissão, Vencimento, Valor, Saldo,
+    Juros, Correção, Outros, Total."""
+    __tablename__ = "titulos_recuperacao"
+
+    id = db.Column(db.Integer, primary_key=True)
+    processo_id = db.Column(db.Integer, db.ForeignKey("processos.id"), nullable=False)
+
+    company = db.Column(db.String(120))
+    cliente = db.Column(db.String(200))
+    nota_fiscal = db.Column(db.String(60))
+    emissao = db.Column(db.Date)
+    vencimento = db.Column(db.Date)
+
+    valor = db.Column(db.Numeric(14, 2))
+    saldo = db.Column(db.Numeric(14, 2))
+    juros = db.Column(db.Numeric(14, 2))
+    correcao = db.Column(db.Numeric(14, 2))
+    outros = db.Column(db.Numeric(14, 2))
+    total = db.Column(db.Numeric(14, 2))
+
+    status = db.Column(db.String(20), default="em_analise")
+    # 'em_analise', 'deferido', 'indeferido'
+
+    # Ordem em que a linha aparece na tabela (mantém a ordem da planilha).
+    ordem = db.Column(db.Integer, default=0)
 
 
 class PedidoCivel(db.Model):
