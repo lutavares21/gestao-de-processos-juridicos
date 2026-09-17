@@ -53,7 +53,7 @@
               </div>
             </div>
 
-            <div class="linha">
+            <div class="linha-filtro">
               <div class="campo">
                 <label for="f_numero">Número do processo</label>
                 <input type="text" id="f_numero" name="numero_processo" value="{{ filtros.get('numero_processo', '') }}" placeholder="0000000-00.0000.0.00.0000" maxlength="25" oninput="mascararNumeroProcesso(this)">
@@ -72,37 +72,34 @@
               </div>
             </div>
 
-            <div id="filtros_avancados" class="oculto">
-              <div class="linha">
-                <div class="campo">
-                  <label for="f_uf">UF</label>
-                  <select id="f_uf" name="uf">
-                    <option value="">Todas</option>
-                    {% for sigla in ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'] %}
-                    <option value="{{ sigla }}" {% if filtros.get('uf') == sigla %}selected{% endif %}>{{ sigla }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-                <div class="campo campo-grande">
-                  <label for="f_tipo_audiencia">Tipo de audiência</label>
-                  <select id="f_tipo_audiencia" name="tipo_audiencia">
-                    <option value="">Todos</option>
-                    {% for valor, texto in rotulos_tipo_audiencia.items() %}
-                    <option value="{{ valor }}" {% if filtros.get('tipo_audiencia') == valor %}selected{% endif %}>{{ texto }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-                <div class="campo">
-                  <label for="f_data_de">Data de</label>
-                  <input type="date" id="f_data_de" name="data_de" value="{{ filtros.get('data_de', '') }}">
-                </div>
-                <div class="campo">
-                  <label for="f_data_ate">Data até</label>
-                  <input type="date" id="f_data_ate" name="data_ate" value="{{ filtros.get('data_ate', '') }}">
-                </div>
+            <div id="filtros_avancados" class="oculto linha-filtro">
+              <div class="campo">
+                <label for="f_uf">UF</label>
+                <select id="f_uf" name="uf">
+                  <option value="">Todas</option>
+                  {% for sigla in ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'] %}
+                  <option value="{{ sigla }}" {% if filtros.get('uf') == sigla %}selected{% endif %}>{{ sigla }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="campo">
+                <label for="f_tipo_audiencia">Tipo de audiência</label>
+                <select id="f_tipo_audiencia" name="tipo_audiencia">
+                  <option value="">Todos</option>
+                  {% for valor, texto in rotulos_tipo_audiencia.items() %}
+                  <option value="{{ valor }}" {% if filtros.get('tipo_audiencia') == valor %}selected{% endif %}>{{ texto }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="campo">
+                <label for="f_data_de">Data de</label>
+                <input type="date" id="f_data_de" name="data_de" value="{{ filtros.get('data_de', '') }}">
+              </div>
+              <div class="campo">
+                <label for="f_data_ate">Data até</label>
+                <input type="date" id="f_data_ate" name="data_ate" value="{{ filtros.get('data_ate', '') }}">
               </div>
             </div>
-
             <button type="button" class="btn btn-adicionar" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="document.getElementById('filtros_avancados').classList.toggle('oculto')">Filtros avançados ▾</button>
 
             <button type="submit" class="btn btn-salvar">Buscar</button>
