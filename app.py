@@ -403,6 +403,29 @@ def numero_processo_ja_existe(numero_processo):
     return Processo.query.filter_by(numero_processo=numero_processo).first() is not None
 
 
+def campos_obrigatorios_faltando(form, trabalhista=False):
+    """Confere os campos que nenhum cadastro pode ficar sem: número do
+    processo e pelo menos um nome de cada lado. Devolve a lista dos que
+    faltam (vazia = pode salvar).
+
+    O formulário sempre manda os nomes em autor_nome/reu_nome, mesmo no
+    trabalhista - só os rótulos mostrados ao operador mudam.
+
+    Essa checagem repete a do JavaScript de propósito: o navegador pode
+    estar com script desativado, ou o POST pode vir de fora da tela."""
+    rotulo_autor = "Reclamante" if trabalhista else "Autor"
+    rotulo_reu = "Reclamada" if trabalhista else "Réu"
+
+    faltando = []
+    if not (form.get("numero_processo") or "").strip():
+        faltando.append("Número do processo")
+    if not any(nome.strip() for nome in form.getlist("autor_nome")):
+        faltando.append(rotulo_autor)
+    if not any(nome.strip() for nome in form.getlist("reu_nome")):
+        faltando.append(rotulo_reu)
+    return faltando
+
+
 @app.route("/inicio")
 @login_required
 def inicio():
@@ -418,6 +441,10 @@ def cadastro_civel():
 
     form = request.form
     numero_processo = form.get("numero_processo")
+
+    faltando = campos_obrigatorios_faltando(form)
+    if faltando:
+        return render_template("cadastro_civel.html", erro_campos_obrigatorios=faltando)
 
     if numero_processo_ja_existe(numero_processo):
         return render_template(
@@ -890,6 +917,10 @@ def cadastro_civel_recuperacao():
     form = request.form
     numero_processo = form.get("numero_processo")
 
+    faltando = campos_obrigatorios_faltando(form)
+    if faltando:
+        return render_template("cadastro_civel_recuperacao.html", erro_campos_obrigatorios=faltando)
+
     if numero_processo_ja_existe(numero_processo):
         return render_template(
             "cadastro_civel_recuperacao.html",
@@ -928,6 +959,10 @@ def cadastro_trabalhista():
 
     form = request.form
     numero_processo = form.get("numero_processo")
+
+    faltando = campos_obrigatorios_faltando(form, trabalhista=True)
+    if faltando:
+        return render_template("cadastro_trabalhista.html", erro_campos_obrigatorios=faltando)
 
     if numero_processo_ja_existe(numero_processo):
         return render_template(

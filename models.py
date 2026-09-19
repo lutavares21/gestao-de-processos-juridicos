@@ -99,7 +99,12 @@ class Processo(db.Model):
     risco = db.Column(db.String(20))
     # 'possivel', 'provavel', 'remoto'
     grau_instancia = db.Column(db.String(30))
-    # 'primeira_instancia', 'segunda_instancia_trt', 'tst', 'stf', 'nao_informado'
+    # Cível e Cível - Recuperação de Crédito:
+    #   'primeira_instancia', 'segunda_instancia_tj', 'segunda_instancia_trf',
+    #   'execucao', 'stj', 'stf', 'nao_informado'
+    # Trabalhista:
+    #   'primeira_instancia', 'segunda_instancia_trt', 'execucao',
+    #   'tst', 'stf', 'nao_informado'
 
     # --- Acompanhamento ---
     resumo = db.Column(db.Text)
