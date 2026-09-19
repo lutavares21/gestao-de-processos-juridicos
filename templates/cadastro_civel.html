@@ -12,7 +12,11 @@
           <div class="flash flash-erro">Já existe um processo cadastrado com o número <strong>{{ erro_numero_duplicado }}</strong>. Verifique o número e tente novamente.</div>
         {% endif %}
 
-        <form method="POST" action="{{ url_for('cadastro_civel') }}" enctype="multipart/form-data">
+        {% if erro_campos_obrigatorios %}
+          <div class="flash flash-erro">Não é possível salvar sem preencher: <strong>{{ erro_campos_obrigatorios|join(', ') }}</strong>.</div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('cadastro_civel') }}" enctype="multipart/form-data" onsubmit="return validarEConfirmar()">
 
           <!-- 1. IDENTIFICAÇÃO -->
           <div class="secao">
@@ -316,10 +320,12 @@
                 <select id="grau_instancia" name="grau_instancia">
                   <option value="">Selecione</option>
                   <option value="primeira_instancia">1ª Instância</option>
-                  <option value="segunda_instancia_trt">2ª Instância - Recurso TRT</option>
+                  <option value="segunda_instancia_tj">2ª Instância - TJ</option>
+                  <option value="segunda_instancia_trf">2ª Instância - TRF</option>
+                  <option value="execucao">Execução</option>
+                  <option value="stj">Tribunal Superior - STJ</option>
+                  <option value="stf">Tribunal Superior - STF</option>
                   <option value="nao_informado">Não informado</option>
-                  <option value="stf">STF</option>
-                  <option value="tst">TST</option>
                 </select>
               </div>
             </div>
@@ -584,6 +590,36 @@
       const container = document.getElementById('lista_movimentos');
       const modelo = document.getElementById('modelo_movimento').content.cloneNode(true);
       container.appendChild(modelo);
+    }
+
+    // --- Campos obrigatórios + confirmação antes de salvar -----------------
+    // Roda no onsubmit do formulário. Devolve false para cancelar o envio e
+    // manter o operador na página de cadastro.
+    function algumPreenchido(seletor) {
+      return Array.from(document.querySelectorAll(seletor))
+        .some((campo) => campo.value.trim() !== '');
+    }
+
+    function validarEConfirmar() {
+      const faltando = [];
+
+      const numero = document.getElementById('numero_processo');
+      if (!numero.value.trim()) faltando.push('Número do processo');
+      if (!algumPreenchido('#lista_autores input[name="autor_nome"]')) faltando.push('Autor');
+      if (!algumPreenchido('#lista_reus input[name="reu_nome"]')) faltando.push('Réu');
+
+      if (faltando.length) {
+        alert('NÃO É POSSÍVEL SALVAR.\n\nPreencha antes os campos obrigatórios:\n\n- ' + faltando.join('\n- '));
+        if (!numero.value.trim()) {
+          numero.focus();
+        } else {
+          const alvo = document.querySelector('#lista_autores input[name="autor_nome"], #lista_reus input[name="reu_nome"]');
+          if (alvo) alvo.focus();
+        }
+        return false;
+      }
+
+      return confirm('CONFIRMAÇÃO DE CADASTRO\n\nOs dados informados serão gravados no sistema.\n\nTem certeza de que deseja salvar este processo?');
     }
 
     // Ao carregar a página, já deixa uma linha pronta em cada grupo dinâmico

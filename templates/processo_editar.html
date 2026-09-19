@@ -313,9 +313,19 @@
                 <label for="grau_instancia">Grau/Instância atual</label>
                 <select id="grau_instancia" name="grau_instancia">
                   <option value="">Selecione</option>
-                  {% for valor, texto in [('primeira_instancia','1ª Instância'), ('segunda_instancia_trt','2ª Instância - Recurso TRT'), ('nao_informado','Não informado'), ('stf','STF'), ('tst','TST')] %}
+                  {% if eh_trabalhista %}
+                    {% set graus = [('primeira_instancia','1ª Instância'), ('segunda_instancia_trt','2ª Instância - Recurso TRT'), ('execucao','Execução'), ('tst','Instância Extraordinária - TST'), ('stf','Instância Extraordinária - STF'), ('nao_informado','Não informado')] %}
+                  {% else %}
+                    {% set graus = [('primeira_instancia','1ª Instância'), ('segunda_instancia_tj','2ª Instância - TJ'), ('segunda_instancia_trf','2ª Instância - TRF'), ('execucao','Execução'), ('stj','Tribunal Superior - STJ'), ('stf','Tribunal Superior - STF'), ('nao_informado','Não informado')] %}
+                  {% endif %}
+                  {% for valor, texto in graus %}
                   <option value="{{ valor }}" {{ 'selected' if p.grau_instancia == valor else '' }}>{{ texto }}</option>
                   {% endfor %}
+                  {# Se o processo foi cadastrado com um grau que não está mais na lista
+                     (ex.: TRT em processo cível), ele continua aparecendo para não se perder. #}
+                  {% if p.grau_instancia and p.grau_instancia not in graus|map(attribute=0)|list %}
+                  <option value="{{ p.grau_instancia }}" selected>{{ p.grau_instancia }} (valor antigo)</option>
+                  {% endif %}
                 </select>
               </div>
             </div>
@@ -444,7 +454,7 @@
             <h2>Valores financeiros</h2>
             <div class="linha">
               <div class="campo">
-                <label for="valor_final_display">{{ 'Valor pago ao reclamante (R$)' if eh_trabalhista else 'Valor pago ao autor (R$)' }}</label>
+                <label for="valor_final_display">{% if eh_recuperacao %}Valor Recuperado (R$){% elif eh_trabalhista %}Valor pago ao reclamante (R$){% else %}Valor pago ao autor (R$){% endif %}</label>
                 <input type="text" inputmode="numeric" id="valor_final_display" placeholder="R$ 0,00"
                        value="{{ p.valor_final|moeda if p.valor_final is not none else '' }}"
                        data-alvo="valor_final" oninput="formatarDinheiro(this)">
@@ -458,7 +468,7 @@
                 <input type="hidden" id="honorarios_advogado" name="honorarios_advogado" value="{{ p.honorarios_advogado if p.honorarios_advogado is not none else '' }}">
               </div>
               <div class="campo">
-                <label for="economia_gerada_display">Economia Gerada (R$)</label>
+                <label for="economia_gerada_display">{{ 'Saldo Não Recuperado (R$)' if eh_recuperacao else 'Economia Gerada (R$)' }}</label>
                 <input type="text" inputmode="numeric" id="economia_gerada_display" placeholder="R$ 0,00"
                        value="{{ p.economia_gerada|moeda if p.economia_gerada is not none else '' }}"
                        data-alvo="economia_gerada" oninput="formatarDinheiro(this)">
