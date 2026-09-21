@@ -1473,6 +1473,13 @@ def registro_processos():
 
     # Filtro por tipo de processo (caixa de seleção no topo da página).
     # "todos" (padrão) não aplica nenhum filtro extra.
+    #
+    # Cível - Recuperação de Crédito fica de fora deste panorama: a análise
+    # de recuperação de crédito é muito diferente (não fala em risco/
+    # sentença/pedidos como os outros tipos) e vai ganhar um panorama
+    # próprio depois. Até lá, nenhum processo com origem_cadastro=
+    # "civel_recuperacao" deve aparecer aqui - nem nas somas/contagens de
+    # "Todos", nem como opção selecionável no filtro.
     tipos_processo_validos = {"civel", "trabalhista"}
     tipo_selecionado = request.args.get("tipo", "todos")
     if tipo_selecionado not in tipos_processo_validos:
@@ -1480,8 +1487,9 @@ def registro_processos():
 
     def query_base():
         """Ponto de partida de toda consulta nesta página - já vem com o
-        filtro de tipo de processo aplicado (se houver um selecionado)."""
-        query = Processo.query
+        filtro de tipo de processo aplicado (se houver um selecionado) e
+        sempre exclui Cível - Recuperação de Crédito (ver comentário acima)."""
+        query = Processo.query.filter(Processo.origem_cadastro != "civel_recuperacao")
         if tipo_selecionado != "todos":
             query = query.filter(Processo.origem_cadastro == tipo_selecionado)
         return query
@@ -1500,6 +1508,7 @@ def registro_processos():
         processos que batem com os filtros dados (além do filtro de tipo
         de processo já aplicado). Nunca retorna None."""
         query = db.session.query(func.coalesce(func.sum(coluna), 0)).select_from(Processo)
+        query = query.filter(Processo.origem_cadastro != "civel_recuperacao")
         if tipo_selecionado != "todos":
             query = query.filter(Processo.origem_cadastro == tipo_selecionado)
         for campo, valor in filtros.items():
@@ -1675,7 +1684,11 @@ def registro_processos():
         Processo.centro_resultado,
         func.count(Processo.id),
         func.coalesce(func.sum(Processo.valor_causa), 0),
-    ).filter(Processo.status == "ativo", Processo.centro_resultado.isnot(None))
+    ).filter(
+        Processo.status == "ativo",
+        Processo.centro_resultado.isnot(None),
+        Processo.origem_cadastro != "civel_recuperacao",
+    )
     if tipo_selecionado != "todos":
         top_cr_query = top_cr_query.filter(Processo.origem_cadastro == tipo_selecionado)
     top_cr = (
