@@ -58,8 +58,15 @@
   'cobranca_extrajudicial':'Cobrança Extrajudicial', 'cobranca_judicial':'Cobrança Judicial', 'outros':'Outros'
 } %}
 {% set rotulos_grau_instancia = {
-  'primeira_instancia':'1ª Instância', 'segunda_instancia_trt':'2ª Instância - Recurso TRT',
-  'nao_informado':'Não informado', 'stf':'STF', 'tst':'TST'
+  'primeira_instancia':'1ª Instância',
+  'segunda_instancia_trt':'2ª Instância - Recurso TRT',
+  'segunda_instancia_tj':'2ª Instância - TJ',
+  'segunda_instancia_trf':'2ª Instância - TRF',
+  'execucao':'Execução',
+  'stj':'Tribunal Superior - STJ',
+  'stf':'Tribunal Superior - STF' if not eh_trabalhista else 'Instância Extraordinária - STF',
+  'tst':'Instância Extraordinária - TST',
+  'nao_informado':'Não informado'
 } %}
 {% set rotulos_status = {'ativo':'Ativo', 'arquivado':'Arquivado', 'suspenso':'Suspenso'} %}
 {% set rotulos_status_pedido = {'em_analise': 'Em análise', 'deferido': 'Deferido', 'indeferido': 'Indeferido'} %}
@@ -319,9 +326,9 @@
         <div class="secao">
           <h2>Valores financeiros</h2>
           <div class="linha">
-            {{ cv_moeda('Valor pago ao reclamante (R$)' if eh_trabalhista else 'Valor pago ao autor (R$)', p.valor_final) }}
+            {{ cv_moeda('Valor Recuperado (R$)' if eh_recuperacao else ('Valor pago ao reclamante (R$)' if eh_trabalhista else 'Valor pago ao autor (R$)'), p.valor_final) }}
             {{ cv_moeda('Honorários Advocatícios (R$)', p.honorarios_advogado) }}
-            {{ cv_moeda('Economia Gerada (R$)', p.economia_gerada) }}
+            {{ cv_moeda('Saldo Não Recuperado (R$)' if eh_recuperacao else 'Economia Gerada (R$)', p.economia_gerada) }}
           </div>
           <div class="linha">
             {{ cv_moeda('Honorários periciais (R$)', p.honorarios_periciais) }}
