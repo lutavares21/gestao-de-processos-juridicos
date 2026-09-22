@@ -1365,6 +1365,14 @@ def agenda():
         # mais próxima (menor data) entra na agenda.
         numero_audiencia, data_aud, horario, tipo_aud = min(candidatos, key=lambda c: c[1])
 
+        # Link da audiência e advogado(s) da empresa (lado "reu") - só a
+        # primeira audiência tem link cadastrado (audiencia_1_link); nas
+        # demais (2ª e 3ª) o campo fica vazio, já que o modelo não guarda
+        # link para elas.
+        link_audiencia = p.audiencia_1_link if numero_audiencia == 1 else None
+        nomes_advogados = [adv.nome for adv in p.advogados if adv.lado == "reu"]
+        advogados = ", ".join(nomes_advogados) if nomes_advogados else "—"
+
         audiencias.append({
             "processo_id": p.id,
             "numero_processo": p.numero_processo,
@@ -1377,6 +1385,8 @@ def agenda():
             "juizado": p.juizado,
             "comarca": p.comarca,
             "uf": p.uf,
+            "link": link_audiencia,
+            "advogados": advogados,
         })
 
     audiencias.sort(key=lambda a: (a["data"], a["horario"] or ""))

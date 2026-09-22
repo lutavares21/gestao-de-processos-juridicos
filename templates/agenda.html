@@ -116,30 +116,40 @@
     <table class="tabela-processos">
       <thead>
         <tr>
-          <th>Número do processo</th>
-          <th>Tipo</th>
-          <th>Reclamante/Autor</th>
           <th>Data</th>
           <th>Hora</th>
           <th>Tipo de audiência</th>
-          <th>Vara/Juizado</th>
-          <th style="min-width:220px;">Comarca</th>
+          <th>Link</th>
+          <th>Tipo do processo</th>
           <th style="width:60px;">UF</th>
+          <th style="min-width:220px;">Comarca</th>
+          <th>Vara/Juizado</th>
+          <th>Reclamante/Autor</th>
+          <th>Número do processo</th>
+          <th>Advogado</th>
           <th>Ações</th>
         </tr>
       </thead>
       <tbody>
         {% for a in audiencias %}
         <tr>
-          <td>{{ a.numero_processo }}</td>
-          <td>{{ rotulos_tipo_processo.get(a.tipo_processo, a.tipo_processo) }}</td>
-          <td>{{ a.nome_parte }}</td>
           <td>{{ a.data.strftime('%d/%m/%Y') }}</td>
           <td>{{ a.horario or '—' }}</td>
           <td>{{ rotulos_tipo_audiencia.get(a.tipo_audiencia, '—') }}</td>
-          <td>{{ a.juizado or '—' }}</td>
-          <td>{{ a.comarca or '—' }}</td>
+          <td>
+            {% if a.link %}
+            <a href="{{ a.link }}" target="_blank" rel="noopener">Acessar</a>
+            {% else %}
+            —
+            {% endif %}
+          </td>
+          <td>{{ rotulos_tipo_processo.get(a.tipo_processo, a.tipo_processo) }}</td>
           <td>{{ a.uf or '—' }}</td>
+          <td>{{ a.comarca or '—' }}</td>
+          <td>{{ a.juizado or '—' }}</td>
+          <td>{{ a.nome_parte }}</td>
+          <td>{{ a.numero_processo }}</td>
+          <td>{{ a.advogados }}</td>
           <td>
             <a class="btn-detalhe" href="{{ url_for('processo_detalhe', processo_id=a.processo_id) }}">Ver detalhes</a>
           </td>
