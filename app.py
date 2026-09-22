@@ -1471,26 +1471,37 @@ def processo_editar(processo_id):
 @login_required
 def panorama_juridico():
 
-    # Filtro por tipo de processo (caixa de seleção no topo da página).
-    # "todos" (padrão) não aplica nenhum filtro extra.
+    # Sem "tipo" na URL (ex.: acabou de clicar em "Panorama Jurídico" no
+    # menu lateral) -> mostra a tela de escolha do tipo de processo, sem
+    # gastar tempo calculando os dados do painel. Só depois que o
+    # operador escolhe um dos cartões (que já vêm com ?tipo=... no link)
+    # é que a lógica abaixo roda e o painel de verdade é exibido.
+    #
+    # "civel_trabalhista" é o único tipo que junta mais de uma origem de
+    # cadastro (Cível + Trabalhista) - não existe um "todos" genérico que
+    # some literalmente todos os tipos de processo do sistema.
+    tipos_processo_validos = {"civel", "trabalhista", "civel_trabalhista"}
+    tipo_param = request.args.get("tipo")
+    if tipo_param not in tipos_processo_validos:
+        return render_template("panorama_juridico.html", mostrar_menu=True)
+    tipo_selecionado = tipo_param
+
+    # Filtro por tipo de processo. "civel_trabalhista" não aplica nenhum
+    # filtro extra de origem_cadastro, pois já é a junção dos dois.
     #
     # Cível - Recuperação de Crédito fica de fora deste panorama: a análise
     # de recuperação de crédito é muito diferente (não fala em risco/
     # sentença/pedidos como os outros tipos) e vai ganhar um panorama
     # próprio depois. Até lá, nenhum processo com origem_cadastro=
     # "civel_recuperacao" deve aparecer aqui - nem nas somas/contagens de
-    # "Todos", nem como opção selecionável no filtro.
-    tipos_processo_validos = {"civel", "trabalhista"}
-    tipo_selecionado = request.args.get("tipo", "todos")
-    if tipo_selecionado not in tipos_processo_validos:
-        tipo_selecionado = "todos"
+    # "Cível + Trabalhista", nem como opção selecionável no filtro.
 
     def query_base():
         """Ponto de partida de toda consulta nesta página - já vem com o
         filtro de tipo de processo aplicado (se houver um selecionado) e
         sempre exclui Cível - Recuperação de Crédito (ver comentário acima)."""
         query = Processo.query.filter(Processo.origem_cadastro != "civel_recuperacao")
-        if tipo_selecionado != "todos":
+        if tipo_selecionado != "civel_trabalhista":
             query = query.filter(Processo.origem_cadastro == tipo_selecionado)
         return query
 
@@ -1509,7 +1520,7 @@ def panorama_juridico():
         de processo já aplicado). Nunca retorna None."""
         query = db.session.query(func.coalesce(func.sum(coluna), 0)).select_from(Processo)
         query = query.filter(Processo.origem_cadastro != "civel_recuperacao")
-        if tipo_selecionado != "todos":
+        if tipo_selecionado != "civel_trabalhista":
             query = query.filter(Processo.origem_cadastro == tipo_selecionado)
         for campo, valor in filtros.items():
             query = query.filter(getattr(Processo, campo) == valor)
@@ -1689,7 +1700,7 @@ def panorama_juridico():
         Processo.centro_resultado.isnot(None),
         Processo.origem_cadastro != "civel_recuperacao",
     )
-    if tipo_selecionado != "todos":
+    if tipo_selecionado != "civel_trabalhista":
         top_cr_query = top_cr_query.filter(Processo.origem_cadastro == tipo_selecionado)
     top_cr = (
         top_cr_query
@@ -1749,7 +1760,7 @@ def panorama_juridico():
         )
         .join(Processo, PedidoTrabalhista.processo_id == Processo.id)
     )
-    if tipo_selecionado != "todos":
+    if tipo_selecionado != "civel_trabalhista":
         pedidos_trab_query = pedidos_trab_query.filter(Processo.origem_cadastro == tipo_selecionado)
     pedidos_trab_query = (
         pedidos_trab_query.group_by(PedidoTrabalhista.verba)
@@ -1777,7 +1788,7 @@ def panorama_juridico():
         )
         .join(Processo, PedidoCivel.processo_id == Processo.id)
     )
-    if tipo_selecionado != "todos":
+    if tipo_selecionado != "civel_trabalhista":
         pedidos_civel_query = pedidos_civel_query.filter(Processo.origem_cadastro == tipo_selecionado)
     pedidos_civel_query = (
         pedidos_civel_query.group_by(PedidoCivel.descricao)
@@ -1796,7 +1807,8 @@ def panorama_juridico():
     ]
 
     return render_template(
-        "panorama_juridico.html", dados=dados, tipo_selecionado=tipo_selecionado
+        "panorama_juridico.html", dados=dados, tipo_selecionado=tipo_selecionado,
+        mostrar_menu=False,
     )
 
 

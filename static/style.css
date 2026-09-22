@@ -1354,3 +1354,85 @@ canvas{ max-width: 100%; }
   font-weight: 600;
   color: var(--texto-suave);
 }
+
+/* ------------------------------------------------------------------
+   Menu do Panorama Jurídico (escolha do tipo de processo antes de
+   entrar no painel executivo)
+   ------------------------------------------------------------------ */
+.menu-panorama {
+  max-width: 760px;
+  margin: 40px auto;
+  text-align: center;
+}
+
+.menu-panorama .dash-subtitulo {
+  margin-bottom: 34px;
+}
+
+.menu-panorama-grade {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+@media (max-width: 640px) {
+  .menu-panorama-grade {
+    grid-template-columns: 1fr;
+  }
+}
+
+.menu-panorama-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 22px 18px;
+  background: #fff;
+  border: 1px solid var(--borda);
+  border-left: 4px solid var(--tinta);
+  border-radius: 3px;
+  font-family: var(--fonte-corpo);
+  text-decoration: none;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.menu-panorama-card:hover {
+  box-shadow: 0 4px 14px rgba(27, 42, 74, 0.12);
+  transform: translateY(-2px);
+}
+
+.menu-panorama-card .titulo {
+  font-family: var(--fonte-titulo);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--tinta);
+}
+
+.menu-panorama-card .legenda {
+  font-size: 12.5px;
+  color: var(--texto-suave);
+}
+
+.menu-panorama-card.off {
+  cursor: not-allowed;
+  border-left-color: var(--borda);
+  background: #f6f4ee;
+  pointer-events: none;
+}
+
+.menu-panorama-card.off .titulo {
+  color: var(--texto-suave);
+}
+
+.menu-panorama-card .selo-off {
+  margin-top: 6px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: #fff;
+  background: var(--texto-suave);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
