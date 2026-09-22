@@ -32,7 +32,7 @@
 
         <a href="{{ url_for('agenda') }}" class="{{ 'ativo' if request.endpoint == 'agenda' else '' }}">Agenda de Audiências</a>
 
-        <a href="{{ url_for('registro_processos') }}" class="{{ 'ativo' if request.endpoint == 'registro_processos' else '' }}">Panorama Jurídico</a>
+        <a href="{{ url_for('panorama_juridico') }}" class="{{ 'ativo' if request.endpoint == 'panorama_juridico' else '' }}">Panorama Jurídico</a>
 
         {% if current_user.eh_administrador %}
         <a href="{{ url_for('operadores') }}" class="{{ 'ativo' if request.endpoint in ['operadores', 'operador_novo', 'operador_editar', 'atividades'] else '' }}">Gestão de Operadores</a>

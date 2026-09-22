@@ -1467,9 +1467,9 @@ def processo_editar(processo_id):
     return redirect(url_for("processo_detalhe", processo_id=processo.id))
 
 
-@app.route("/registro-processos")
+@app.route("/panorama-juridico")
 @login_required
-def registro_processos():
+def panorama_juridico():
 
     # Filtro por tipo de processo (caixa de seleção no topo da página).
     # "todos" (padrão) não aplica nenhum filtro extra.
@@ -1796,7 +1796,7 @@ def registro_processos():
     ]
 
     return render_template(
-        "registro_processos.html", dados=dados, tipo_selecionado=tipo_selecionado
+        "panorama_juridico.html", dados=dados, tipo_selecionado=tipo_selecionado
     )
 
 

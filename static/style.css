@@ -963,7 +963,7 @@ select.selo-pedido-select.indeferido { background: #fff; color: var(--risco-remo
 }
 
 /* -----------------------------------------------------------
-   Painel executivo (Panorama Jurídico / registro_processos)
+   Painel executivo (Panorama Jurídico / panorama_juridico)
    ----------------------------------------------------------- */
 :root{
   --dash-navy: #16233d;
