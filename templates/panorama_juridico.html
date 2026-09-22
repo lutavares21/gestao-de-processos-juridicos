@@ -7,11 +7,54 @@
 {% block container_attrs %} style="max-width: 1280px;"{% endblock %}
 
 {% block conteudo %}
+{% if mostrar_menu %}
+        <!-- MENU DE ESCOLHA DO TIPO DE PROCESSO -->
+        <div class="menu-panorama">
+          <h1>Panorama Jurídico</h1>
+          <div class="dash-subtitulo">Selecione o tipo de processo que deseja analisar</div>
+
+          <div class="menu-panorama-grade">
+            <a class="menu-panorama-card" href="{{ url_for('panorama_juridico', tipo='civel') }}">
+              <span class="titulo">Processo Cível</span>
+              <span class="legenda">Panorama apenas do Cível</span>
+            </a>
+
+            <div class="menu-panorama-card off" title="Em breve: análise própria para Recuperação de Crédito.">
+              <span class="titulo">Processo Cível - Recuperação de Crédito</span>
+              <span class="legenda">Análise diferenciada</span>
+              <span class="selo-off">Em breve</span>
+            </div>
+
+            <a class="menu-panorama-card" href="{{ url_for('panorama_juridico', tipo='civel_trabalhista') }}">
+              <span class="titulo">Processo Cível + Processo Trabalhista</span>
+              <span class="legenda">Panorama combinado</span>
+            </a>
+
+            <div class="menu-panorama-card off" title="Em breve.">
+              <span class="titulo">Processo Licitatório</span>
+              <span class="selo-off">Em breve</span>
+            </div>
+
+            <a class="menu-panorama-card" href="{{ url_for('panorama_juridico', tipo='trabalhista') }}">
+              <span class="titulo">Processo Trabalhista</span>
+              <span class="legenda">Panorama apenas do Trabalhista</span>
+            </a>
+
+            <div class="menu-panorama-card off" title="Em breve.">
+              <span class="titulo">Processo Tributário</span>
+              <span class="selo-off">Em breve</span>
+            </div>
+          </div>
+        </div>
+{% else %}
         <!-- CABEÇALHO EXECUTIVO -->
         <div class="dash-header">
           <div>
             <h1>Panorama Jurídico</h1>
-            <div class="dash-subtitulo">Visão Geral dos Processos, indicadores e análises estratégicas</div>
+            <div class="dash-subtitulo">
+              Visão Geral dos Processos, indicadores e análises estratégicas ·
+              <a href="{{ url_for('panorama_juridico') }}">voltar para a escolha do tipo</a>
+            </div>
           </div>
 
           <form method="GET" action="{{ url_for('panorama_juridico') }}" class="dash-filtro-tipo">
@@ -19,7 +62,7 @@
             <select id="tipo" name="tipo" onchange="this.form.submit()">
               <option value="civel" {% if tipo_selecionado == 'civel' %}selected{% endif %}>Cível</option>
               <option value="trabalhista" {% if tipo_selecionado == 'trabalhista' %}selected{% endif %}>Trabalhista</option>
-              <option value="todos" {% if tipo_selecionado == 'todos' %}selected{% endif %}>Todos</option>
+              <option value="civel_trabalhista" {% if tipo_selecionado == 'civel_trabalhista' %}selected{% endif %}>Cível + Trabalhista</option>
               <option value="civel_recuperacao" disabled title="Em breve: este tipo de processo terá um panorama próprio.">Cível - Recuperação de Crédito</option>
             </select>
           </form>
@@ -468,4 +511,5 @@
 
     } // fim do if (typeof Chart !== "undefined")
   </script>
+{% endif %}
 {% endblock %}
