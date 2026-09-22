@@ -14,7 +14,7 @@
             <div class="dash-subtitulo">Visão Geral dos Processos, indicadores e análises estratégicas</div>
           </div>
 
-          <form method="GET" action="{{ url_for('registro_processos') }}" class="dash-filtro-tipo">
+          <form method="GET" action="{{ url_for('panorama_juridico') }}" class="dash-filtro-tipo">
             <label for="tipo">Selecione o tipo de processo:</label>
             <select id="tipo" name="tipo" onchange="this.form.submit()">
               <option value="civel" {% if tipo_selecionado == 'civel' %}selected{% endif %}>Cível</option>
