@@ -1365,6 +1365,13 @@ canvas{ max-width: 100%; }
   text-align: center;
 }
 
+.menu-panorama h1 {
+  font-family: var(--fonte-titulo);
+  font-weight: 600;
+  color: var(--tinta);
+  letter-spacing: 0.01em;
+}
+
 .menu-panorama .dash-subtitulo {
   margin-bottom: 34px;
 }
