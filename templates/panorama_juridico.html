@@ -54,9 +54,11 @@
             <label for="tipo">Selecione o tipo de processo:</label>
             <select id="tipo" name="tipo" onchange="this.form.submit()">
               <option value="civel" {% if tipo_selecionado == 'civel' %}selected{% endif %}>Cível</option>
-              <option value="trabalhista" {% if tipo_selecionado == 'trabalhista' %}selected{% endif %}>Trabalhista</option>
-              <option value="civel_trabalhista" {% if tipo_selecionado == 'civel_trabalhista' %}selected{% endif %}>Cível + Trabalhista</option>
               <option value="civel_recuperacao" disabled title="Em breve: este tipo de processo terá um panorama próprio.">Cível - Recuperação de Crédito</option>
+              <option value="civel_trabalhista" {% if tipo_selecionado == 'civel_trabalhista' %}selected{% endif %}>Cível + Trabalhista</option>
+              <option value="licitatorio" disabled title="Em breve.">Processo Licitatório</option>
+              <option value="trabalhista" {% if tipo_selecionado == 'trabalhista' %}selected{% endif %}>Trabalhista</option>
+              <option value="tributario" disabled title="Em breve.">Processo Tributário</option>
             </select>
           </form>
         </div>
