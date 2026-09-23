@@ -145,6 +145,9 @@ class Processo(db.Model):
     titulos_recuperacao = db.relationship(
         "TituloRecuperacao", backref="processo", cascade="all, delete-orphan"
     )
+    acordos_recebimento = db.relationship(
+        "AcordoRecebimento", backref="processo", cascade="all, delete-orphan"
+    )
 
     @property
     def dias_ativos(self):
@@ -193,6 +196,13 @@ class Processo(db.Model):
         if not self.titulos_recuperacao:
             return None
         return sum((titulo.total or 0) for titulo in self.titulos_recuperacao)
+
+    @property
+    def total_recebido_acordo(self):
+        """Soma a coluna Valor Recebido de todas as parcelas do acordo."""
+        if not self.acordos_recebimento:
+            return None
+        return sum((parcela.valor_recebido or 0) for parcela in self.acordos_recebimento)
 
 
 class Parte(db.Model):
@@ -288,6 +298,35 @@ class TituloRecuperacao(db.Model):
 
     status = db.Column(db.String(20), default="em_analise")
     # 'em_analise', 'deferido', 'indeferido'
+
+    # Ordem em que a linha aparece na tabela (mantém a ordem da planilha).
+    ordem = db.Column(db.Integer, default=0)
+
+
+class AcordoRecebimento(db.Model):
+    """Parcelas de um acordo/recebimento de um processo, preenchidas aos
+    poucos ao longo do processo (planilha importada na tela de cadastro/
+    edição, ou digitadas manualmente).
+
+    As colunas espelham a planilha usada pelo escritório:
+    Parcela, Vencimento, Valor da Parcela, Honorários Êxito, Sucumbência,
+    Valor Recebido, Data Recebimento, Valor Pago Adv, Data Pagto Adv."""
+    __tablename__ = "acordos_recebimento"
+
+    id = db.Column(db.Integer, primary_key=True)
+    processo_id = db.Column(db.Integer, db.ForeignKey("processos.id"), nullable=False)
+
+    parcela = db.Column(db.String(30))
+    vencimento = db.Column(db.Date)
+    valor_parcela = db.Column(db.Numeric(14, 2))
+    honorarios_exito = db.Column(db.Numeric(14, 2))
+    sucumbencia = db.Column(db.Numeric(14, 2))
+
+    # Preenchidos aos poucos, conforme o pagamento acontece.
+    valor_recebido = db.Column(db.Numeric(14, 2))
+    data_recebimento = db.Column(db.Date)
+    valor_pago_adv = db.Column(db.Numeric(14, 2))
+    data_pagto_adv = db.Column(db.Date)
 
     # Ordem em que a linha aparece na tabela (mantém a ordem da planilha).
     ordem = db.Column(db.Integer, default=0)

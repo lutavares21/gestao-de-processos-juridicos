@@ -286,6 +286,55 @@
             {% else %}
             <p class="texto-vazio">Nenhum título cadastrado.</p>
             {% endif %}
+
+            {% if p.acordos_recebimento %}
+            <h3 class="subtitulo-secao">Acordo / recebimento</h3>
+            <div class="tabela-wrap">
+              <table class="tabela-processos tabela-titulos-detalhe">
+                <thead>
+                  <tr>
+                    <th>Parcela</th><th>Vencimento</th>
+                    <th class="col-num">Valor da Parcela</th>
+                    <th class="col-num">Honorários Êxito</th>
+                    <th class="col-num">Sucumbência</th>
+                    <th class="col-num">Valor Recebido</th>
+                    <th>Data Recebimento</th>
+                    <th class="col-num">Valor Pago Adv</th>
+                    <th>Data Pagto Adv</th>
+                    <th>Situação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for a in p.acordos_recebimento|sort(attribute='ordem') %}
+                  <tr>
+                    <td>{{ a.parcela or '—' }}</td>
+                    <td>{{ a.vencimento.strftime('%d/%m/%Y') if a.vencimento else '—' }}</td>
+                    {% for numero in [a.valor_parcela, a.honorarios_exito, a.sucumbencia, a.valor_recebido] %}
+                    <td class="col-num">{{ (numero|moeda)|replace('R$ ', '') if numero is not none else '—' }}</td>
+                    {% endfor %}
+                    <td>{{ a.data_recebimento.strftime('%d/%m/%Y') if a.data_recebimento else '—' }}</td>
+                    <td class="col-num">{{ (a.valor_pago_adv|moeda)|replace('R$ ', '') if a.valor_pago_adv is not none else '—' }}</td>
+                    <td>{{ a.data_pagto_adv.strftime('%d/%m/%Y') if a.data_pagto_adv else '—' }}</td>
+                    <td><span class="selo-pedido {{ 'deferido' if a.valor_recebido else 'em_analise' }}">{{ 'Pago' if a.valor_recebido else 'Pendente' }}</span></td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="2" class="rodape-rotulo">Totais ({{ p.acordos_recebimento|length }} parcela(s))</td>
+                    {% for campo in ['valor_parcela', 'honorarios_exito', 'sucumbencia', 'valor_recebido'] %}
+                    {% set soma = p.acordos_recebimento|map(attribute=campo)|reject('none')|sum %}
+                    <td class="col-num">{{ (soma|moeda)|replace('R$ ', '') }}</td>
+                    {% endfor %}
+                    <td></td>
+                    {% set soma_pago_adv = p.acordos_recebimento|map(attribute='valor_pago_adv')|reject('none')|sum %}
+                    <td class="col-num">{{ (soma_pago_adv|moeda)|replace('R$ ', '') }}</td>
+                    <td colspan="2"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            {% endif %}
           {% else %}
             {{ cv('Pedidos marcados', p.pedidos_civeis|map(attribute='descricao')|join(', ')) }}
           {% endif %}

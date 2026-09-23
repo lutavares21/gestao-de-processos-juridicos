@@ -343,6 +343,9 @@
           {% if eh_recuperacao %}
           {% set titulos = p.titulos_recuperacao|sort(attribute='ordem') %}
           {% include "_titulos_recuperacao.html" %}
+
+          {% set parcelas_acordo = p.acordos_recebimento|sort(attribute='ordem') %}
+          {% include "_acordo_recebimento.html" %}
           {% else %}
           <div class="secao">
             <h2>Pedidos e requerimentos</h2>
