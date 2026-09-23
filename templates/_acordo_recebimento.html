@@ -38,6 +38,8 @@
 
   <div id="aviso_acordo" class="aviso-recuperacao oculto"></div>
 
+  {# Barra de rolagem horizontal duplicada no topo (sincronizada com a de baixo) #}
+  <div class="scroll-topo scroll-topo-acordo" id="scroll_topo_acordo"><div id="scroll_topo_acordo_interno"></div></div>
   <div class="tabela-wrap tabela-wrap-acordo">
     <table class="tabela-recuperacao">
       <thead>
@@ -194,6 +196,8 @@
     document.getElementById('contador_acordo').textContent = quantidade;
     document.getElementById('vazio_acordo').classList.toggle('oculto', quantidade > 0);
     document.querySelector('.tabela-wrap-acordo').classList.toggle('oculto', quantidade === 0);
+    document.getElementById('scroll_topo_acordo').classList.toggle('oculto', quantidade === 0);
+    if (window.sincronizarScrollTopoAcordo) window.sincronizarScrollTopoAcordo();
   }
 
   // Adiciona uma linha. Se vier um objeto "dados" (linha da planilha),
@@ -297,6 +301,40 @@
       );
     }
   }
+
+  // Barra de rolagem horizontal também no topo da tabela: uma barra "espelho"
+  // com a mesma largura da tabela, sincronizada nos dois sentidos.
+  window.addEventListener('DOMContentLoaded', () => {
+    const topo = document.getElementById('scroll_topo_acordo');
+    const interno = document.getElementById('scroll_topo_acordo_interno');
+    const wrap = document.querySelector('.tabela-wrap-acordo');
+    const tabela = wrap ? wrap.querySelector('table') : null;
+    if (!topo || !interno || !wrap || !tabela) return;
+
+    window.sincronizarScrollTopoAcordo = function () {
+      interno.style.width = tabela.scrollWidth + 'px';
+    };
+    window.sincronizarScrollTopoAcordo();
+    window.addEventListener('resize', window.sincronizarScrollTopoAcordo);
+    // A tabela muda de largura ao adicionar/importar linhas.
+    if (window.ResizeObserver) {
+      new ResizeObserver(window.sincronizarScrollTopoAcordo).observe(tabela);
+    }
+
+    let sincronizando = false;
+    topo.addEventListener('scroll', () => {
+      if (sincronizando) return;
+      sincronizando = true;
+      wrap.scrollLeft = topo.scrollLeft;
+      sincronizando = false;
+    });
+    wrap.addEventListener('scroll', () => {
+      if (sincronizando) return;
+      sincronizando = true;
+      topo.scrollLeft = wrap.scrollLeft;
+      sincronizando = false;
+    });
+  });
 
   window.addEventListener('DOMContentLoaded', recalcularRodapeAcordo);
 </script>
