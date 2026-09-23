@@ -1,0 +1,294 @@
+{#
+  Seção "Acordo / recebimento" - parcelas preenchidas aos poucos ao longo
+  do processo. Usada tanto no cadastro (cadastro_civel_recuperacao.html)
+  quanto na edição (processo_editar.html).
+
+  Quem inclui este arquivo define antes a variável `parcelas_acordo`:
+      {% set parcelas_acordo = p.acordos_recebimento|sort(attribute='ordem') %}
+      {% include "_acordo_recebimento.html" %}
+  No cadastro novo é só passar uma lista vazia.
+#}
+{% set parcelas_acordo = parcelas_acordo if parcelas_acordo is defined else [] %}
+
+<div class="secao">
+  <h2>Acordo / recebimento</h2>
+
+  <p class="texto-ajuda">
+    Anexe uma planilha, edite caso necessário ou adicione as linhas manualmente.
+    Preencha aos poucos: no início só parcela e vencimento, e o restante conforme
+    o pagamento for acontecendo.
+  </p>
+
+  <div class="linha linha-importacao">
+    <div class="campo campo-grande">
+      <label for="planilha_acordo">Planilha de acordo/recebimento </label>
+      {# Sem atributo "name": este arquivo é lido por JavaScript,
+         não vai junto no submit do formulário. #}
+      <input type="file" id="planilha_acordo"
+             accept=".xlsx,.xlsm,.xltx,.xltm,.xls,.csv,.txt,.tsv,.ods"
+             onchange="importarPlanilhaAcordo()">
+    </div>
+    <div class="campo campo-pequeno">
+      <button type="button" class="btn btn-adicionar"
+              onclick="adicionarParcelaAcordo()">+ Adicionar linha</button>
+    </div>
+    <div class="campo campo-pequeno">
+      <button type="button" class="btn btn-remover"
+              onclick="limparAcordoRecebimento()">Limpar tabela</button>
+    </div>
+  </div>
+
+  <div id="aviso_acordo" class="aviso-recuperacao oculto"></div>
+
+  <div class="tabela-wrap tabela-wrap-acordo">
+    <table class="tabela-recuperacao">
+      <thead>
+        <tr>
+          <th>Parcela</th>
+          <th>Vencimento</th>
+          <th class="col-num">Valor da Parcela</th>
+          <th class="col-num">Honorários Êxito</th>
+          <th class="col-num">Sucumbência</th>
+          <th class="col-num">Valor Recebido</th>
+          <th>Data Recebimento</th>
+          <th class="col-num">Valor Pago Adv</th>
+          <th>Data Pagto Adv</th>
+          <th>Situação</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="corpo_acordo_recebimento">
+        {% for a in parcelas_acordo %}
+        <tr>
+          <td><input type="text" name="acordo_parcela" value="{{ a.parcela or '' }}"></td>
+          <td><input type="date" name="acordo_vencimento" value="{{ a.vencimento.isoformat() if a.vencimento else '' }}"></td>
+          <td><input type="text" name="acordo_valor_parcela" class="cel-num" inputmode="decimal"
+                     value="{{ (a.valor_parcela|moeda)|replace('R$ ', '') if a.valor_parcela is not none else '' }}"
+                     onblur="formatarCelulaMoeda(this)"></td>
+          <td><input type="text" name="acordo_honorarios_exito" class="cel-num" inputmode="decimal"
+                     value="{{ (a.honorarios_exito|moeda)|replace('R$ ', '') if a.honorarios_exito is not none else '' }}"
+                     onblur="formatarCelulaMoeda(this)"></td>
+          <td><input type="text" name="acordo_sucumbencia" class="cel-num" inputmode="decimal"
+                     value="{{ (a.sucumbencia|moeda)|replace('R$ ', '') if a.sucumbencia is not none else '' }}"
+                     onblur="formatarCelulaMoeda(this)"></td>
+          <td><input type="text" name="acordo_valor_recebido" class="cel-num" inputmode="decimal"
+                     value="{{ (a.valor_recebido|moeda)|replace('R$ ', '') if a.valor_recebido is not none else '' }}"
+                     oninput="atualizarSituacaoAcordo(this)" onblur="formatarCelulaMoeda(this)"></td>
+          <td><input type="date" name="acordo_data_recebimento" value="{{ a.data_recebimento.isoformat() if a.data_recebimento else '' }}"></td>
+          <td><input type="text" name="acordo_valor_pago_adv" class="cel-num" inputmode="decimal"
+                     value="{{ (a.valor_pago_adv|moeda)|replace('R$ ', '') if a.valor_pago_adv is not none else '' }}"
+                     onblur="formatarCelulaMoeda(this)"></td>
+          <td><input type="date" name="acordo_data_pagto_adv" value="{{ a.data_pagto_adv.isoformat() if a.data_pagto_adv else '' }}"></td>
+          <td>
+            <span class="selo-pedido-select {{ 'deferido' if a.valor_recebido else 'em_analise' }} selo-situacao-acordo">
+              {{ 'Pago' if a.valor_recebido else 'Pendente' }}
+            </span>
+          </td>
+          <td>
+            <button type="button" class="btn btn-remover"
+                    onclick="removerParcelaAcordo(this)">Remover</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr id="rodape_acordo_recebimento">
+          <td colspan="2" class="rodape-rotulo">
+            Totais (<span id="contador_acordo">0</span> parcela(s))
+          </td>
+          <td class="col-num" id="soma_acordo_valor_parcela">—</td>
+          <td class="col-num" id="soma_acordo_honorarios_exito">—</td>
+          <td class="col-num" id="soma_acordo_sucumbencia">—</td>
+          <td class="col-num" id="soma_acordo_valor_recebido">—</td>
+          <td></td>
+          <td class="col-num" id="soma_acordo_valor_pago_adv">—</td>
+          <td colspan="3"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <p id="vazio_acordo" class="texto-ajuda">
+    Nenhuma parcela adicionada ainda.
+  </p>
+</div>
+
+<!-- Modelo de uma linha nova (usado pelo botão "+ Adicionar linha" e pela importação) -->
+<template id="modelo_parcela_acordo">
+  <tr>
+    <td><input type="text" name="acordo_parcela"></td>
+    <td><input type="date" name="acordo_vencimento"></td>
+    <td><input type="text" name="acordo_valor_parcela" class="cel-num" inputmode="decimal"
+               onblur="formatarCelulaMoeda(this)"></td>
+    <td><input type="text" name="acordo_honorarios_exito" class="cel-num" inputmode="decimal"
+               onblur="formatarCelulaMoeda(this)"></td>
+    <td><input type="text" name="acordo_sucumbencia" class="cel-num" inputmode="decimal"
+               onblur="formatarCelulaMoeda(this)"></td>
+    <td><input type="text" name="acordo_valor_recebido" class="cel-num" inputmode="decimal"
+               oninput="atualizarSituacaoAcordo(this)" onblur="formatarCelulaMoeda(this)"></td>
+    <td><input type="date" name="acordo_data_recebimento"></td>
+    <td><input type="text" name="acordo_valor_pago_adv" class="cel-num" inputmode="decimal"
+               onblur="formatarCelulaMoeda(this)"></td>
+    <td><input type="date" name="acordo_data_pagto_adv"></td>
+    <td>
+      <span class="selo-pedido-select em_analise selo-situacao-acordo">Pendente</span>
+    </td>
+    <td>
+      <button type="button" class="btn btn-remover"
+              onclick="removerParcelaAcordo(this)">Remover</button>
+    </td>
+  </tr>
+</template>
+
+<script>
+  // ==========================================================
+  // Acordo / recebimento (parcelas)
+  // Reaproveita numeroDaCelula/formatarNumeroBR/formatarCelulaMoeda
+  // já definidas em _titulos_recuperacao.html.
+  // ==========================================================
+
+  // Atualiza o selo "Pago"/"Pendente" da linha conforme o Valor Recebido.
+  function atualizarSituacaoAcordo(input) {
+    const linha = input.closest('tr');
+    const selo = linha.querySelector('.selo-situacao-acordo');
+    const numero = numeroDaCelula(input);
+    if (numero !== null && numero > 0) {
+      selo.textContent = 'Pago';
+      selo.className = 'selo-pedido-select deferido selo-situacao-acordo';
+    } else {
+      selo.textContent = 'Pendente';
+      selo.className = 'selo-pedido-select em_analise selo-situacao-acordo';
+    }
+  }
+
+  function recalcularRodapeAcordo() {
+    const colunas = {
+      acordo_valor_parcela: 'soma_acordo_valor_parcela',
+      acordo_honorarios_exito: 'soma_acordo_honorarios_exito',
+      acordo_sucumbencia: 'soma_acordo_sucumbencia',
+      acordo_valor_recebido: 'soma_acordo_valor_recebido',
+      acordo_valor_pago_adv: 'soma_acordo_valor_pago_adv',
+    };
+    const corpo = document.getElementById('corpo_acordo_recebimento');
+    if (!corpo) return;
+
+    Object.entries(colunas).forEach(([nomeCampo, idRodape]) => {
+      let soma = 0;
+      let temAlgum = false;
+      corpo.querySelectorAll('input[name="' + nomeCampo + '"]').forEach((celula) => {
+        const numero = numeroDaCelula(celula);
+        if (numero !== null) { soma += numero; temAlgum = true; }
+      });
+      document.getElementById(idRodape).textContent = temAlgum ? formatarNumeroBR(soma) : '—';
+    });
+
+    const quantidade = corpo.children.length;
+    document.getElementById('contador_acordo').textContent = quantidade;
+    document.getElementById('vazio_acordo').classList.toggle('oculto', quantidade > 0);
+    document.querySelector('.tabela-wrap-acordo').classList.toggle('oculto', quantidade === 0);
+  }
+
+  // Adiciona uma linha. Se vier um objeto "dados" (linha da planilha),
+  // já preenche as células; senão entra uma linha em branco.
+  function adicionarParcelaAcordo(dados) {
+    const corpo = document.getElementById('corpo_acordo_recebimento');
+    const modelo = document.getElementById('modelo_parcela_acordo').content.cloneNode(true);
+
+    if (dados) {
+      ['parcela', 'vencimento', 'data_recebimento', 'data_pagto_adv'].forEach((campo) => {
+        const alvo = modelo.querySelector(
+          'input[name="acordo_' + campo.replace('data_', 'data_') + '"]'
+        );
+        if (alvo && dados[campo]) alvo.value = dados[campo];
+      });
+      ['valor_parcela', 'honorarios_exito', 'sucumbencia', 'valor_recebido', 'valor_pago_adv']
+        .forEach((campo) => {
+          const alvo = modelo.querySelector('input[name="acordo_' + campo + '"]');
+          if (alvo && dados[campo] !== null && dados[campo] !== undefined) {
+            alvo.value = formatarNumeroBR(dados[campo]);
+          }
+        });
+    }
+
+    corpo.appendChild(modelo);
+    const novaLinha = corpo.lastElementChild;
+    const campoRecebido = novaLinha.querySelector('input[name="acordo_valor_recebido"]');
+    if (campoRecebido) atualizarSituacaoAcordo(campoRecebido);
+    recalcularRodapeAcordo();
+  }
+
+  function removerParcelaAcordo(botao) {
+    botao.closest('tr').remove();
+    recalcularRodapeAcordo();
+  }
+
+  function limparAcordoRecebimento() {
+    const corpo = document.getElementById('corpo_acordo_recebimento');
+    if (!corpo.children.length) return;
+    if (!confirm('Remover todas as linhas da tabela de acordo/recebimento?')) return;
+    corpo.innerHTML = '';
+    document.getElementById('planilha_acordo').value = '';
+    mostrarAvisoAcordo('', null);
+    recalcularRodapeAcordo();
+  }
+
+  function mostrarAvisoAcordo(html, tipo) {
+    const caixa = document.getElementById('aviso_acordo');
+    if (!html) {
+      caixa.className = 'aviso-recuperacao oculto';
+      caixa.innerHTML = '';
+      return;
+    }
+    caixa.className = 'aviso-recuperacao ' + (tipo || 'info');
+    caixa.innerHTML = html;
+  }
+
+  async function importarPlanilhaAcordo() {
+    const campoArquivo = document.getElementById('planilha_acordo');
+    const arquivo = campoArquivo.files[0];
+    if (!arquivo) return;
+
+    const corpo = document.getElementById('corpo_acordo_recebimento');
+    if (corpo.children.length &&
+        !confirm('A tabela já tem linhas. Substituir pelo conteúdo da planilha?')) {
+      campoArquivo.value = '';
+      return;
+    }
+
+    mostrarAvisoAcordo('Lendo a planilha…', 'info');
+
+    const dados = new FormData();
+    dados.append('planilha', arquivo);
+
+    try {
+      const resposta = await fetch('{{ url_for("acordo_ler_planilha") }}', {
+        method: 'POST',
+        body: dados,
+      });
+      const resultado = await resposta.json();
+
+      if (!resultado.ok) {
+        mostrarAvisoAcordo(resultado.erro, 'erro');
+        campoArquivo.value = '';
+        return;
+      }
+
+      corpo.innerHTML = '';
+      resultado.linhas.forEach((linha) => adicionarParcelaAcordo(linha));
+
+      let mensagem = '<strong>' + resultado.linhas.length +
+                     ' parcela(s) importada(s).</strong> Confira e corrija o que precisar antes de salvar.';
+      if (resultado.avisos && resultado.avisos.length) {
+        mensagem += '<ul><li>' + resultado.avisos.join('</li><li>') + '</li></ul>';
+      }
+      mostrarAvisoAcordo(mensagem, resultado.avisos && resultado.avisos.length ? 'atencao' : 'ok');
+    } catch (erro) {
+      mostrarAvisoAcordo(
+        'Não consegui falar com o servidor para ler a planilha. Verifique a conexão e tente de novo.',
+        'erro'
+      );
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', recalcularRodapeAcordo);
+</script>

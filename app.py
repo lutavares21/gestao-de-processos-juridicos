@@ -19,7 +19,7 @@ from sqlalchemy import func, case
 from werkzeug.security import check_password_hash, generate_password_hash
 from models import (
     db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR,
-    PedidoCivel, TituloRecuperacao, Operador, RegistroAtividade,
+    PedidoCivel, TituloRecuperacao, AcordoRecebimento, Operador, RegistroAtividade,
 )
 
 app = Flask(__name__)
@@ -508,6 +508,26 @@ COLUNAS_RECUPERACAO = {
 CAMPOS_NUMERICOS_RECUPERACAO = ["valor", "saldo", "juros", "correcao", "outros", "total"]
 CAMPOS_DATA_RECUPERACAO = ["emissao", "vencimento"]
 
+# Planilha de acordo/recebimento (parcelas), preenchida aos poucos ao longo
+# do processo - mesma lógica de importação da planilha de títulos acima.
+COLUNAS_ACORDO = {
+    "parcela": ["parcela", "parcelas", "n parcela", "numero parcela", "num parcela"],
+    "vencimento": ["vencimento", "data vencimento", "data de vencimento", "dt vencimento"],
+    "valor_parcela": ["valor da parcela", "valor parcela"],
+    "honorarios_exito": ["honorarios exito", "honorarios de exito", "honorario exito",
+                          "honorarios de exito adv"],
+    "sucumbencia": ["sucumbencia", "honorarios sucumbencia", "honorarios de sucumbencia"],
+    "valor_recebido": ["valor recebido"],
+    "data_recebimento": ["data recebimento", "data do recebimento", "dt recebimento"],
+    "valor_pago_adv": ["valor pago adv", "valor pago advogado", "valor pg adv"],
+    "data_pagto_adv": ["data pagto adv", "data pagamento adv", "data pagamento advogado"],
+}
+
+CAMPOS_NUMERICOS_ACORDO = [
+    "valor_parcela", "honorarios_exito", "sucumbencia", "valor_recebido", "valor_pago_adv",
+]
+CAMPOS_DATA_ACORDO = ["vencimento", "data_recebimento", "data_pagto_adv"]
+
 EXTENSOES_PLANILHA = (
     ".xlsx", ".xlsm", ".xltx", ".xltm",   # Excel moderno (openpyxl)
     ".xls",                                # Excel antigo (xlrd)
@@ -718,17 +738,21 @@ def ler_linhas_brutas(arquivo):
     return _linhas_csv(conteudo)
 
 
-def localizar_cabecalho(linhas):
+def localizar_cabecalho(linhas, colunas_aceitas, exemplo_colunas):
     """Procura a linha de cabeçalho e devolve (índice da linha, mapa de
     coluna -> posição). Percorre as 15 primeiras linhas porque muita planilha
-    vem com título, logotipo ou linhas em branco antes da tabela."""
+    vem com título, logotipo ou linhas em branco antes da tabela.
+
+    colunas_aceitas: dict campo -> lista de rótulos aceitos (ex.: COLUNAS_RECUPERACAO).
+    exemplo_colunas: texto com os nomes de coluna esperados, usado só na
+    mensagem de erro quando o cabeçalho não é encontrado."""
     melhor_indice = None
     melhor_mapa = {}
 
     for indice, linha in enumerate(linhas[:15]):
         rotulos = [normalizar_rotulo(celula) for celula in linha]
         mapa = {}
-        for campo, aceitos in COLUNAS_RECUPERACAO.items():
+        for campo, aceitos in colunas_aceitas.items():
             for posicao, rotulo in enumerate(rotulos):
                 if not rotulo or posicao in mapa.values():
                     continue
@@ -742,8 +766,7 @@ def localizar_cabecalho(linhas):
     if melhor_indice is None or len(melhor_mapa) < 3:
         raise PlanilhaErro(
             "Não encontrei a linha de cabeçalho na planilha. Ela precisa ter "
-            "uma linha com os nomes das colunas (Company, Cliente, Nota Fiscal, "
-            "Emissão, Vencimento, Valor, Saldo, Juros, Correção, Outros, Total)."
+            "uma linha com os nomes das colunas (" + exemplo_colunas + ")."
         )
     return melhor_indice, melhor_mapa
 
@@ -759,7 +782,11 @@ def ler_planilha_recuperacao(arquivo):
     if not linhas_brutas:
         raise PlanilhaErro("A planilha não tem nenhuma linha.")
 
-    indice_cabecalho, mapa = localizar_cabecalho(linhas_brutas)
+    indice_cabecalho, mapa = localizar_cabecalho(
+        linhas_brutas, COLUNAS_RECUPERACAO,
+        "Company, Cliente, Nota Fiscal, Emissão, Vencimento, Valor, Saldo, "
+        "Juros, Correção, Outros, Total",
+    )
     colunas_faltando = [campo for campo in COLUNAS_RECUPERACAO if campo not in mapa]
 
     linhas = []
@@ -856,6 +883,161 @@ def recuperacao_ler_planilha():
     return jsonify({"ok": True, "linhas": linhas, "avisos": avisos})
 
 
+def ler_planilha_acordo(arquivo):
+    """Lê a planilha de acordo/recebimento (parcelas) e devolve (linhas,
+    avisos, colunas_faltando). Mesma lógica de ler_planilha_recuperacao,
+    só que com o mapa de colunas do acordo."""
+    linhas_brutas = ler_linhas_brutas(arquivo)
+    if not linhas_brutas:
+        raise PlanilhaErro("A planilha não tem nenhuma linha.")
+
+    indice_cabecalho, mapa = localizar_cabecalho(
+        linhas_brutas, COLUNAS_ACORDO,
+        "Parcela, Vencimento, Valor da Parcela, Honorários Êxito, "
+        "Sucumbência, Valor Recebido, Data Recebimento, Valor Pago Adv, "
+        "Data Pagto Adv",
+    )
+    colunas_faltando = [campo for campo in COLUNAS_ACORDO if campo not in mapa]
+
+    linhas = []
+    avisos = []
+
+    for deslocamento, linha in enumerate(linhas_brutas[indice_cabecalho + 1:], start=1):
+        numero_linha = indice_cabecalho + 1 + deslocamento  # como o operador vê no Excel
+
+        # Pula linhas totalmente vazias.
+        if not any(str(celula).strip() for celula in linha if celula is not None):
+            continue
+
+        registro = {}
+        for campo, posicao in mapa.items():
+            registro[campo] = linha[posicao] if posicao < len(linha) else None
+
+        # Pula a linha de totais que costuma vir no rodapé da planilha
+        # (sem Parcela/Vencimento, só com números).
+        identificacao = " ".join(
+            str(registro.get(campo) or "") for campo in ("parcela", "vencimento")
+        ).strip()
+        if not identificacao:
+            continue
+        if normalizar_rotulo(identificacao) in {"total", "total geral", "totais", "soma"}:
+            continue
+
+        saida = {}
+        bruto_parcela = registro.get("parcela")
+        if isinstance(bruto_parcela, float) and bruto_parcela.is_integer():
+            bruto_parcela = int(bruto_parcela)  # parcela 1.0 vira 1
+        saida["parcela"] = str(bruto_parcela).strip() if bruto_parcela is not None else ""
+
+        for campo in CAMPOS_DATA_ACORDO:
+            bruto = registro.get(campo)
+            convertida = valor_para_data_planilha(bruto)
+            saida[campo] = convertida.isoformat() if convertida else ""
+            if convertida is None and bruto not in (None, "") and campo == "vencimento":
+                avisos.append(
+                    f"Linha {numero_linha}: não consegui entender a data de "
+                    f"vencimento (\"{str(bruto).strip()}\") - preencha na tela."
+                )
+
+        for campo in CAMPOS_NUMERICOS_ACORDO:
+            saida[campo] = valor_para_numero_planilha(registro.get(campo))
+
+        linhas.append(saida)
+
+    if not linhas:
+        raise PlanilhaErro(
+            "Encontrei o cabeçalho, mas nenhuma linha de parcela abaixo dele."
+        )
+
+    if len(avisos) > 12:
+        restantes = len(avisos) - 12
+        avisos = avisos[:12] + [f"...e mais {restantes} aviso(s) do mesmo tipo."]
+
+    return linhas, avisos, colunas_faltando
+
+
+@app.route("/acordo/ler-planilha", methods=["POST"])
+@login_required
+def acordo_ler_planilha():
+    """Igual a /recuperacao/ler-planilha, mas para a planilha de parcelas
+    do acordo/recebimento."""
+    arquivo = request.files.get("planilha")
+    if not arquivo or not arquivo.filename:
+        return jsonify({"ok": False, "erro": "Nenhum arquivo foi selecionado."}), 400
+
+    try:
+        linhas, avisos, colunas_faltando = ler_planilha_acordo(arquivo)
+    except PlanilhaErro as erro:
+        return jsonify({"ok": False, "erro": str(erro)}), 400
+    except Exception:
+        app.logger.exception("Falha ao ler planilha de acordo/recebimento")
+        return jsonify({
+            "ok": False,
+            "erro": "Não consegui ler este arquivo. Confira se ele abre normalmente "
+                    "no Excel e se a primeira aba é a que tem a tabela de parcelas.",
+        }), 400
+
+    if colunas_faltando:
+        nomes = {
+            "parcela": "Parcela", "vencimento": "Vencimento",
+            "valor_parcela": "Valor da Parcela", "honorarios_exito": "Honorários Êxito",
+            "sucumbencia": "Sucumbência", "valor_recebido": "Valor Recebido",
+            "data_recebimento": "Data Recebimento", "valor_pago_adv": "Valor Pago Adv",
+            "data_pagto_adv": "Data Pagto Adv",
+        }
+        avisos.insert(0, "Colunas não encontradas na planilha (ficaram em branco): "
+                         + ", ".join(nomes[campo] for campo in colunas_faltando) + ".")
+
+    return jsonify({"ok": True, "linhas": linhas, "avisos": avisos})
+
+
+def preencher_acordo_recebimento(processo, form):
+    """Lê os campos repetidos da tabela de parcelas do acordo (pareados pela
+    posição, igual à tabela de títulos) e monta os objetos AcordoRecebimento."""
+    colunas = {
+        "parcela": form.getlist("acordo_parcela"),
+        "vencimento": form.getlist("acordo_vencimento"),
+        "valor_parcela": form.getlist("acordo_valor_parcela"),
+        "honorarios_exito": form.getlist("acordo_honorarios_exito"),
+        "sucumbencia": form.getlist("acordo_sucumbencia"),
+        "valor_recebido": form.getlist("acordo_valor_recebido"),
+        "data_recebimento": form.getlist("acordo_data_recebimento"),
+        "valor_pago_adv": form.getlist("acordo_valor_pago_adv"),
+        "data_pagto_adv": form.getlist("acordo_data_pagto_adv"),
+    }
+    quantidade = max((len(lista) for lista in colunas.values()), default=0)
+
+    def pegar(campo, indice):
+        lista = colunas[campo]
+        return lista[indice].strip() if indice < len(lista) and lista[indice] else ""
+
+    for indice in range(quantidade):
+        parcela = pegar("parcela", indice)
+        vencimento = pegar("vencimento", indice)
+        numeros = [valor_para_numero_planilha(pegar(campo, indice))
+                   for campo in CAMPOS_NUMERICOS_ACORDO]
+        data_recebimento = pegar("data_recebimento", indice)
+        data_pagto_adv = pegar("data_pagto_adv", indice)
+
+        # Linha completamente em branco: ignora.
+        if not (parcela or vencimento or data_recebimento or data_pagto_adv) \
+                and not any(n is not None for n in numeros):
+            continue
+
+        processo.acordos_recebimento.append(AcordoRecebimento(
+            parcela=parcela or None,
+            vencimento=valor_para_data_planilha(vencimento),
+            valor_parcela=numeros[0],
+            honorarios_exito=numeros[1],
+            sucumbencia=numeros[2],
+            valor_recebido=numeros[3],
+            data_recebimento=valor_para_data_planilha(data_recebimento),
+            valor_pago_adv=numeros[4],
+            data_pagto_adv=valor_para_data_planilha(data_pagto_adv),
+            ordem=indice,
+        ))
+
+
 def preencher_titulos_recuperacao(processo, form):
     """Lê os campos repetidos da tabela de títulos (pareados pela posição,
     igual aos pedidos/verbas do trabalhista) e monta os objetos
@@ -933,6 +1115,8 @@ def cadastro_civel_recuperacao():
 
     # Títulos em recuperação (linhas da tabela editável)
     preencher_titulos_recuperacao(processo, form)
+    # Parcelas do acordo/recebimento (linhas da tabela editável)
+    preencher_acordo_recebimento(processo, form)
 
     db.session.add(processo)
     quantidade_titulos = len(processo.titulos_recuperacao)
@@ -1461,6 +1645,8 @@ def processo_editar(processo_id):
         # da tabela editável.
         processo.titulos_recuperacao = []
         preencher_titulos_recuperacao(processo, form)
+        processo.acordos_recebimento = []
+        preencher_acordo_recebimento(processo, form)
     else:
         processo.pedidos_civeis = []
         for descricao in form.getlist("pedido_civel"):
