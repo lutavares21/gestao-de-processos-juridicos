@@ -34,6 +34,22 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
+    # create_all() só cria tabelas novas - não acrescenta colunas novas em
+    # tabelas que já existem. Então, se o banco é anterior à coluna
+    # "situacao" das parcelas do acordo, ela é adicionada aqui (uma vez só).
+    from sqlalchemy import inspect as sa_inspect, text as sa_text
+    colunas_acordo = [c["name"] for c in sa_inspect(db.engine).get_columns("acordos_recebimento")]
+    if "situacao" not in colunas_acordo:
+        db.session.execute(sa_text(
+            "ALTER TABLE acordos_recebimento ADD COLUMN situacao VARCHAR(20) DEFAULT 'pendente'"
+        ))
+        # Parcelas antigas que já têm valor recebido passam a constar como pagas.
+        db.session.execute(sa_text(
+            "UPDATE acordos_recebimento SET situacao = 'pago' "
+            "WHERE valor_recebido IS NOT NULL AND valor_recebido > 0"
+        ))
+        db.session.commit()
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
@@ -1004,6 +1020,7 @@ def preencher_acordo_recebimento(processo, form):
         "data_recebimento": form.getlist("acordo_data_recebimento"),
         "valor_pago_adv": form.getlist("acordo_valor_pago_adv"),
         "data_pagto_adv": form.getlist("acordo_data_pagto_adv"),
+        "situacao": form.getlist("acordo_situacao"),
     }
     quantidade = max((len(lista) for lista in colunas.values()), default=0)
 
@@ -1018,6 +1035,12 @@ def preencher_acordo_recebimento(processo, form):
                    for campo in CAMPOS_NUMERICOS_ACORDO]
         data_recebimento = pegar("data_recebimento", indice)
         data_pagto_adv = pegar("data_pagto_adv", indice)
+
+        # Situação escolhida na tela ('pendente' ou 'pago'). Se por algum
+        # motivo não vier, deduz pelo Valor Recebido.
+        situacao = pegar("situacao", indice)
+        if situacao not in ("pendente", "pago"):
+            situacao = "pago" if numeros[3] else "pendente"
 
         # Linha completamente em branco: ignora.
         if not (parcela or vencimento or data_recebimento or data_pagto_adv) \
@@ -1034,6 +1057,7 @@ def preencher_acordo_recebimento(processo, form):
             data_recebimento=valor_para_data_planilha(data_recebimento),
             valor_pago_adv=numeros[4],
             data_pagto_adv=valor_para_data_planilha(data_pagto_adv),
+            situacao=situacao,
             ordem=indice,
         ))
 

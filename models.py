@@ -328,6 +328,10 @@ class AcordoRecebimento(db.Model):
     valor_pago_adv = db.Column(db.Numeric(14, 2))
     data_pagto_adv = db.Column(db.Date)
 
+    # Situação da parcela, editável na tela: 'pendente' (vermelho) ou
+    # 'pago' (verde).
+    situacao = db.Column(db.String(20), default="pendente")
+
     # Ordem em que a linha aparece na tabela (mantém a ordem da planilha).
     ordem = db.Column(db.Integer, default=0)
 

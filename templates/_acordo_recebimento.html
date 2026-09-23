@@ -77,10 +77,13 @@
                      value="{{ (a.valor_pago_adv|moeda)|replace('R$ ', '') if a.valor_pago_adv is not none else '' }}"
                      onblur="formatarCelulaMoeda(this)"></td>
           <td><input type="date" name="acordo_data_pagto_adv" value="{{ a.data_pagto_adv.isoformat() if a.data_pagto_adv else '' }}"></td>
+          {% set situacao_parcela = a.situacao or ('pago' if a.valor_recebido else 'pendente') %}
           <td>
-            <span class="selo-pedido-select {{ 'deferido' if a.valor_recebido else 'em_analise' }} selo-situacao-acordo">
-              {{ 'Pago' if a.valor_recebido else 'Pendente' }}
-            </span>
+            <select name="acordo_situacao" class="selo-pedido-select situacao-{{ situacao_parcela }} selo-situacao-acordo"
+                    onchange="pintarSituacaoAcordo(this)">
+              <option value="pendente" {% if situacao_parcela == 'pendente' %}selected{% endif %}>Pendente</option>
+              <option value="pago" {% if situacao_parcela == 'pago' %}selected{% endif %}>Pago</option>
+            </select>
           </td>
           <td>
             <button type="button" class="btn btn-remover"
@@ -129,7 +132,11 @@
                onblur="formatarCelulaMoeda(this)"></td>
     <td><input type="date" name="acordo_data_pagto_adv"></td>
     <td>
-      <span class="selo-pedido-select em_analise selo-situacao-acordo">Pendente</span>
+      <select name="acordo_situacao" class="selo-pedido-select situacao-pendente selo-situacao-acordo"
+              onchange="pintarSituacaoAcordo(this)">
+        <option value="pendente" selected>Pendente</option>
+        <option value="pago">Pago</option>
+      </select>
     </td>
     <td>
       <button type="button" class="btn btn-remover"
@@ -145,18 +152,21 @@
   // já definidas em _titulos_recuperacao.html.
   // ==========================================================
 
-  // Atualiza o selo "Pago"/"Pendente" da linha conforme o Valor Recebido.
+  // A Situação é editável (Pendente = vermelho / Pago = verde). Aqui só a
+  // cor do campo acompanha o valor escolhido.
+  function pintarSituacaoAcordo(select) {
+    select.classList.remove('situacao-pendente', 'situacao-pago');
+    select.classList.add('situacao-' + select.value);
+  }
+
+  // Sugestão automática: ao digitar um Valor Recebido, a linha passa para
+  // "Pago" (e volta para "Pendente" se o valor for apagado). Depois disso a
+  // pessoa ainda pode trocar a situação manualmente no próprio campo.
   function atualizarSituacaoAcordo(input) {
-    const linha = input.closest('tr');
-    const selo = linha.querySelector('.selo-situacao-acordo');
+    const select = input.closest('tr').querySelector('.selo-situacao-acordo');
     const numero = numeroDaCelula(input);
-    if (numero !== null && numero > 0) {
-      selo.textContent = 'Pago';
-      selo.className = 'selo-pedido-select deferido selo-situacao-acordo';
-    } else {
-      selo.textContent = 'Pendente';
-      selo.className = 'selo-pedido-select em_analise selo-situacao-acordo';
-    }
+    select.value = (numero !== null && numero > 0) ? 'pago' : 'pendente';
+    pintarSituacaoAcordo(select);
   }
 
   function recalcularRodapeAcordo() {

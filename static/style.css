@@ -865,6 +865,12 @@ select.selo-pedido-select.em_analise { background: #fff; color: var(--risco-poss
 select.selo-pedido-select.deferido   { background: #fff; color: var(--risco-provavel); }
 select.selo-pedido-select.indeferido { background: #fff; color: var(--risco-remoto); }
 
+/* --- Situação da parcela do acordo: Pendente = vermelho / Pago = verde --- */
+select.selo-pedido-select.situacao-pendente { background: #f6dede; color: var(--risco-provavel); border-color: var(--risco-provavel); }
+select.selo-pedido-select.situacao-pago     { background: #e3f0e6; color: var(--risco-remoto);    border-color: var(--risco-remoto); }
+.selo-pedido.situacao-pendente { background: #f6dede; color: var(--risco-provavel); }
+.selo-pedido.situacao-pago     { background: #e3f0e6; color: var(--risco-remoto); }
+
 /* --- Campo de valor com o "R$" fixo alinhado à direita e o número à esquerda --- */
 .input-valor-moeda {
   position: relative;
