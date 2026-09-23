@@ -84,7 +84,7 @@
             <select name="acordo_situacao" class="selo-pedido-select situacao-{{ situacao_parcela }} selo-situacao-acordo"
                     onchange="pintarSituacaoAcordo(this)">
               <option value="pendente" {% if situacao_parcela == 'pendente' %}selected{% endif %}>Pendente</option>
-              <option value="pago" {% if situacao_parcela == 'pago' %}selected{% endif %}>Pago</option>
+              <option value="pago" {% if situacao_parcela == 'pago' %}selected{% endif %}>Recebido</option>
             </select>
           </td>
           <td>
@@ -137,7 +137,7 @@
       <select name="acordo_situacao" class="selo-pedido-select situacao-pendente selo-situacao-acordo"
               onchange="pintarSituacaoAcordo(this)">
         <option value="pendente" selected>Pendente</option>
-        <option value="pago">Pago</option>
+        <option value="pago">Recebido</option>
       </select>
     </td>
     <td>
@@ -154,7 +154,7 @@
   // já definidas em _titulos_recuperacao.html.
   // ==========================================================
 
-  // A Situação é editável (Pendente = vermelho / Pago = verde). Aqui só a
+  // A Situação é editável (Pendente = vermelho / Recebido = verde). Aqui só a
   // cor do campo acompanha o valor escolhido.
   function pintarSituacaoAcordo(select) {
     select.classList.remove('situacao-pendente', 'situacao-pago');
@@ -162,7 +162,7 @@
   }
 
   // Sugestão automática: ao digitar um Valor Recebido, a linha passa para
-  // "Pago" (e volta para "Pendente" se o valor for apagado). Depois disso a
+  // "Recebido" (e volta para "Pendente" se o valor for apagado). Depois disso a
   // pessoa ainda pode trocar a situação manualmente no próprio campo.
   function atualizarSituacaoAcordo(input) {
     const select = input.closest('tr').querySelector('.selo-situacao-acordo');
