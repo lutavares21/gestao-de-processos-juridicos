@@ -492,7 +492,7 @@ class PlanilhaErro(Exception):
 # caem todos no mesmo lugar.
 COLUNAS_RECUPERACAO = {
     "company": ["company", "companhia", "empresa", "filial"],
-    "cliente": ["cliente", "sacado", "devedor", "razao social"],
+    "cliente": ["cliente", "sacado", "devedor", "razao social", "id cliente"],
     "nota_fiscal": ["nota fiscal", "notafiscal", "nf", "nfe", "nf-e",
                     "numero da nota", "numero nf", "no nf", "documento", "titulo"],
     "emissao": ["emissao", "data emissao", "data de emissao", "dt emissao"],
