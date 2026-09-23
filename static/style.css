@@ -1360,20 +1360,42 @@ canvas{ max-width: 100%; }
    entrar no painel executivo)
    ------------------------------------------------------------------ */
 .menu-panorama {
-  max-width: 760px;
+  max-width: 780px;
   margin: 40px auto;
   text-align: center;
 }
 
-.menu-panorama h1 {
-  font-family: var(--fonte-titulo);
-  font-weight: 600;
-  color: var(--tinta);
-  letter-spacing: 0.01em;
+.menu-panorama-hero {
+  background: linear-gradient(135deg, var(--dash-navy) 0%, var(--dash-navy-2) 100%);
+  border-radius: 6px;
+  padding: 38px 28px 30px;
+  margin-bottom: 30px;
 }
 
-.menu-panorama .dash-subtitulo {
-  margin-bottom: 34px;
+.menu-panorama-hero h1 {
+  font-family: var(--fonte-titulo);
+  font-weight: 600;
+  font-size: 28px;
+  color: #fbf8f1;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.menu-panorama-hero h1::after {
+  content: "";
+  display: block;
+  width: 56px;
+  height: 2px;
+  background: var(--dash-gold);
+  margin: 16px auto 0;
+}
+
+.menu-panorama-subtitulo {
+  font-family: var(--fonte-titulo);
+  font-style: italic;
+  font-size: 14.5px;
+  color: #ccd1dc;
+  margin-top: 12px;
 }
 
 .menu-panorama-grade {
@@ -1393,20 +1415,39 @@ canvas{ max-width: 100%; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 22px 18px;
+  gap: 8px;
+  padding: 26px 18px 22px;
   background: #fff;
   border: 1px solid var(--borda);
   border-left: 4px solid var(--tinta);
   border-radius: 3px;
   font-family: var(--fonte-corpo);
   text-decoration: none;
-  transition: box-shadow 0.15s, transform 0.15s;
+  transition: box-shadow 0.15s, transform 0.15s, border-left-color 0.15s;
 }
 
 .menu-panorama-card:hover {
   box-shadow: 0 4px 14px rgba(27, 42, 74, 0.12);
   transform: translateY(-2px);
+  border-left-color: var(--dash-gold);
+}
+
+.menu-panorama-icone {
+  width: 32px;
+  height: 32px;
+  color: var(--dash-navy);
+  transition: color 0.15s, transform 0.15s;
+}
+
+.menu-panorama-icone svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.menu-panorama-card:hover .menu-panorama-icone {
+  color: var(--dash-gold);
+  transform: scale(1.08);
 }
 
 .menu-panorama-card .titulo {
@@ -1430,6 +1471,11 @@ canvas{ max-width: 100%; }
 
 .menu-panorama-card.off .titulo {
   color: var(--texto-suave);
+}
+
+.menu-panorama-card.off .menu-panorama-icone {
+  color: var(--texto-suave);
+  opacity: 0.45;
 }
 
 .menu-panorama-card .selo-off {
