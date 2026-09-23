@@ -497,7 +497,7 @@ COLUNAS_RECUPERACAO = {
                     "numero da nota", "numero nf", "no nf", "documento", "titulo"],
     "emissao": ["emissao", "data emissao", "data de emissao", "dt emissao"],
     "vencimento": ["vencimento", "data vencimento", "data de vencimento", "dt vencimento"],
-    "valor": ["valor", "valor original", "valor da nota", "valor nf"],
+    "valor": ["valor", "valor original", "valor da nota", "valor nf", "valor principal"],
     "saldo": ["saldo", "saldo devedor", "saldo em aberto"],
     "juros": ["juros", "juros de mora", "mora"],
     "correcao": ["correcao", "correcao monetaria", "atualizacao", "atualizacao monetaria"],
