@@ -8,6 +8,7 @@
   --tinta-clara: #2e4470;
   --selo: #7a2e3b;
   --selo-claro: #9a3e4d;
+  --creme-logo: #fbf7f1;
   --papel: #f7f6f3;
   --papel-cartao: #ffffff;
   --borda: #dcd8cf;
@@ -583,9 +584,9 @@ input[readonly] {
 
 .inicio-topo {
   width: 100%;
-  background: var(--tinta);
+  background: var(--creme-logo);
   border-bottom: 4px solid var(--tinta-clara);
-  padding: 36px 20px 30px;
+  padding: 30px 20px 26px;
   text-align: center;
 }
 
@@ -593,29 +594,21 @@ input[readonly] {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
 }
 
 .inicio-topo-titulo .logo-inicio {
-  height: 56px;
+  height: 96px;
   width: auto;
 }
 
-.inicio-topo h1 {
-  font-family: var(--fonte-titulo);
-  color: #fff;
-  font-size: 34px;
-  margin: 0;
-}
-
 .inicio-topo .topo-operador {
-  color: #c9d2e3;
+  color: var(--tinta);
   font-size: 17px;
-  margin-top: 10px;
+  margin-top: 18px;
 }
 
 .inicio-topo .topo-operador a {
-  color: #fff;
+  color: var(--selo-claro);
   font-weight: 600;
   text-decoration: none;
 }
