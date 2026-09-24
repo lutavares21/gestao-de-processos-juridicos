@@ -1039,7 +1039,7 @@ def preencher_acordo_recebimento(processo, form):
         # Situação escolhida na tela ('pendente' ou 'pago'). Se por algum
         # motivo não vier, deduz pelo Valor Recebido.
         situacao = pegar("situacao", indice)
-        if situacao not in ("pendente", "pago"):
+        if situacao not in ("pendente", "parcial", "pago"):
             situacao = "pago" if numeros[3] else "pendente"
 
         # Linha completamente em branco: ignora.

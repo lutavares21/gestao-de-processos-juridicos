@@ -870,6 +870,8 @@ select.selo-pedido-select.situacao-pendente { background: #f6dede; color: var(--
 select.selo-pedido-select.situacao-pago     { background: #e3f0e6; color: var(--risco-remoto);    border-color: var(--risco-remoto); }
 .selo-pedido.situacao-pendente { background: #f6dede; color: var(--risco-provavel); }
 .selo-pedido.situacao-pago     { background: #e3f0e6; color: var(--risco-remoto); }
+select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--risco-possivel); border-color: var(--risco-possivel); }  /* amarelo */
+.selo-pedido.situacao-parcial { background: #fbeecb; color: var(--risco-possivel); }
 
 /* --- Campo de valor com o "R$" fixo alinhado à direita e o número à esquerda --- */
 .input-valor-moeda {
@@ -1336,6 +1338,16 @@ canvas{ max-width: 100%; }
 .selo-pedido.titulos-verde    { background: #e3f0e6; color: var(--risco-remoto); }
 .selo-pedido.titulos-amarelo  { background: #fbeecb; color: var(--risco-possivel); }
 .selo-pedido.titulos-vermelho { background: #f6dede; color: var(--risco-provavel); }
+
+/* Subtítulo dentro de uma seção (ex.: "Acordos e Recebimentos" na página de detalhes).
+   Usa a mesma fonte do título das seções ("Pedidos e requerimentos"). */
+.subtitulo-secao {
+  font-family: var(--fonte-titulo);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--tinta);
+  margin: 28px 0 14px;
+}
 
 /* Tabela de títulos na página de detalhes do processo (só leitura) */
 .tabela-processos th.col-num,
