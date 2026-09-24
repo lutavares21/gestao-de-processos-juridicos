@@ -578,82 +578,174 @@ input[readonly] {
   font-size: 14px;
 }
 
-/* --- Página Início: menu central, sem barra lateral --- */
-.pagina-inicio {
+/* --- Página Início: logo grande à esquerda, menu à direita --- */
+.inicio-split {
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  background: var(--papel);
 }
 
-.inicio-topo {
+.inicio-painel-logo {
   position: relative;
-  width: 100%;
-  overflow: hidden;
-  background: linear-gradient(160deg, var(--creme-logo) 0%, #f4ead9 100%);
-  padding: 44px 20px 30px;
-  text-align: center;
-}
-
-.inicio-topo::before {
-  content: "";
-  position: absolute;
-  top: -160px;
-  left: 50%;
-  width: 560px;
-  height: 340px;
-  transform: translateX(-50%);
-  background: radial-gradient(closest-side, rgba(199, 154, 77, 0.22), transparent);
-  pointer-events: none;
-}
-
-.inicio-topo::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--tinta), var(--dourado-logo), var(--tinta));
-}
-
-.inicio-topo-titulo {
-  position: relative;
+  width: 42%;
+  min-width: 340px;
+  max-width: 520px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 40px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #0c1730 0%, #1b2a4a 55%, #24396a 100%);
 }
 
-.inicio-topo-titulo .logo-inicio {
-  position: relative;
-  height: 108px;
-  width: auto;
-  filter: drop-shadow(0 6px 14px rgba(27, 42, 74, 0.18));
+.inicio-painel-logo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  pointer-events: none;
 }
 
-.inicio-topo .topo-operador {
+.inicio-painel-logo::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, transparent, var(--dourado-logo), transparent);
+  box-shadow: 0 0 24px 2px rgba(199, 154, 77, 0.55);
+}
+
+.inicio-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.5;
+  pointer-events: none;
+  animation: inicio-pulsar 7s ease-in-out infinite;
+}
+
+.inicio-glow-1 {
+  width: 320px;
+  height: 320px;
+  top: -90px;
+  left: -70px;
+  background: rgba(199, 154, 77, 0.45);
+}
+
+.inicio-glow-2 {
+  width: 280px;
+  height: 280px;
+  bottom: -90px;
+  right: -70px;
+  background: rgba(46, 68, 112, 0.65);
+  animation-delay: 2.5s;
+}
+
+@keyframes inicio-pulsar {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.15); opacity: 0.7; }
+}
+
+.inicio-painel-logo-conteudo {
   position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+}
+
+.logo-grande {
+  width: min(300px, 100%);
+  height: auto;
+  filter: drop-shadow(0 10px 26px rgba(0, 0, 0, 0.4));
+}
+
+.inicio-tagline {
+  margin: 0;
+  color: #dfe4f0;
+  font-size: 13px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.inicio-tagline::before,
+.inicio-tagline::after {
+  content: "";
+  display: inline-block;
+  width: 26px;
+  height: 1px;
+  background: var(--dourado-logo);
+  vertical-align: middle;
+  margin: 0 10px 3px;
+}
+
+.inicio-painel-conteudo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 28px clamp(24px, 5vw, 64px) 60px;
+}
+
+.inicio-userbar {
+  align-self: flex-end;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 20px;
-  padding: 8px 20px;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(27, 42, 74, 0.12);
+  margin-bottom: 24px;
+  padding: 8px 18px;
+  background: var(--papel-cartao);
+  border: 1px solid var(--borda);
   border-radius: 999px;
-  box-shadow: 0 2px 8px rgba(27, 42, 74, 0.06);
-  color: var(--tinta);
+  color: var(--texto);
   font-size: 14px;
 }
 
-.inicio-topo .topo-operador a {
+.inicio-userbar a {
   color: var(--selo-claro);
   font-weight: 700;
   text-decoration: none;
 }
 
-.inicio-topo .topo-operador a:hover {
+.inicio-userbar a:hover {
   text-decoration: underline;
+}
+
+@media (max-width: 960px) {
+  .inicio-split {
+    flex-direction: column;
+  }
+
+  .inicio-painel-logo {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    padding: 32px 20px;
+  }
+
+  .inicio-painel-logo::after {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--dourado-logo), transparent);
+    box-shadow: 0 0 18px 1px rgba(199, 154, 77, 0.55);
+  }
+
+  .inicio-userbar {
+    align-self: center;
+  }
 }
 
 .caixa-login {
@@ -676,8 +768,7 @@ input[readonly] {
 
 .inicio-blocos {
   width: 100%;
-  max-width: 920px;
-  padding: 40px 20px 60px;
+  max-width: 760px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 24px;

@@ -3,58 +3,64 @@
 {% block titulo %}Início - Gestão de Processos{% endblock %}
 
 {% block corpo %}
-  <div class="pagina-inicio">
+  <div class="inicio-split">
 
-    <div class="inicio-topo">
-      <div class="inicio-topo-titulo">
+    <aside class="inicio-painel-logo">
+      <div class="inicio-glow inicio-glow-1"></div>
+      <div class="inicio-glow inicio-glow-2"></div>
+      <div class="inicio-painel-logo-conteudo">
         <img src="{{ url_for('static', filename='images/logo.png') }}"
              alt="TavisJur - Gestão Jurídica Inteligente"
-             class="logo-inicio">
+             class="logo-grande">
+        <p class="inicio-tagline">Gestão Jurídica Inteligente</p>
       </div>
-      <div class="topo-operador">
+    </aside>
+
+    <div class="inicio-painel-conteudo">
+      <div class="inicio-userbar">
         Olá, {{ current_user.nome }} · <a href="{{ url_for('logout') }}">Sair</a>
       </div>
-    </div>
 
-    <div class="inicio-blocos">
+      <div class="inicio-blocos">
 
-      <div class="coluna-inicio">
-        <div class="bloco-inicio">
-          <h2>Novo cadastro</h2>
-          <div class="links-bloco">
-            <a href="{{ url_for('cadastro_civel') }}">Processo Cível</a>
-            <a href="{{ url_for('cadastro_civel_recuperacao') }}">Processo Cível - Recuperação de Crédito</a>
-            <a href="#" class="oculto-visual">Processo Licitatório</a>
-            <a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a>
-            <a href="#" class="oculto-visual">Processos Tributários</a>
+        <div class="coluna-inicio">
+          <div class="bloco-inicio">
+            <h2>Novo cadastro</h2>
+            <div class="links-bloco">
+              <a href="{{ url_for('cadastro_civel') }}">Processo Cível</a>
+              <a href="{{ url_for('cadastro_civel_recuperacao') }}">Processo Cível - Recuperação de Crédito</a>
+              <a href="#" class="oculto-visual">Processo Licitatório</a>
+              <a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a>
+              <a href="#" class="oculto-visual">Processos Tributários</a>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="coluna-inicio">
-        <div class="bloco-inicio">
-          <h2>Processos Cadastrados</h2>
-          <div class="links-bloco">
-            <a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a>
-            <a href="{{ url_for('processos_civel_recuperacao') }}">Processos Cível - Recuperação de Crédito <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_recuperacao_ativos }}</span></a>
-            <a href="#" class="oculto-visual">Processos Licitatórios</a>
-            <a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a>
-            <a href="#" class="oculto-visual">Processos Tributários</a>
+        <div class="coluna-inicio">
+          <div class="bloco-inicio">
+            <h2>Processos Cadastrados</h2>
+            <div class="links-bloco">
+              <a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a>
+              <a href="{{ url_for('processos_civel_recuperacao') }}">Processos Cível - Recuperação de Crédito <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_recuperacao_ativos }}</span></a>
+              <a href="#" class="oculto-visual">Processos Licitatórios</a>
+              <a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a>
+              <a href="#" class="oculto-visual">Processos Tributários</a>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="bloco-inicio bloco-largo">
-        <div class="links-bloco">
-          <a href="{{ url_for('agenda') }}">Agenda de Audiências</a>
-          <a href="{{ url_for('panorama_juridico') }}">Panorama Jurídico</a>
+        <div class="bloco-inicio bloco-largo">
+          <div class="links-bloco">
+            <a href="{{ url_for('agenda') }}">Agenda de Audiências</a>
+            <a href="{{ url_for('panorama_juridico') }}">Panorama Jurídico</a>
 
-      {% if current_user.eh_administrador %}
-      <a href="{{ url_for('operadores') }}">Gestão de Operadores</a>
-      {% endif %}
+        {% if current_user.eh_administrador %}
+        <a href="{{ url_for('operadores') }}">Gestão de Operadores</a>
+        {% endif %}
+          </div>
         </div>
-      </div>
 
+      </div>
     </div>
   </div>
 {% endblock %}
