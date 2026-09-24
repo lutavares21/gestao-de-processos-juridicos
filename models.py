@@ -198,6 +198,37 @@ class Processo(db.Model):
         return sum((titulo.total or 0) for titulo in self.titulos_recuperacao)
 
     @property
+    def total_acordo(self):
+        """Valor do acordo: soma o Valor da Parcela de todas as parcelas.
+        None se não há parcela com valor cadastrado."""
+        valores = [
+            parcela.valor_parcela for parcela in self.acordos_recebimento
+            if parcela.valor_parcela is not None
+        ]
+        if not valores:
+            return None
+        return sum(valores)
+
+    @property
+    def sentenca_a_receber(self):
+        """Sentença à receber = valor do acordo - parcelas já pagas.
+
+        Uma parcela conta como paga pelo Valor Recebido dela; se esse campo
+        estiver vazio e a Situação estiver como "Recebido", conta pelo Valor
+        da Parcela. Parcela "Pendente" ou "Recebido parcial" sem Valor
+        Recebido não abate nada. None se não há valor de acordo."""
+        total = self.total_acordo
+        if total is None:
+            return None
+        pago = 0
+        for parcela in self.acordos_recebimento:
+            if parcela.valor_recebido:
+                pago += parcela.valor_recebido
+            elif parcela.situacao == "pago" and parcela.valor_parcela:
+                pago += parcela.valor_parcela
+        return total - pago
+
+    @property
     def total_recebido_acordo(self):
         """Soma a coluna Valor Recebido de todas as parcelas do acordo."""
         if not self.acordos_recebimento:
