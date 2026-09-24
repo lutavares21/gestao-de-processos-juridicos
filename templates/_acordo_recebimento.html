@@ -84,6 +84,7 @@
             <select name="acordo_situacao" class="selo-pedido-select situacao-{{ situacao_parcela }} selo-situacao-acordo"
                     onchange="pintarSituacaoAcordo(this)">
               <option value="pendente" {% if situacao_parcela == 'pendente' %}selected{% endif %}>Pendente</option>
+              <option value="parcial" {% if situacao_parcela == 'parcial' %}selected{% endif %}>Recebido parcial</option>
               <option value="pago" {% if situacao_parcela == 'pago' %}selected{% endif %}>Recebido</option>
             </select>
           </td>
@@ -137,6 +138,7 @@
       <select name="acordo_situacao" class="selo-pedido-select situacao-pendente selo-situacao-acordo"
               onchange="pintarSituacaoAcordo(this)">
         <option value="pendente" selected>Pendente</option>
+        <option value="parcial">Recebido parcial</option>
         <option value="pago">Recebido</option>
       </select>
     </td>
@@ -154,20 +156,29 @@
   // já definidas em _titulos_recuperacao.html.
   // ==========================================================
 
-  // A Situação é editável (Pendente = vermelho / Recebido = verde). Aqui só a
-  // cor do campo acompanha o valor escolhido.
+  // A Situação é editável: Pendente (vermelho) / Recebido parcial (amarelo) /
+  // Recebido (verde). Aqui só a cor do campo acompanha o valor escolhido.
   function pintarSituacaoAcordo(select) {
-    select.classList.remove('situacao-pendente', 'situacao-pago');
+    select.classList.remove('situacao-pendente', 'situacao-parcial', 'situacao-pago');
     select.classList.add('situacao-' + select.value);
   }
 
-  // Sugestão automática: ao digitar um Valor Recebido, a linha passa para
-  // "Recebido" (e volta para "Pendente" se o valor for apagado). Depois disso a
-  // pessoa ainda pode trocar a situação manualmente no próprio campo.
+  // Sugestão automática ao digitar o Valor Recebido: vazio/zero = Pendente;
+  // menor que o Valor da Parcela = Recebido parcial; senão = Recebido.
+  // Depois disso a pessoa ainda pode trocar a situação manualmente no campo.
   function atualizarSituacaoAcordo(input) {
-    const select = input.closest('tr').querySelector('.selo-situacao-acordo');
-    const numero = numeroDaCelula(input);
-    select.value = (numero !== null && numero > 0) ? 'pago' : 'pendente';
+    const linha = input.closest('tr');
+    const select = linha.querySelector('.selo-situacao-acordo');
+    const recebido = numeroDaCelula(input);
+    const parcela = numeroDaCelula(linha.querySelector('input[name="acordo_valor_parcela"]'));
+
+    if (recebido === null || !(recebido > 0)) {
+      select.value = 'pendente';
+    } else if (parcela !== null && parcela > 0 && recebido < parcela) {
+      select.value = 'parcial';
+    } else {
+      select.value = 'pago';
+    }
     pintarSituacaoAcordo(select);
   }
 

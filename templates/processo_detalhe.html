@@ -316,7 +316,7 @@
                     <td class="col-num">{{ (a.valor_pago_adv|moeda)|replace('R$ ', '') if a.valor_pago_adv is not none else '—' }}</td>
                     <td>{{ a.data_pagto_adv.strftime('%d/%m/%Y') if a.data_pagto_adv else '—' }}</td>
                     {% set situacao_parcela = a.situacao or ('pago' if a.valor_recebido else 'pendente') %}
-                    <td><span class="selo-pedido situacao-{{ situacao_parcela }}">{{ 'Recebido' if situacao_parcela == 'pago' else 'Pendente' }}</span></td>
+                    <td><span class="selo-pedido situacao-{{ situacao_parcela }}">{{ {'pago': 'Recebido', 'parcial': 'Recebido parcial'}.get(situacao_parcela, 'Pendente') }}</span></td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -393,4 +393,49 @@
 
 
       
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+  // Barra de rolagem horizontal também no topo de toda tabela desta página
+  // que precise de rolagem. A barra de cima é criada aqui, sincronizada com
+  // a de baixo, e só aparece quando a tabela é mais larga que a caixa.
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.tabela-wrap').forEach((wrap) => {
+      const tabela = wrap.querySelector('table');
+      if (!tabela) return;
+
+      const topo = document.createElement('div');
+      topo.className = 'scroll-topo';
+      const interno = document.createElement('div');
+      topo.appendChild(interno);
+      wrap.parentNode.insertBefore(topo, wrap);
+
+      function ajustar() {
+        interno.style.width = tabela.scrollWidth + 'px';
+        topo.style.display = tabela.scrollWidth > wrap.clientWidth ? '' : 'none';
+      }
+      ajustar();
+      window.addEventListener('resize', ajustar);
+      if (window.ResizeObserver) {
+        new ResizeObserver(ajustar).observe(tabela);
+        new ResizeObserver(ajustar).observe(wrap);
+      }
+
+      let sincronizando = false;
+      topo.addEventListener('scroll', () => {
+        if (sincronizando) return;
+        sincronizando = true;
+        wrap.scrollLeft = topo.scrollLeft;
+        sincronizando = false;
+      });
+      wrap.addEventListener('scroll', () => {
+        if (sincronizando) return;
+        sincronizando = true;
+        topo.scrollLeft = wrap.scrollLeft;
+        sincronizando = false;
+      });
+    });
+  });
+</script>
 {% endblock %}
