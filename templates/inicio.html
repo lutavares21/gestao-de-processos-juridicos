@@ -6,7 +6,12 @@
   <div class="pagina-inicio">
 
     <div class="inicio-topo">
-      <h1>Gestão de Processos Jurídicos</h1>
+      <div class="inicio-topo-titulo">
+        <img src="{{ url_for('static', filename='images/logo.png') }}"
+             alt="TavisJur - Gestão Jurídica Inteligente"
+             class="logo-inicio">
+        <h1>Gestão de Processos Jurídicos</h1>
+      </div>
       <div class="topo-operador">
         Olá, {{ current_user.nome }} · <a href="{{ url_for('logout') }}">Sair</a>
       </div>

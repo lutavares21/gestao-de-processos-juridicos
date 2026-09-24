@@ -4,7 +4,10 @@
   <div class="layout">
 
     <aside class="menu-lateral">
-      <div class="logo-menu">Gestão de Processos</div>
+      <div class="logo-menu">
+        <img src="{{ url_for('static', filename='images/logo.png') }}"
+             alt="TavisJur - Gestão Jurídica Inteligente">
+      </div>
       <nav>
         <a href="{{ url_for('inicio') }}" class="{{ 'ativo' if request.endpoint == 'inicio' else '' }}">Início</a>
 

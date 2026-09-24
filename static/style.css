@@ -50,13 +50,15 @@ body {
 }
 
 .menu-lateral .logo-menu {
-  font-family: var(--fonte-titulo);
-  font-weight: 700;
-  color: #fff;
-  font-size: 16px;
   padding: 0 24px 22px;
   margin-bottom: 10px;
   border-bottom: 1px solid #2c3f66;
+}
+
+.menu-lateral .logo-menu img {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 .menu-lateral nav a {
@@ -585,6 +587,18 @@ input[readonly] {
   border-bottom: 4px solid var(--tinta-clara);
   padding: 36px 20px 30px;
   text-align: center;
+}
+
+.inicio-topo-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.inicio-topo-titulo .logo-inicio {
+  height: 56px;
+  width: auto;
 }
 
 .inicio-topo h1 {
