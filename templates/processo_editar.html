@@ -1,31 +1,5 @@
 {% extends "base_painel.html" %}
 
-{% macro cv(rotulo, valor, classe_campo='', estilo='') %}
-<div class="campo {{ classe_campo }}" style="{{ estilo }}">
-  <label>{{ rotulo }}</label>
-  {% if valor %}
-  <div class="valor">{{ valor }}</div>
-  {% else %}
-  <div class="valor texto-vazio">—</div>
-  {% endif %}
-</div>
-{% endmacro %}
-
-{% macro cv_moeda(rotulo, valor) %}
-<div class="campo">
-  <label>{{ rotulo }}</label>
-  {% if valor is not none %}
-  {% set texto = valor|moeda %}
-  <div class="valor" style="justify-content:space-between;">
-    <span>{{ texto.split(' ')[0] }}</span>
-    <span>{{ texto.split(' ', 1)[1] }}</span>
-  </div>
-  {% else %}
-  <div class="valor texto-vazio">—</div>
-  {% endif %}
-</div>
-{% endmacro %}
-
 {% set eh_trabalhista = p.origem_cadastro == 'trabalhista' %}
 {% set eh_recuperacao = p.origem_cadastro == 'civel_recuperacao' %}
 {% set rotulo_ativo = 'Reclamante(s)' if eh_trabalhista else 'Autor(es)' %}
@@ -38,6 +12,8 @@
 {% set nomes_passivo = p.partes|selectattr('tipo', 'equalto', tipo_passivo)|list %}
 {% set adv_autor = p.advogados|selectattr('lado', 'equalto', 'autor')|list %}
 {% set adv_reu = p.advogados|selectattr('lado', 'equalto', 'reu')|list %}
+{% set nomes_ativo_texto = nomes_ativo|map(attribute='nome')|join(', ') %}
+{% set nomes_passivo_texto = nomes_passivo|map(attribute='nome')|join(', ') %}
 {% set crs_lista = [
   ('271','Audiologia'), ('290','Bernafon'), ('245','Call Center'), ('220','Departamento Financeiro'),
   ('273','Diatec'), ('211','Diretoria Executiva'), ('501','Distribuidores'), ('302','Expansão'),
@@ -48,349 +24,706 @@
   ('251','RH/Depto.Pessoal'), ('258','Sonic'), ('502','Sonic Distribuidores'), ('236','Suprimentos'),
   ('213','Telex Licença'), ('261','TI - Informática')
 ] %}
-{% set nomes_crs = dict(crs_lista) %}
-{% set rotulos_tipo_acao = {
-  'acao_anulatoria':'Ação Anulatória', 'acao_civil_publica':'Ação Civil Pública',
-  'acao_consignacao_pagamento':'Ação de Consignação em Pagamento', 'acao_cumprimento':'Ação de Cumprimento',
-  'acao_rescisoria':'Ação Rescisória', 'dissidio_coletivo':'Dissídio Coletivo',
-  'inquerito_falta_grave':'Inquérito para Apuração de Falta Grave', 'mandado_seguranca':'Mandado de Segurança',
-  'reclamacao_trabalhista':'Reclamação Trabalhista', 'acao_civel':'Ação Cível', 'acao_trabalhista':'Ação Trabalhista',
-  'cobranca_extrajudicial':'Cobrança Extrajudicial', 'cobranca_judicial':'Cobrança Judicial', 'outros':'Outros'
-} %}
-{% set rotulos_grau_instancia = {
-  'primeira_instancia':'1ª Instância',
-  'segunda_instancia_trt':'2ª Instância - Recurso TRT',
-  'segunda_instancia_tj':'2ª Instância - TJ',
-  'segunda_instancia_trf':'2ª Instância - TRF',
-  'execucao':'Execução',
-  'stj':'Tribunal Superior - STJ',
-  'stf':'Tribunal Superior - STF' if not eh_trabalhista else 'Instância Extraordinária - STF',
-  'tst':'Instância Extraordinária - TST',
-  'nao_informado':'Não informado'
-} %}
-{% set rotulos_status = {'ativo':'Ativo', 'arquivado':'Arquivado', 'suspenso':'Suspenso'} %}
-{% set rotulos_status_pedido = {'em_analise': 'Em análise', 'deferido': 'Deferido', 'indeferido': 'Indeferido'} %}
-{% set rotulos_modalidade = {'hibrida':'Híbrida','presencial':'Presencial','telepresencial':'Telepresencial','videoconferencia':'Videoconferência'} %}
-
-{% set ns = namespace(adv_autor_texto='', adv_reu_texto='', rateio_texto='') %}
-{% for adv in adv_autor %}
-  {% set ns.adv_autor_texto = ns.adv_autor_texto + adv.nome + (' (OAB ' + adv.oab + ')' if adv.oab else '') + (', ' if not loop.last else '') %}
-{% endfor %}
-{% for adv in adv_reu %}
-  {% set ns.adv_reu_texto = ns.adv_reu_texto + adv.nome + (' (OAB ' + adv.oab + ')' if adv.oab else '') + (', ' if not loop.last else '') %}
-{% endfor %}
-{% for r in p.rateio_crs %}
-  {% set ns.rateio_texto = ns.rateio_texto + nomes_crs.get(r.centro_resultado, r.centro_resultado) + (', ' if not loop.last else '') %}
-{% endfor %}
-
-{% set texto_tramitacao = (p.dias_ativos|string ~ ' dias') if p.dias_ativos is not none else '' %}
-{% set texto_cr %}{% if p.centro_resultado == 'rateio' %}Rateio{% elif p.centro_resultado %}{{ p.centro_resultado }} - {{ nomes_crs.get(p.centro_resultado, '') }}{% endif %}{% endset %}
-{% set nomes_ativo_texto = nomes_ativo|map(attribute='nome')|join(', ') %}
-{% set nomes_passivo_texto = nomes_passivo|map(attribute='nome')|join(', ') %}
+{% set codigos_cr_conhecidos = crs_lista|map(attribute=0)|list %}
+{% set rateio_codigos = p.rateio_crs|map(attribute='centro_resultado')|list %}
+{% set rateio_manuais = p.rateio_crs|rejectattr('centro_resultado', 'in', codigos_cr_conhecidos)|list %}
+{% set descricoes_pedidos_civeis = p.pedidos_civeis|map(attribute='descricao')|list %}
 
   
 
-{% block titulo %}Processo {{ p.numero_processo }}{% endblock %}
-{% block cabecalho %}
-      <div class="cabecalho">
-        <div style="display:flex; align-items:center; justify-content:flex-start; gap:12px; flex-wrap:wrap;">
-          <h1>Processo {{ p.numero_processo }}</h1>
-          <a href="{{ url_for('processo_editar', processo_id=p.id) }}" class="btn btn-adicionar" style="text-decoration:none;">Editar processo</a>
-        </div>
-        <div class="subtitulo">Gestão de Processos Jurídicos</div>
-      </div>
-{% endblock %}
+{% block titulo %}Editar Processo {{ p.numero_processo }}{% endblock %}
+{% block cabecalho_titulo %}Editar Processo {{ p.numero_processo }}{% endblock %}
 
 {% block conteudo %}
         <a class="link-voltar" href="{{ url_for('processos_trabalhista') if eh_trabalhista else (url_for('processos_civel_recuperacao') if eh_recuperacao else url_for('processos_civel')) }}">← Voltar para a listagem</a>
 
-        <!-- 1. IDENTIFICAÇÃO -->
-        <div class="secao">
-          <h2>Identificação</h2>
-          <div class="linha">
-            {{ cv('Número do processo', p.numero_processo) }}
-            {{ cv('Vara do Trabalho' if eh_trabalhista else 'Juizado', p.juizado) }}
-          </div>
-          <div class="linha">
-            {{ cv('Comarca', p.comarca) }}
-            {{ cv('UF', p.uf, '', 'flex: 0 0 90px;') }}
-            {{ cv('Classe processual' if eh_trabalhista else 'Tipo de ação', rotulos_tipo_acao.get(p.tipo_acao, p.tipo_acao)) }}
-          </div>
-          <div class="linha">
-            {{ cv(rotulo_ativo, nomes_ativo_texto) }}
-          </div>
-        </div>
+        {% if erro_numero_duplicado %}
+          <div class="flash flash-erro">Já existe um processo cadastrado com o número <strong>{{ erro_numero_duplicado }}</strong>. Verifique o número e tente novamente.</div>
+        {% endif %}
 
-        <!-- 2. DATAS DE DISTRIBUIÇÃO, AUDIÊNCIAS, ARQUIVAMENTO E VALOR DA CAUSA -->
-        <div class="secao">
-          <h2>Datas de Distribuição, Audiências, Arquivamento e Valor da Causa</h2>
-          <div class="linha">
-            {{ cv('Data de distribuição', p.data_distribuicao.strftime('%d/%m/%Y') if p.data_distribuicao else '') }}
-            {{ cv('Valor da causa (R$)', p.valor_causa|moeda if p.valor_causa is not none else '') }}
+        <form method="POST" action="{{ url_for('processo_editar', processo_id=p.id) }}" enctype="multipart/form-data" style="margin-top:16px;" onsubmit="return confirmarEdicao()">
+
+          <!-- 1. IDENTIFICAÇÃO -->
+          <div class="secao">
+            <h2>Identificação</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="numero_processo">Número do processo</label>
+                <input type="text" id="numero_processo" name="numero_processo"
+                       value="{{ p.numero_processo }}" readonly
+                       title="O número do processo não pode ser alterado depois do cadastro.">
+              </div>
+              <div class="campo">
+                <label for="juizado">{{ 'Vara do Trabalho' if eh_trabalhista else 'Juizado' }}</label>
+                <input type="text" id="juizado" name="juizado" value="{{ p.juizado or '' }}">
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label for="comarca">Comarca</label>
+                <input type="text" id="comarca" name="comarca" value="{{ p.comarca or '' }}">
+              </div>
+              <div class="campo" style="flex: 0 0 90px;">
+                <label for="uf">UF</label>
+                <select id="uf" name="uf">
+                  <option value="">Selecione</option>
+                  {% for sigla in ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'] %}
+                  <option value="{{ sigla }}" {{ 'selected' if p.uf == sigla else '' }}>{{ sigla }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="campo">
+                <label for="tipo_acao">{{ 'Classe processual' if eh_trabalhista else 'Tipo de ação' }}</label>
+                {% if eh_trabalhista %}
+                <select id="tipo_acao" name="tipo_acao" required>
+                  <option value="">Selecione</option>
+                  {% for valor, texto in [
+                    ('acao_anulatoria','Ação Anulatória'), ('acao_civil_publica','Ação Civil Pública'),
+                    ('acao_consignacao_pagamento','Ação de Consignação em Pagamento'), ('acao_cumprimento','Ação de Cumprimento'),
+                    ('acao_rescisoria','Ação Rescisória'), ('dissidio_coletivo','Dissídio Coletivo'),
+                    ('inquerito_falta_grave','Inquérito para Apuração de Falta Grave'), ('mandado_seguranca','Mandado de Segurança'),
+                    ('outros','Outros'), ('reclamacao_trabalhista','Reclamação Trabalhista')
+                  ] %}
+                  <option value="{{ valor }}" {{ 'selected' if p.tipo_acao == valor else '' }}>{{ texto }}</option>
+                  {% endfor %}
+                </select>
+                {% else %}
+                <select id="tipo_acao" name="tipo_acao" required>
+                  <option value="">Selecione</option>
+                  {% for valor, texto in [
+                    ('acao_civel','Ação Cível'), ('acao_trabalhista','Ação Trabalhista'),
+                    ('cobranca_extrajudicial','Cobrança Extrajudicial'), ('cobranca_judicial','Cobrança Judicial')
+                  ] %}
+                  <option value="{{ valor }}" {{ 'selected' if p.tipo_acao == valor else '' }}>{{ texto }}</option>
+                  {% endfor %}
+                </select>
+                {% endif %}
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label>{{ rotulo_ativo }} <span class="aviso-limite">(não pode ser alterado)</span></label>
+                <input type="text" value="{{ nomes_ativo_texto }}" disabled>
+              </div>
+            </div>
           </div>
-          <div class="linha">
-            {{ cv('Próxima audiência', p.data_audiencia_1.strftime('%d/%m/%Y') if p.data_audiencia_1 else '') }}
-            {{ cv('Horário', p.audiencia_1_horario, 'campo-pequeno') }}
-            {{ cv('Modalidade da audiência', rotulos_modalidade.get(p.audiencia_1_tipo)) }}
-            {% if p.audiencia_1_link %}
+
+          <!-- 2. DATAS DE DISTRIBUIÇÃO, AUDIÊNCIAS, ARQUIVAMENTO E VALOR DA CAUSA -->
+          <div class="secao">
+            <h2>Datas de Distribuição, Audiências, Arquivamento e Valor da Causa</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="data_distribuicao">Data de distribuição</label>
+                <input type="date" id="data_distribuicao" name="data_distribuicao" required
+                       value="{{ p.data_distribuicao.isoformat() if p.data_distribuicao else '' }}"
+                       onchange="calcularTempoTramitacao()">
+              </div>
+              <div class="campo">
+                <label for="valor_causa_display">Valor da causa (R$)</label>
+                <input type="text" inputmode="numeric" id="valor_causa_display" placeholder="R$ 0,00"
+                       value="{{ p.valor_causa|moeda if p.valor_causa is not none else '' }}"
+                       data-alvo="valor_causa" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="valor_causa" name="valor_causa" value="{{ p.valor_causa if p.valor_causa is not none else '' }}">
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label for="data_audiencia_1">Próxima audiência</label>
+                <input type="date" id="data_audiencia_1" name="data_audiencia_1"
+                       value="{{ p.data_audiencia_1.isoformat() if p.data_audiencia_1 else '' }}">
+              </div>
+              <div class="campo campo-pequeno">
+                <label for="audiencia_1_horario">Horário</label>
+                <input type="time" id="audiencia_1_horario" name="audiencia_1_horario" value="{{ p.audiencia_1_horario or '' }}">
+              </div>
+              <div class="campo">
+                <label for="audiencia_1_tipo">Modalidade da audiência</label>
+                <select id="audiencia_1_tipo" name="audiencia_1_tipo" onchange="alternarLinkAudiencia()">
+                  <option value="">Selecione</option>
+                  {% for valor, texto in [('hibrida','Híbrida'), ('presencial','Presencial'), ('telepresencial','Telepresencial'), ('videoconferencia','Videoconferência')] %}
+                  <option value="{{ valor }}" {{ 'selected' if p.audiencia_1_tipo == valor else '' }}>{{ texto }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="campo {{ '' if p.audiencia_1_tipo in ('telepresencial','videoconferencia','hibrida') else 'oculto' }}" id="campo_link_audiencia">
+                <label for="audiencia_1_link">Link da audiência</label>
+                <input type="text" id="audiencia_1_link" name="audiencia_1_link" placeholder="https://..." value="{{ p.audiencia_1_link or '' }}">
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo campo-pequeno">
+                <label for="data_audiencia_2">Última audiência</label>
+                <input type="date" id="data_audiencia_2" name="data_audiencia_2"
+                       value="{{ p.data_audiencia_2.isoformat() if p.data_audiencia_2 else '' }}">
+              </div>
+              <div class="campo">
+                <label for="data_audiencia_3">Audiência inicial</label>
+                <input type="date" id="data_audiencia_3" name="data_audiencia_3"
+                       value="{{ p.data_audiencia_3.isoformat() if p.data_audiencia_3 else '' }}">
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo campo-pequeno">
+                <label for="data_arquivamento">Data do arquivamento</label>
+                <input type="date" id="data_arquivamento" name="data_arquivamento"
+                       value="{{ p.data_arquivamento.isoformat() if p.data_arquivamento else '' }}"
+                       onchange="calcularTempoTramitacao()">
+              </div>
+              <div class="campo">
+                <label for="tempo_tramitacao">Tempo de tramitação</label>
+                <input type="text" id="tempo_tramitacao" readonly
+                       value="{{ (p.dias_ativos|string ~ ' dias') if p.dias_ativos is not none else '' }}"
+                       placeholder="Preencha a data de distribuição ou do arquivamento">
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. PARTES ENVOLVIDAS -->
+          <div class="secao">
+            <h2>Partes envolvidas</h2>
+
+            <label class="rotulo-secao">{{ rotulo_ativo }} <span class="aviso-limite">(não pode ser alterado)</span></label>
+            <input type="text" value="{{ nomes_ativo_texto }}" disabled style="margin-bottom:18px;">
+
+            <div>
+              <label class="rotulo-secao">{{ rotulo_adv_ativo }} <span class="aviso-limite">(até 5)</span></label>
+              <div id="lista_advogados_autor" class="grupo-dinamico">
+                {% for adv in adv_autor %}
+                <div class="linha-repetida">
+                  <div class="campo campo-grande">
+                    <input type="text" name="advogado_autor_nome" placeholder="Nome do advogado" value="{{ adv.nome }}">
+                  </div>
+                  <div class="campo campo-pequeno">
+                    <input type="text" name="advogado_autor_oab" placeholder="OAB" value="{{ adv.oab or '' }}">
+                  </div>
+                  <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+                </div>
+                {% endfor %}
+              </div>
+              <button type="button" class="btn btn-adicionar" onclick="adicionarAdvogado('autor')">+ Adicionar advogado</button>
+            </div>
+
+            <hr style="border:none;border-top:3px solid var(--texto-suave);margin:22px 0;">
+
+            <label class="rotulo-secao">{{ rotulo_passivo }} <span class="aviso-limite">(não pode ser alterado)</span></label>
+            <input type="text" value="{{ nomes_passivo_texto }}" disabled style="margin-bottom:18px;">
+
+            <div>
+              <label class="rotulo-secao">{{ rotulo_adv_passivo }} <span class="aviso-limite">(até 5)</span></label>
+              <div id="lista_advogados_reu" class="grupo-dinamico">
+                {% for adv in adv_reu %}
+                <div class="linha-repetida">
+                  <div class="campo campo-grande">
+                    <input type="text" name="advogado_reu_nome" placeholder="Nome do advogado" value="{{ adv.nome }}">
+                  </div>
+                  <div class="campo campo-pequeno">
+                    <input type="text" name="advogado_reu_oab" placeholder="OAB" value="{{ adv.oab or '' }}">
+                  </div>
+                  <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+                </div>
+                {% endfor %}
+              </div>
+              <button type="button" class="btn btn-adicionar" onclick="adicionarAdvogado('reu')">+ Adicionar advogado</button>
+            </div>
+          </div>
+
+          <!-- 4. ORGANIZAÇÃO INTERNA -->
+          <div class="secao">
+            <h2>Organização interna</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="centro_resultado">Centro de Resultados (CR)</label>
+                <select id="centro_resultado" name="centro_resultado" onchange="alternarRateio()">
+                  <option value="">Selecione</option>
+                  {% for codigo, nome in crs_lista %}
+                  <option value="{{ codigo }}" {{ 'selected' if p.centro_resultado == codigo else '' }}>{{ codigo }} - {{ nome }}</option>
+                  {% endfor %}
+                  <option value="rateio" {{ 'selected' if p.centro_resultado == 'rateio' else '' }}>Rateio</option>
+                </select>
+              </div>
+              <div class="campo">
+                <label for="escritorio">Escritório</label>
+                <select id="escritorio" name="escritorio">
+                  <option value="">Selecione</option>
+                  {% for nome in ['Dr. Fernando Ximenes','Dr. Luiz Antônio Correa','Dr. Rolim','Dra. Cláudia Mello','Escritório Dannemann','Escritório Vra Advogados'] %}
+                  <option value="{{ nome }}" {{ 'selected' if p.escritorio == nome else '' }}>{{ nome }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <!-- Bloco de rateio - só aparece quando Centro de Resultados = Rateio -->
+            <div id="bloco_rateio" class="grupo-dinamico {{ '' if p.centro_resultado == 'rateio' else 'oculto' }}" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--borda);">
+              <label>CRs que entram no rateio</label>
+              <p class="aviso-limite" style="margin-top:-2px;margin-bottom:10px;">Marque os CRs da lista, ou digite outro que não esteja na lista.</p>
+
+              <div class="chip-risco" style="flex-wrap:wrap;margin-bottom:14px;">
+                {% for codigo, nome in crs_lista %}
+                <label><input type="checkbox" name="rateio_cr" value="{{ codigo }}" {{ 'checked' if codigo in rateio_codigos else '' }}> {{ codigo }} - {{ nome }}</label>
+                {% endfor %}
+              </div>
+
+              <div id="lista_rateio_manual">
+                {% for r in rateio_manuais %}
+                <div class="linha-repetida">
+                  <div class="campo">
+                    <input type="text" name="rateio_cr_manual" placeholder="Nome do CR" value="{{ r.centro_resultado }}">
+                  </div>
+                  <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+                </div>
+                {% endfor %}
+              </div>
+              <button type="button" class="btn btn-adicionar" onclick="adicionarRateioManual()">+ Adicionar outro CR</button>
+            </div>
+          </div>
+
+          <!-- 5. RESULTADO, STATUS E RISCO -->
+          <div class="secao">
+            <h2>Resultado, status e risco</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="resultado">Resultado</label>
+                <select id="resultado" name="resultado">
+                  <option value="">Selecione</option>
+                  {% for valor, texto in [('acordo','Acordo'), ('extinto_sem_resolucao_merito','Extinto Sem Resolução do Mérito'), ('ganhamos','Ganhamos'), ('perdemos','Perdemos')] %}
+                  <option value="{{ valor }}" {{ 'selected' if p.resultado == valor else '' }}>{{ texto }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="campo">
+                <label for="sentenca">Sentença</label>
+                <select id="sentenca" name="sentenca">
+                  <option value="">Selecione</option>
+                  {% for valor, texto in [('acordo','Acordo'), ('desistencia','Desistência'), ('extinto_com_resolucao_merito','Extinto com resolução do mérito'), ('extinto_sem_resolucao_merito','Extinto sem resolução do mérito'), ('improcedente','Improcedente'), ('outros','Outros'), ('procedente_parcial','Parcialmente procedente'), ('procedente','Procedente')] %}
+                  <option value="{{ valor }}" {{ 'selected' if p.sentenca == valor else '' }}>{{ texto }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="linha">
+              <div class="campo">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                  {% for valor, texto in [('arquivado','Arquivado'), ('ativo','Ativo'), ('suspenso','Suspenso')] %}
+                  <option value="{{ valor }}" {{ 'selected' if (p.status or 'ativo') == valor else '' }}>{{ texto }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="campo">
+                <label for="grau_instancia">Grau/Instância atual</label>
+                <select id="grau_instancia" name="grau_instancia">
+                  <option value="">Selecione</option>
+                  {% if eh_trabalhista %}
+                    {% set graus = [('primeira_instancia','1ª Instância'), ('segunda_instancia_trt','2ª Instância - Recurso TRT'), ('execucao','Execução'), ('tst','Instância Extraordinária - TST'), ('stf','Instância Extraordinária - STF'), ('nao_informado','Não informado')] %}
+                  {% else %}
+                    {% set graus = [('primeira_instancia','1ª Instância'), ('segunda_instancia_tj','2ª Instância - TJ'), ('segunda_instancia_trf','2ª Instância - TRF'), ('execucao','Execução'), ('stj','Tribunal Superior - STJ'), ('stf','Tribunal Superior - STF'), ('nao_informado','Não informado')] %}
+                  {% endif %}
+                  {% for valor, texto in graus %}
+                  <option value="{{ valor }}" {{ 'selected' if p.grau_instancia == valor else '' }}>{{ texto }}</option>
+                  {% endfor %}
+                  {# Se o processo foi cadastrado com um grau que não está mais na lista
+                     (ex.: TRT em processo cível), ele continua aparecendo para não se perder. #}
+                  {% if p.grau_instancia and p.grau_instancia not in graus|map(attribute=0)|list %}
+                  <option value="{{ p.grau_instancia }}" selected>{{ p.grau_instancia }} (valor antigo)</option>
+                  {% endif %}
+                </select>
+              </div>
+            </div>
             <div class="campo">
-              <label>Link da audiência</label>
-              <div class="valor"><a href="{{ p.audiencia_1_link }}" target="_blank" rel="noopener">{{ p.audiencia_1_link }}</a></div>
-            </div>
-            {% endif %}
-          </div>
-          <div class="linha">
-            {{ cv('Última audiência', p.data_audiencia_2.strftime('%d/%m/%Y') if p.data_audiencia_2 else '', 'campo-pequeno') }}
-            {{ cv('Audiência inicial', p.data_audiencia_3.strftime('%d/%m/%Y') if p.data_audiencia_3 else '') }}
-          </div>
-          <div class="linha">
-            {{ cv('Data do arquivamento', p.data_arquivamento.strftime('%d/%m/%Y') if p.data_arquivamento else '', 'campo-pequeno') }}
-            {{ cv('Tempo de tramitação', texto_tramitacao) }}
-          </div>
-        </div>
-
-        <!-- 3. PARTES ENVOLVIDAS -->
-        <div class="secao">
-          <h2>Partes envolvidas</h2>
-
-          <label class="rotulo-secao">{{ rotulo_ativo }}</label>
-          <div class="valor{{ '' if nomes_ativo_texto else ' texto-vazio' }}" style="margin-bottom:18px;">{{ nomes_ativo_texto or '—' }}</div>
-
-          <label class="rotulo-secao">{{ rotulo_adv_ativo }}</label>
-          <div class="valor{{ '' if ns.adv_autor_texto else ' texto-vazio' }}">{{ ns.adv_autor_texto or '—' }}</div>
-
-          <hr style="border:none;border-top:3px solid var(--texto-suave);margin:22px 0;">
-
-          <label class="rotulo-secao">{{ rotulo_passivo }}</label>
-          <div class="valor{{ '' if nomes_passivo_texto else ' texto-vazio' }}" style="margin-bottom:18px;">{{ nomes_passivo_texto or '—' }}</div>
-
-          <label class="rotulo-secao">{{ rotulo_adv_passivo }}</label>
-          <div class="valor{{ '' if ns.adv_reu_texto else ' texto-vazio' }}">{{ ns.adv_reu_texto or '—' }}</div>
-        </div>
-
-        <!-- 4. ORGANIZAÇÃO INTERNA -->
-        <div class="secao">
-          <h2>Organização interna</h2>
-          <div class="linha">
-            {{ cv('Centro de Resultados (CR)', texto_cr) }}
-            {{ cv('Escritório', p.escritorio) }}
-          </div>
-          {% if p.centro_resultado == 'rateio' %}
-          <div class="linha">
-            {{ cv('CRs no rateio', ns.rateio_texto) }}
-          </div>
-          {% endif %}
-        </div>
-
-        <!-- 5. RESULTADO, STATUS E RISCO -->
-        <div class="secao">
-          <h2>Resultado, status e risco</h2>
-          <div class="linha">
-            {{ cv('Resultado', p.resultado|title if p.resultado else '') }}
-            {{ cv('Sentença', p.sentenca|title if p.sentenca else '') }}
-          </div>
-          <div class="linha">
-            {{ cv('Grau/Instância atual', rotulos_grau_instancia.get(p.grau_instancia), '', 'flex: 2 1 300px;') }}
-            <div class="campo" style="flex: 0 1 140px; margin-left:32px;">
-              <label>Status</label>
-              {% if p.status %}
-              <span class="selo-status {{ p.status }}">{{ rotulos_status.get(p.status, p.status) }}</span>
-              {% else %}
-              <span class="texto-vazio">—</span>
-              {% endif %}
-            </div>
-            <div class="campo" style="flex: 0 1 140px;">
               <label>Risco</label>
-              {% if p.risco %}
-              <span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>
-              {% else %}
-              <span class="texto-vazio">—</span>
+              <div class="chip-risco">
+                {% for valor, texto in [('remoto','Remoto'), ('possivel','Possível'), ('provavel','Provável')] %}
+                <label><input type="radio" name="risco" value="{{ valor }}" {{ 'checked' if p.risco == valor else '' }}> {{ texto }}</label>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. PEDIDOS E REQUERIMENTOS -->
+          {% if eh_recuperacao %}
+          {% set titulos = p.titulos_recuperacao|sort(attribute='ordem') %}
+          {% include "_titulos_recuperacao.html" %}
+
+          {% set parcelas_acordo = p.acordos_recebimento|sort(attribute='ordem') %}
+          {% include "_acordo_recebimento.html" %}
+          {% else %}
+          <div class="secao">
+            <h2>Pedidos e requerimentos</h2>
+            {% if eh_trabalhista %}
+              <div class="linha">
+                <div class="campo campo-grande">
+                  <label for="select_verba">Pedido / verba</label>
+                  <select id="select_verba">
+                    <option value="">Selecione</option>
+                    {% for verba in ['13º salário proporcional','Adicional de insalubridade','Adicional de periculosidade','Adicional noturno','Aviso-prévio','Comissões','Diferenças salariais','Equiparação salarial','Férias em Dobro + 1/3','Férias proporcionais + 1/3','Férias vencidas + 1/3','FGTS (8%) não depositado','Honorários','Horas extras','Indenização por Assédio Moral','Indenização por danos morais','Intervalo Interjornada','Intervalo intrajornada','Multa do art. 467 da CLT','Multa do art. 477 da CLT','Outros','Prêmios','Recolhimento do FGTS 8%','Recolhimento FGTS - Multa de 40%','Reconhecimento de vínculo empregatício','Retificação/anotação da CTPS','Saldo de salário','Seguro-desemprego'] %}
+                    <option value="{{ verba }}">{{ verba }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="campo campo-pequeno">
+                  <label for="valor_verba_display">Valor (R$)</label>
+                  <input type="text" inputmode="numeric" id="valor_verba_display" placeholder="R$ 0,00" oninput="formatarDinheiro(this)">
+                </div>
+                <div class="campo campo-pequeno">
+                  <label for="situacao_verba">Situação</label>
+                  <select id="situacao_verba">
+                    <option value="deferido">Deferido</option>
+                    <option value="em_analise" selected>Em análise</option>
+                    <option value="indeferido">Indeferido</option>
+                  </select>
+                </div>
+                <div class="campo" style="flex:0 0 auto;align-self:flex-end;margin-bottom:14px;">
+                  <button type="button" class="btn btn-adicionar" onclick="adicionarVerba()">+ Adicionar novo</button>
+                </div>
+              </div>
+
+              <div id="lista_verbas" class="grupo-dinamico">
+                {% for ped in p.pedidos_trabalhistas %}
+                <div class="linha-repetida">
+                  <div class="campo campo-grande">
+                    <input type="text" name="pedido_verba" value="{{ ped.verba }}" readonly>
+                  </div>
+                  <div class="campo campo-pequeno">
+                    <div class="input-valor-moeda">
+                      <input type="text" class="valor-verba-linha" value="{{ (ped.valor|moeda|replace('R$ ', '')) if ped.valor is not none else '0,00' }}" readonly>
+                      <span class="moeda-simbolo">R$</span>
+                    </div>
+                    <input type="hidden" name="pedido_valor" value="{{ ped.valor if ped.valor is not none else 0 }}">
+                  </div>
+                  <div class="campo campo-pequeno" style="align-self:center;">
+                    <select name="pedido_status" class="selo-pedido selo-pedido-select {{ ped.status or 'em_analise' }}" onchange="this.className = 'selo-pedido selo-pedido-select ' + this.value">
+                      <option value="em_analise" {{ 'selected' if (ped.status or 'em_analise') == 'em_analise' else '' }}>Em análise</option>
+                      <option value="deferido" {{ 'selected' if ped.status == 'deferido' else '' }}>Deferido</option>
+                      <option value="indeferido" {{ 'selected' if ped.status == 'indeferido' else '' }}>Indeferido</option>
+                    </select>
+                  </div>
+                  <button type="button" class="btn btn-remover" onclick="this.parentElement.remove(); calcularTotalPedidos()">Remover</button>
+                </div>
+                {% endfor %}
+              </div>
+
+              <div class="linha" style="margin-top:8px;padding-top:14px;border-top:1px solid var(--borda);">
+                <div class="campo">
+                  <label for="total_pedidos">Total dos pedidos</label>
+                  <input type="text" id="total_pedidos" readonly value="R$ 0,00">
+                </div>
+              </div>
+            {% else %}
+              <div class="grid-requerimentos">
+                {% for descricao in ['Atendimento Loja','Cancelamento da compra','Devolução do valor pago','Indenização danos materiais','Indenização danos morais','Não recebeu produto do conserto','Perícia Técnica','Produto com defeito','Responsabilidade solidária','Responsabilidade subsidiária','Tempo de retorno garantia','Tutela antecipada'] %}
+                <label><input type="checkbox" name="pedido_civel" value="{{ descricao }}" {{ 'checked' if descricao in descricoes_pedidos_civeis else '' }}> {{ descricao }}</label>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <!-- 7. ACOMPANHAMENTO -->
+          <div class="secao">
+            <h2>Acompanhamento</h2>
+
+            <label>Últimos movimentos</label>
+            <div id="lista_movimentos" class="grupo-dinamico">
+              {% for m in p.movimentos|sort(attribute='data_movimento') %}
+              <div class="linha-repetida">
+                <div class="campo">
+                  <input type="date" name="movimento_data" value="{{ m.data_movimento.isoformat() if m.data_movimento else '' }}">
+                </div>
+                <div class="campo">
+                  <input type="text" name="movimento_tipo" placeholder="Ex.: juntada de petição" value="{{ m.tipo_movimento }}">
+                </div>
+                <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+              </div>
+              {% endfor %}
+            </div>
+            <button type="button" class="btn btn-adicionar" onclick="adicionarMovimento()">+ Adicionar movimento</button>
+
+            <div class="campo" style="margin-top:18px;">
+              <label for="resumo">Resumo do processo</label>
+              <textarea id="resumo" name="resumo">{{ p.resumo or '' }}</textarea>
+            </div>
+
+            <div class="campo">
+              <label for="arquivo_relatorio">Importar relatório</label>
+              <input type="file" id="arquivo_relatorio" name="arquivo_relatorio">
+              {% if p.arquivo_relatorio %}
+              <p class="aviso-limite" style="margin-top:6px;">Relatório já importado: {{ p.arquivo_relatorio }}. Escolher um novo arquivo substitui o atual.</p>
               {% endif %}
             </div>
           </div>
-        </div>
 
-        <!-- 6. PEDIDOS E REQUERIMENTOS -->
-        <div class="secao">
-          <h2>Pedidos e requerimentos</h2>
-          {% if eh_trabalhista %}
-            {% if p.pedidos_trabalhistas %}
-            <div class="tabela-wrap">
-              <table class="tabela-processos">
-                <thead><tr><th>Pedido/Verba</th><th style="text-align:center;">Valor</th><th>Situação</th></tr></thead>
-                <tbody>
-                  {% for ped in p.pedidos_trabalhistas %}
-                  <tr>
-                    <td>{{ ped.verba }}</td>
-                    <td>
-                      {% if ped.valor is not none %}
-                      {% set texto_moeda = ped.valor|moeda %}
-                      <div style="display:flex; justify-content:space-between;">
-                        <span>{{ texto_moeda.split(' ')[0] }}</span>
-                        <span>{{ texto_moeda.split(' ', 1)[1] }}</span>
-                      </div>
-                      {% else %}
-                      <div style="text-align:right;">—</div>
-                      {% endif %}
-                    </td>
-                    <td><span class="selo-pedido {{ ped.status or 'em_analise' }}">{{ rotulos_status_pedido.get(ped.status, 'Em análise') }}</span></td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+          <!-- 8. VALORES FINANCEIROS -->
+          <div class="secao">
+            <h2>Valores financeiros</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="valor_final_display">{% if eh_recuperacao %}Valor Recuperado (R$){% elif eh_trabalhista %}Valor pago ao reclamante (R$){% else %}Valor pago ao autor (R$){% endif %}</label>
+                <input type="text" inputmode="numeric" id="valor_final_display" placeholder="R$ 0,00"
+                       value="{{ p.valor_final|moeda if p.valor_final is not none else '' }}"
+                       data-alvo="valor_final" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="valor_final" name="valor_final" value="{{ p.valor_final if p.valor_final is not none else '' }}">
+              </div>
+              <div class="campo">
+                <label for="honorarios_advogado_display">Honorários Advocatícios (R$)</label>
+                <input type="text" inputmode="numeric" id="honorarios_advogado_display" placeholder="R$ 0,00"
+                       value="{{ p.honorarios_advogado|moeda if p.honorarios_advogado is not none else '' }}"
+                       data-alvo="honorarios_advogado" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="honorarios_advogado" name="honorarios_advogado" value="{{ p.honorarios_advogado if p.honorarios_advogado is not none else '' }}">
+              </div>
+              <div class="campo">
+                <label for="economia_gerada_display">{{ 'Saldo Não Recuperado (R$)' if eh_recuperacao else 'Economia Gerada (R$)' }}</label>
+                <input type="text" inputmode="numeric" id="economia_gerada_display" placeholder="R$ 0,00"
+                       value="{{ p.economia_gerada|moeda if p.economia_gerada is not none else '' }}"
+                       data-alvo="economia_gerada" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="economia_gerada" name="economia_gerada" value="{{ p.economia_gerada if p.economia_gerada is not none else '' }}">
+              </div>
             </div>
-            {% else %}
-            <p class="texto-vazio">Nenhum pedido cadastrado.</p>
-            {% endif %}
-          {% elif eh_recuperacao %}
-            {% if p.titulos_recuperacao %}
-            <div class="tabela-wrap">
-              <table class="tabela-processos tabela-titulos-detalhe">
-                <thead>
-                  <tr>
-                    <th>Company</th><th>Cliente</th><th>Nota Fiscal</th>
-                    <th>Emissão</th><th>Vencimento</th>
-                    <th class="col-num">Valor</th><th class="col-num">Saldo</th>
-                    <th class="col-num">Juros</th><th class="col-num">Correção</th>
-                    <th class="col-num">Outros</th><th class="col-num">Total</th>
-                    <th>Situação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for t in p.titulos_recuperacao|sort(attribute='ordem') %}
-                  <tr>
-                    <td>{{ t.company or '—' }}</td>
-                    <td>{{ t.cliente or '—' }}</td>
-                    <td>{{ t.nota_fiscal or '—' }}</td>
-                    <td>{{ t.emissao.strftime('%d/%m/%Y') if t.emissao else '—' }}</td>
-                    <td>{{ t.vencimento.strftime('%d/%m/%Y') if t.vencimento else '—' }}</td>
-                    {% for numero in [t.valor, t.saldo, t.juros, t.correcao, t.outros, t.total] %}
-                    <td class="col-num">{{ (numero|moeda)|replace('R$ ', '') if numero is not none else '—' }}</td>
-                    {% endfor %}
-                    <td><span class="selo-pedido {{ t.status or 'em_analise' }}">{{ rotulos_status_pedido.get(t.status, 'Em análise') }}</span></td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td colspan="5" class="rodape-rotulo">Totais ({{ p.titulos_recuperacao|length }} título(s))</td>
-                    {% for campo in ['valor', 'saldo', 'juros', 'correcao', 'outros', 'total'] %}
-                    {% set soma = p.titulos_recuperacao|map(attribute=campo)|reject('none')|sum %}
-                    <td class="col-num">{{ (soma|moeda)|replace('R$ ', '') }}</td>
-                    {% endfor %}
-                    <td></td>
-                  </tr>
-                </tfoot>
-              </table>
+            <div class="linha">
+              <div class="campo">
+                <label for="honorarios_periciais_display">Honorários periciais (R$)</label>
+                <input type="text" inputmode="numeric" id="honorarios_periciais_display" placeholder="R$ 0,00"
+                       value="{{ p.honorarios_periciais|moeda if p.honorarios_periciais is not none else '' }}"
+                       data-alvo="honorarios_periciais" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="honorarios_periciais" name="honorarios_periciais" value="{{ p.honorarios_periciais if p.honorarios_periciais is not none else '' }}">
+              </div>
+              <div class="campo">
+                <label for="custas_processuais_display">Custas processuais (R$)</label>
+                <input type="text" inputmode="numeric" id="custas_processuais_display" placeholder="R$ 0,00"
+                       value="{{ p.custas_processuais|moeda if p.custas_processuais is not none else '' }}"
+                       data-alvo="custas_processuais" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="custas_processuais" name="custas_processuais" value="{{ p.custas_processuais if p.custas_processuais is not none else '' }}">
+              </div>
+              <div class="campo">
+                <label for="deposito_recursal_display">Depósito recursal (R$)</label>
+                <input type="text" inputmode="numeric" id="deposito_recursal_display" placeholder="R$ 0,00"
+                       value="{{ p.deposito_recursal|moeda if p.deposito_recursal is not none else '' }}"
+                       data-alvo="deposito_recursal" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="deposito_recursal" name="deposito_recursal" value="{{ p.deposito_recursal if p.deposito_recursal is not none else '' }}">
+              </div>
+              <div class="campo">
+                <label for="valor_alvara_display">Alvará (R$)</label>
+                <input type="text" inputmode="numeric" id="valor_alvara_display" placeholder="R$ 0,00"
+                       value="{{ p.valor_alvara|moeda if p.valor_alvara is not none else '' }}"
+                       data-alvo="valor_alvara" oninput="formatarDinheiro(this)">
+                <input type="hidden" id="valor_alvara" name="valor_alvara" value="{{ p.valor_alvara if p.valor_alvara is not none else '' }}">
+              </div>
+              <div class="campo">
+                <label for="data_alvara">Data do alvará</label>
+                <input type="date" id="data_alvara" name="data_alvara" value="{{ p.data_alvara.isoformat() if p.data_alvara else '' }}">
+              </div>
             </div>
-            {% else %}
-            <p class="texto-vazio">Nenhum título cadastrado.</p>
-            {% endif %}
-
-            {% if p.acordos_recebimento %}
-            <h3 class="subtitulo-secao">Acordos e Recebimentos</h3>
-            <div class="tabela-wrap">
-              <table class="tabela-processos tabela-titulos-detalhe">
-                <thead>
-                  <tr>
-                    <th>Parcela</th><th>Vencimento</th>
-                    <th class="col-num">Valor da Parcela</th>
-                    <th class="col-num">Honorários Êxito</th>
-                    <th class="col-num">Sucumbência</th>
-                    <th class="col-num">Valor Recebido</th>
-                    <th>Data Recebimento</th>
-                    <th class="col-num">Valor Pago Adv</th>
-                    <th>Data Pagto Adv</th>
-                    <th>Situação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for a in p.acordos_recebimento|sort(attribute='ordem') %}
-                  <tr>
-                    <td>{{ a.parcela or '—' }}</td>
-                    <td>{{ a.vencimento.strftime('%d/%m/%Y') if a.vencimento else '—' }}</td>
-                    {% for numero in [a.valor_parcela, a.honorarios_exito, a.sucumbencia, a.valor_recebido] %}
-                    <td class="col-num">{{ (numero|moeda)|replace('R$ ', '') if numero is not none else '—' }}</td>
-                    {% endfor %}
-                    <td>{{ a.data_recebimento.strftime('%d/%m/%Y') if a.data_recebimento else '—' }}</td>
-                    <td class="col-num">{{ (a.valor_pago_adv|moeda)|replace('R$ ', '') if a.valor_pago_adv is not none else '—' }}</td>
-                    <td>{{ a.data_pagto_adv.strftime('%d/%m/%Y') if a.data_pagto_adv else '—' }}</td>
-                    {% set situacao_parcela = a.situacao or ('pago' if a.valor_recebido else 'pendente') %}
-                    <td><span class="selo-pedido situacao-{{ situacao_parcela }}">{{ 'Pago' if situacao_parcela == 'pago' else 'Pendente' }}</span></td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td colspan="2" class="rodape-rotulo">Totais ({{ p.acordos_recebimento|length }} parcela(s))</td>
-                    {% for campo in ['valor_parcela', 'honorarios_exito', 'sucumbencia', 'valor_recebido'] %}
-                    {% set soma = p.acordos_recebimento|map(attribute=campo)|reject('none')|sum %}
-                    <td class="col-num">{{ (soma|moeda)|replace('R$ ', '') }}</td>
-                    {% endfor %}
-                    <td></td>
-                    {% set soma_pago_adv = p.acordos_recebimento|map(attribute='valor_pago_adv')|reject('none')|sum %}
-                    <td class="col-num">{{ (soma_pago_adv|moeda)|replace('R$ ', '') }}</td>
-                    <td colspan="2"></td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-            {% endif %}
-          {% else %}
-            {{ cv('Pedidos marcados', p.pedidos_civeis|map(attribute='descricao')|join(', ')) }}
-          {% endif %}
-        </div>
-
-        <!-- 7. ACOMPANHAMENTO -->
-        <div class="secao">
-          <h2>Acompanhamento</h2>
-
-          <label>Últimos movimentos</label>
-          {% set movimentos_ordenados = p.movimentos|sort(attribute='data_movimento') %}
-          {% if movimentos_ordenados %}
-          <ul class="lista-itens">
-            {% for m in movimentos_ordenados %}
-            <li>{{ m.data_movimento.strftime('%d/%m/%Y') if m.data_movimento else '—' }} — {{ m.tipo_movimento }}</li>
-            {% endfor %}
-          </ul>
-          {% else %}
-          <p class="texto-vazio">Nenhum movimento cadastrado.</p>
-          {% endif %}
-
-          <div class="campo" style="margin-top:18px;">
-            <label>Resumo do processo</label>
-            {% if p.resumo %}
-            <div class="valor" style="min-height:80px; align-items:flex-start; white-space:pre-wrap;">{{ p.resumo }}</div>
-            {% else %}
-            <div class="valor texto-vazio" style="min-height:80px; align-items:flex-start;">—</div>
-            {% endif %}
           </div>
 
-          <div class="campo">
-            <label>Relatório importado</label>
-            <div class="valor{{ '' if p.arquivo_relatorio else ' texto-vazio' }}">{{ p.arquivo_relatorio or 'Nenhum relatório importado.' }}</div>
-          </div>
-        </div>
+          <button type="submit" class="btn btn-salvar">Salvar alterações</button>
 
-        <!-- 8. VALORES FINANCEIROS -->
-        <div class="secao">
-          <h2>Valores financeiros</h2>
-          <div class="linha">
-            {{ cv_moeda('Valor Recuperado (R$)' if eh_recuperacao else ('Valor pago ao reclamante (R$)' if eh_trabalhista else 'Valor pago ao autor (R$)'), p.valor_final) }}
-            {{ cv_moeda('Honorários Advocatícios (R$)', p.honorarios_advogado) }}
-            {{ cv_moeda('Saldo Não Recuperado (R$)' if eh_recuperacao else 'Economia Gerada (R$)', p.economia_gerada) }}
-          </div>
-          <div class="linha">
-            {{ cv_moeda('Honorários periciais (R$)', p.honorarios_periciais) }}
-            {{ cv_moeda('Custas processuais (R$)', p.custas_processuais) }}
-            {{ cv_moeda('Depósito recursal (R$)', p.deposito_recursal) }}
-          </div>
-          <div class="linha">
-            {{ cv_moeda('Alvará (R$)', p.valor_alvara) }}
-            {{ cv('Data do alvará', p.data_alvara.strftime('%d/%m/%Y') if p.data_alvara else '') }}
-          </div>
-        </div>
-
-
+        </form>
       
+{% endblock %}
+
+{% block scripts_extra %}
+<!-- Modelos escondidos usados pelo JavaScript para criar novas linhas -->
+  <template id="modelo_advogado">
+    <div class="linha-repetida">
+      <div class="campo campo-grande">
+        <input type="text" name="__NOME__" placeholder="Nome do advogado">
+      </div>
+      <div class="campo campo-pequeno">
+        <input type="text" name="__OAB__" placeholder="OAB">
+      </div>
+      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+    </div>
+  </template>
+
+  <template id="modelo_movimento">
+    <div class="linha-repetida">
+      <div class="campo">
+        <input type="date" name="movimento_data">
+      </div>
+      <div class="campo">
+        <input type="text" name="movimento_tipo" placeholder="Ex.: juntada de petição">
+      </div>
+      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+    </div>
+  </template>
+
+  <template id="modelo_rateio_manual">
+    <div class="linha-repetida">
+      <div class="campo">
+        <input type="text" name="rateio_cr_manual" placeholder="Nome do CR">
+      </div>
+      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+    </div>
+  </template>
+
+  {% if eh_trabalhista %}
+  <template id="modelo_verba">
+    <div class="linha-repetida">
+      <div class="campo campo-grande">
+        <input type="text" name="pedido_verba" readonly>
+      </div>
+      <div class="campo campo-pequeno">
+        <div class="input-valor-moeda">
+          <input type="text" class="valor-verba-linha" readonly>
+          <span class="moeda-simbolo">R$</span>
+        </div>
+        <input type="hidden" name="pedido_valor">
+      </div>
+      <div class="campo campo-pequeno" style="align-self:center;">
+        <select name="pedido_status" class="selo-pedido selo-pedido-select" onchange="this.className = 'selo-pedido selo-pedido-select ' + this.value">
+          <option value="em_analise">Em análise</option>
+          <option value="deferido">Deferido</option>
+          <option value="indeferido">Indeferido</option>
+        </select>
+      </div>
+      <button type="button" class="btn btn-remover" onclick="this.parentElement.remove(); calcularTotalPedidos()">Remover</button>
+    </div>
+  </template>
+  {% endif %}
+
+  <script>
+    // Formata automaticamente os campos de dinheiro no padrão contábil (R$ 1.234,56),
+    // enquanto guarda o valor numérico puro (1234.56) no campo escondido correspondente.
+    function formatarDinheiro(campoTexto) {
+      const idAlvo = campoTexto.dataset.alvo;
+      const campoOculto = idAlvo ? document.getElementById(idAlvo) : null;
+      const digitos = campoTexto.value.replace(/\D/g, '');
+
+      if (!digitos) {
+        campoTexto.value = '';
+        if (campoOculto) campoOculto.value = '';
+        return;
+      }
+
+      const valor = parseInt(digitos, 10) / 100;
+      campoTexto.value = 'R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (campoOculto) campoOculto.value = valor.toFixed(2);
+    }
+
+    // Converte um texto já formatado como dinheiro (ex.: "R$ 1.234,56") em número puro (1234.56)
+    function paraNumero(textoFormatado) {
+      const digitos = (textoFormatado || '').replace(/\D/g, '');
+      if (!digitos) return 0;
+      return parseInt(digitos, 10) / 100;
+    }
+
+    // Calcula o tempo de tramitação: (arquivamento ou hoje) - distribuição, em dias
+    function calcularTempoTramitacao() {
+      const dataDistStr = document.getElementById('data_distribuicao').value;
+      const dataArqStr = document.getElementById('data_arquivamento').value;
+      const campo = document.getElementById('tempo_tramitacao');
+
+      if (!dataDistStr) {
+        campo.value = '';
+        return;
+      }
+
+      const dataDist = new Date(dataDistStr + 'T00:00:00');
+      const dataFim = dataArqStr ? new Date(dataArqStr + 'T00:00:00') : new Date();
+      dataFim.setHours(0, 0, 0, 0);
+
+      const diffMs = dataFim - dataDist;
+      const dias = Math.round(diffMs / (1000 * 60 * 60 * 24));
+      campo.value = (dias >= 0 ? dias : 0) + ' dias';
+    }
+
+    // Adiciona uma linha de pedido/verba trabalhista, usando o que está selecionado no topo
+    function adicionarVerba() {
+      const select = document.getElementById('select_verba');
+      const inputValor = document.getElementById('valor_verba_display');
+      const selectStatus = document.getElementById('situacao_verba');
+
+      if (!select.value) {
+        alert('Selecione um pedido/verba antes de adicionar.');
+        return;
+      }
+
+      const valorNumerico = paraNumero(inputValor.value);
+      const statusEscolhido = selectStatus.value;
+
+      const container = document.getElementById('lista_verbas');
+      const modelo = document.getElementById('modelo_verba').content.cloneNode(true);
+      const campoNome = modelo.querySelector('input[name="pedido_verba"]');
+      const campoValorDisplay = modelo.querySelector('.valor-verba-linha');
+      const campoValorOculto = modelo.querySelector('input[name="pedido_valor"]');
+      const seloStatus = modelo.querySelector('select[name="pedido_status"]');
+
+      campoNome.value = select.value;
+      campoValorDisplay.value = valorNumerico.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      campoValorOculto.value = valorNumerico.toFixed(2);
+      seloStatus.value = statusEscolhido;
+      seloStatus.className = 'selo-pedido selo-pedido-select ' + statusEscolhido;
+
+      container.appendChild(modelo);
+
+      selectStatus.value = 'em_analise';
+
+      select.value = '';
+      inputValor.value = '';
+      calcularTotalPedidos();
+    }
+
+    // Soma todos os valores dos pedidos/verbas já adicionados
+    function calcularTotalPedidos() {
+      const valores = document.querySelectorAll('#lista_verbas input[name="pedido_valor"]');
+      let total = 0;
+      valores.forEach((campo) => {
+        total += parseFloat(campo.value) || 0;
+      });
+      const campoTotal = document.getElementById('total_pedidos');
+      if (campoTotal) {
+        campoTotal.value = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+    }
+
+    // Mostra o campo de link da audiência quando o tipo não é presencial
+    function alternarLinkAudiencia() {
+      const tipo = document.getElementById('audiencia_1_tipo').value;
+      const mostrar = tipo === 'telepresencial' || tipo === 'videoconferencia' || tipo === 'hibrida';
+      document.getElementById('campo_link_audiencia').classList.toggle('oculto', !mostrar);
+    }
+
+    // Mostra o bloco de rateio só quando Centro de Resultados = "rateio"
+    function alternarRateio() {
+      const valor = document.getElementById('centro_resultado').value;
+      document.getElementById('bloco_rateio').classList.toggle('oculto', valor !== 'rateio');
+    }
+
+    // Adiciona uma linha de CR digitado manualmente no rateio
+    function adicionarRateioManual() {
+      const container = document.getElementById('lista_rateio_manual');
+      const modelo = document.getElementById('modelo_rateio_manual').content.cloneNode(true);
+      container.appendChild(modelo);
+    }
+
+    // Adiciona uma linha de advogado (autor/reclamante ou réu/reclamada), respeitando o limite de 5
+    function adicionarAdvogado(lado) {
+      const container = document.getElementById(lado === 'autor' ? 'lista_advogados_autor' : 'lista_advogados_reu');
+      if (container.children.length >= 5) {
+        alert('Limite de 5 advogados por lado.');
+        return;
+      }
+      const modelo = document.getElementById('modelo_advogado').content.cloneNode(true);
+      const inputs = modelo.querySelectorAll('input');
+      inputs[0].name = lado === 'autor' ? 'advogado_autor_nome' : 'advogado_reu_nome';
+      inputs[1].name = lado === 'autor' ? 'advogado_autor_oab' : 'advogado_reu_oab';
+      container.appendChild(modelo);
+    }
+
+    // Adiciona uma linha de movimento (data + tipo)
+    function adicionarMovimento() {
+      const container = document.getElementById('lista_movimentos');
+      const modelo = document.getElementById('modelo_movimento').content.cloneNode(true);
+      container.appendChild(modelo);
+    }
+
+    // Confirmação obrigatória antes de salvar as alterações do processo
+    function confirmarEdicao() {
+      return confirm('ATENÇÃO: ESTA AÇÃO NÃO PODERÁ SER DESFEITA.\n\nTEM CERTEZA QUE DESEJA SALVAR AS ALTERAÇÕES NESTE PROCESSO?');
+    }
+
+    // Ao carregar a página, calcula o total dos pedidos já existentes (trabalhista)
+    window.addEventListener('DOMContentLoaded', () => {
+      calcularTotalPedidos();
+    });
+  </script>
 {% endblock %}
