@@ -187,11 +187,18 @@
         </div>
 
         {% if processos %}
-        <div style="display:flex; gap:24px; flex-wrap:wrap; background:var(--papel-cartao); border:1px solid var(--borda); border-radius:4px; padding:12px 16px; margin-bottom:12px; font-size:13.5px;">
-          <span><strong>{{ processos|length }}</strong> processo(s)</span>
-          <span><strong>{{ total_titulos }}</strong> título(s)</span>
-          <span>Valor total: <strong>{{ total_geral|moeda }}</strong></span>
-        </div>
+        {# Célula de dinheiro: cifrão colado à esquerda, valor à direita #}
+        {% macro celula_moeda(valor) %}
+          {% if valor is not none %}
+          {% set texto_moeda = valor|moeda %}
+          <div style="display:flex; justify-content:space-between; gap:10px;">
+            <span>{{ texto_moeda.split(' ')[0] }}</span>
+            <span>{{ texto_moeda.split(' ', 1)[1] }}</span>
+          </div>
+          {% else %}
+          <div style="text-align:right;">—</div>
+          {% endif %}
+        {% endmacro %}
 
         <div class="scroll-topo" id="scrollTopo"><div id="scrollTopoInterno"></div></div>
 
@@ -202,12 +209,12 @@
                 <th>Número do processo</th>
                 <th>Autor(es)</th>
                 <th>Réu</th>
-                <th>Clientes dos títulos</th>
-                <th>Títulos</th>
                 <th>Risco</th>
                 <th>Status</th>
                 <th>Tempo de tramitação</th>
-                <th>Valor total dos títulos</th>
+                <th>Valor da causa</th>
+                <th>Acordo</th>
+                <th>Sentença à receber</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -218,28 +225,13 @@
                 <td>{{ p.partes|selectattr('tipo', 'equalto', 'autor')|map(attribute='nome')|join(', ') or '—' }}</td>
                 <td>{{ p.partes|selectattr('tipo', 'equalto', 'reu')|map(attribute='nome')|join(', ') or '—' }}</td>
                 <td>
-                  {% set clientes = p.titulos_recuperacao|map(attribute='cliente')|reject('none')|unique|list %}
-                  {% if clientes %}
-                    {{ clientes[:3]|join(', ') }}{% if clientes|length > 3 %} <span class="texto-vazio">+{{ clientes|length - 3 }}</span>{% endif %}
-                  {% else %}—{% endif %}
-                </td>
-                <td style="text-align:center;">{{ p.titulos_recuperacao|length or '—' }}</td>
-                <td>
                   {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif %}
                 </td>
                 <td><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></td>
-                <td>{{ p.dias_ativos if p.dias_ativos is not none else '—' }}{{ ' dias' if p.dias_ativos is not none else '' }}</td>
-                <td>
-                  {% if p.total_titulos_recuperacao is not none %}
-                  {% set texto_moeda = p.total_titulos_recuperacao|moeda %}
-                  <div style="display:flex; justify-content:space-between;">
-                    <span>{{ texto_moeda.split(' ')[0] }}</span>
-                    <span>{{ texto_moeda.split(' ', 1)[1] }}</span>
-                  </div>
-                  {% else %}
-                  <div style="text-align:right;">—</div>
-                  {% endif %}
-                </td>
+                <td style="text-align:right; white-space:nowrap;">{{ p.dias_ativos if p.dias_ativos is not none else '—' }}{{ ' dias' if p.dias_ativos is not none else '' }}</td>
+                <td style="min-width:130px;">{{ celula_moeda(p.valor_causa) }}</td>
+                <td style="min-width:130px;">{{ celula_moeda(p.total_acordo) }}</td>
+                <td style="min-width:130px;">{{ celula_moeda(p.sentenca_a_receber) }}</td>
                 <td>
                   <a class="btn-detalhe" href="{{ url_for('processo_detalhe', processo_id=p.id) }}">Ver detalhes</a>
                   <a class="btn-detalhe btn-editar" href="{{ url_for('processo_editar', processo_id=p.id) }}">Editar</a>
