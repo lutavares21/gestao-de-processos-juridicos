@@ -20,7 +20,8 @@
           'civel': 'Cível',
           'civel_recuperacao': 'Cível - Recuperação',
           'trabalhista': 'Trabalhista',
-          'tributario': 'Tributário'
+          'tributario': 'Tributário',
+          'licitatorio': 'Licitatório'
         } %}
 
         <div class="secao" style="margin-bottom:16px;">
@@ -43,6 +44,10 @@
                   Cível - Recuperação
                 </label>
                 <label>
+                  <input type="radio" name="tipo" value="licitatorio" {% if tipo_selecionado == 'licitatorio' %}checked{% endif %} onchange="this.form.submit()">
+                  Licitatórios
+                </label>
+                <label>
                   <input type="radio" name="tipo" value="trabalhista" {% if tipo_selecionado == 'trabalhista' %}checked{% endif %} onchange="this.form.submit()">
                   Trabalhista
                 </label>
@@ -63,8 +68,8 @@
                 <input type="text" id="f_parte" name="parte" value="{{ filtros.get('parte', '') }}" placeholder="Nome da parte">
               </div>
               <div class="campo">
-                <label for="f_juizado">Vara/Juizado</label>
-                <input type="text" id="f_juizado" name="juizado" value="{{ filtros.get('juizado', '') }}">
+                <label for="f_advogado">Advogado</label>
+                <input type="text" id="f_advogado" name="advogado" value="{{ filtros.get('advogado', '') }}" placeholder="Nome do advogado">
               </div>
               <div class="campo">
                 <label for="f_comarca">Comarca</label>
