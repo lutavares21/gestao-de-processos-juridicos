@@ -1474,9 +1474,11 @@ def processos_civel_recuperacao():
 @login_required
 def agenda():
     """Agenda de audiências: reúne as audiências (1, 2 e 3) de todos os
-    processos cíveis, cíveis-recuperação, trabalhistas e tributários
+    processos cíveis, cíveis-recuperação, trabalhistas, tributários
     (estes últimos ainda são processos cíveis com tipo_acao='tributario',
-    já que não existe cadastro próprio para tributário)."""
+    já que não existe cadastro próprio para tributário) e licitatórios
+    (origem_cadastro='licitatorio' - o cadastro ainda não existe, então
+    por enquanto essa opção da agenda não retorna nada)."""
     f = request.args
 
     def texto(chave):
@@ -1485,7 +1487,7 @@ def agenda():
     tipo = texto("tipo") or "todos"
     numero_processo = texto("numero_processo")
     parte = texto("parte")
-    juizado = texto("juizado")
+    advogado = texto("advogado")
     comarca = texto("comarca")
     uf = texto("uf")
     tipo_audiencia = texto("tipo_audiencia")
@@ -1506,14 +1508,19 @@ def agenda():
         query = query.filter(
             Processo.origem_cadastro == "civel", Processo.tipo_acao == "tributario"
         )
+    elif tipo == "licitatorio":
+        query = query.filter(Processo.origem_cadastro == "licitatorio")
     # tipo == "todos" -> sem filtro de origem
 
     if numero_processo:
         query = query.filter(Processo.numero_processo.ilike(f"%{numero_processo}%"))
     if parte:
         query = query.filter(Processo.partes.any(Parte.nome.ilike(f"%{parte}%")))
-    if juizado:
-        query = query.filter(Processo.juizado.ilike(f"%{juizado}%"))
+    if advogado:
+        # Mesmo lado que aparece na coluna "Advogado" da agenda (lado "reu").
+        query = query.filter(Processo.advogados.any(
+            db.and_(Advogado.lado == "reu", Advogado.nome.ilike(f"%{advogado}%"))
+        ))
     if comarca:
         query = query.filter(Processo.comarca.ilike(f"%{comarca}%"))
     if uf:
@@ -1544,6 +1551,8 @@ def agenda():
             tipo_processo = "trabalhista"
         elif p.origem_cadastro == "civel_recuperacao":
             tipo_processo = "civel_recuperacao"
+        elif p.origem_cadastro == "licitatorio":
+            tipo_processo = "licitatorio"
         elif p.tipo_acao == "tributario":
             tipo_processo = "tributario"
         else:
@@ -1600,7 +1609,7 @@ def agenda():
     audiencias.sort(key=lambda a: (a["data"], a["horario"] or ""))
 
     campos_filtro = [
-        "numero_processo", "parte", "juizado", "comarca", "uf",
+        "numero_processo", "parte", "advogado", "comarca", "uf",
         "tipo_audiencia", "data_de", "data_ate",
     ]
     filtros_ativos = tipo != "todos" or any(f.get(c, "").strip() for c in campos_filtro)
