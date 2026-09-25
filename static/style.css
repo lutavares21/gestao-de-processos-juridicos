@@ -582,7 +582,7 @@ input[readonly] {
 .inicio-split {
   min-height: 100vh;
   display: flex;
-  background: var(--papel);
+  background: linear-gradient(160deg, #0c1730 0%, #1b2a4a 55%, #24396a 100%);
 }
 
 .inicio-painel-logo {
@@ -596,8 +596,7 @@ input[readonly] {
   justify-content: center;
   padding: 40px;
   overflow: hidden;
-  background: linear-gradient(160deg, #0c1730 0%, #1b2a4a 55%, #24396a 100%);
-  order: 2;
+  background: var(--papel);
 }
 
 .inicio-painel-logo::before {
@@ -605,8 +604,8 @@ input[readonly] {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
   background-size: 42px 42px;
   pointer-events: none;
 }
@@ -615,7 +614,7 @@ input[readonly] {
   content: "";
   position: absolute;
   top: 0;
-  left: 0;
+  right: 0;
   bottom: 0;
   width: 3px;
   background: linear-gradient(180deg, transparent, var(--dourado-logo), transparent);
@@ -695,7 +694,6 @@ input[readonly] {
   display: flex;
   flex-direction: column;
   padding: 28px clamp(24px, 5vw, 64px) 60px;
-  order: 1;
 }
 
 .inicio-userbar {
@@ -735,10 +733,10 @@ input[readonly] {
   }
 
   .inicio-painel-logo::after {
-    top: 0;
+    top: auto;
     left: 0;
     right: 0;
-    bottom: auto;
+    bottom: 0;
     width: auto;
     height: 3px;
     background: linear-gradient(90deg, transparent, var(--dourado-logo), transparent);
