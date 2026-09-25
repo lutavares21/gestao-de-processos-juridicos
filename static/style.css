@@ -47,9 +47,18 @@ body {
   width: 280px;
   flex-shrink: 0;
   background: var(--papel);
-  border-right: 3px solid var(--tinta);
   padding: 26px 0 20px;
   position: relative;
+}
+
+.menu-lateral::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -6px;
+  bottom: 0;
+  width: 3px;
+  background: var(--tinta);
 }
 
 .menu-lateral::after {
