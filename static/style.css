@@ -738,14 +738,13 @@ input[readonly] {
   max-width: 760px;
   text-align: center;
   margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
 }
 
-.inicio-topo h1 {
-  font-family: var(--fonte-titulo);
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--tinta);
-  margin: 0;
+.logo-login {
+  width: min(260px, 100%);
+  height: auto;
 }
 
 .caixa-login {
