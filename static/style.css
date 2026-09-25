@@ -10,6 +10,7 @@
   --selo-claro: #9a3e4d;
   --creme-logo: #fbf7f1;
   --dourado-logo: #c79a4d;
+  --dourado-vivo: #f0a52e;
   --papel: #f7f6f3;
   --papel-cartao: #ffffff;
   --borda: #dcd8cf;
@@ -55,10 +56,10 @@ body {
   content: "";
   position: absolute;
   top: 0;
-  right: -5px;
+  right: -3px;
   bottom: 0;
-  width: 5px;
-  background: var(--dourado-logo);
+  width: 3px;
+  background: var(--tinta);
 }
 
 .menu-lateral::after {
@@ -67,8 +68,8 @@ body {
   top: 0;
   right: -8px;
   bottom: 0;
-  width: 3px;
-  background: var(--tinta);
+  width: 5px;
+  background: var(--dourado-vivo);
 }
 
 .menu-lateral .logo-menu {
