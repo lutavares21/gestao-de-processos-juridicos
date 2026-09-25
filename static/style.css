@@ -55,20 +55,20 @@ body {
   content: "";
   position: absolute;
   top: 0;
-  right: -8px;
+  right: -5px;
   bottom: 0;
-  width: 3px;
-  background: var(--tinta);
+  width: 5px;
+  background: var(--dourado-logo);
 }
 
 .menu-lateral::after {
   content: "";
   position: absolute;
   top: 0;
-  right: -5px;
+  right: -8px;
   bottom: 0;
-  width: 5px;
-  background: var(--dourado-logo);
+  width: 3px;
+  background: var(--tinta);
 }
 
 .menu-lateral .logo-menu {
