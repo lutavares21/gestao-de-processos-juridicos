@@ -852,7 +852,7 @@ input[readonly] {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #e3c17c, var(--dourado-logo));
+  background: linear-gradient(90deg, #f0c04a, #c79a4d 45%, #96722f);
 }
 
 .inicio-blocos .bloco-inicio:hover {
