@@ -46,17 +46,27 @@ body {
 .menu-lateral {
   width: 232px;
   flex-shrink: 0;
-  background: var(--tinta);
-  border-right: 4px solid var(--tinta-clara);
+  background: var(--papel);
+  border-right: 3px solid var(--tinta);
   padding: 26px 0 20px;
+  position: relative;
+}
+
+.menu-lateral::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -3px;
+  bottom: 0;
+  width: 3px;
+  background: var(--dourado-logo);
 }
 
 .menu-lateral .logo-menu {
-  margin: 0 16px 22px;
-  padding: 14px 16px;
+  margin: 0 8px 22px;
+  padding: 8px;
   background: var(--creme-logo);
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
 }
 
 .menu-lateral .logo-menu img {
@@ -70,7 +80,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #c9d2e3;
+  color: var(--texto);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
@@ -79,19 +89,19 @@ body {
 }
 
 .menu-lateral nav a:hover {
-  background: #24365c;
+  background: var(--tinta);
   color: #fff;
 }
 
 .menu-lateral nav a.ativo {
-  background: #24365c;
+  background: var(--tinta);
   color: #fff;
-  border-left: 3px solid var(--selo-claro);
+  border-left: 3px solid var(--dourado-logo);
   font-weight: 600;
 }
 
 .menu-lateral nav a.desabilitado {
-  color: #647192;
+  color: #a8a49a;
   cursor: default;
   pointer-events: none;
 }
@@ -106,7 +116,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  color: #c9d2e3;
+  color: var(--texto);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
@@ -117,12 +127,12 @@ body {
 
 .item-com-submenu:hover > .rotulo-menu,
 .item-com-submenu.ativo > .rotulo-menu {
-  background: #24365c;
+  background: var(--tinta);
   color: #fff;
 }
 
 .item-com-submenu.ativo > .rotulo-menu {
-  border-left: 3px solid var(--selo-claro);
+  border-left: 3px solid var(--dourado-logo);
   font-weight: 600;
 }
 
@@ -137,7 +147,7 @@ body {
   padding: 0;
   max-height: 0;
   overflow: hidden;
-  background: #16233d;
+  background: var(--papel-cartao);
   transition: max-height 0.15s ease;
 }
 
@@ -151,7 +161,7 @@ body {
   justify-content: space-between;
   gap: 8px;
   padding: 9px 24px 9px 40px;
-  color: #a9b6d0;
+  color: var(--texto-suave);
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
@@ -159,9 +169,9 @@ body {
 }
 
 .submenu li a:hover {
-  background: #1e2f52;
+  background: var(--tinta);
   color: #fff;
-  border-left: 3px solid var(--selo-claro);
+  border-left: 3px solid var(--dourado-logo);
 }
 
 .badge-ativos {
