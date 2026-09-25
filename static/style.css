@@ -737,7 +737,7 @@ input[readonly] {
   width: 100%;
   max-width: 760px;
   text-align: center;
-  margin-bottom: 8px;
+  margin-bottom: -30px;
   display: flex;
   justify-content: center;
 }
