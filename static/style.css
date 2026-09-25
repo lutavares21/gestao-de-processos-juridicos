@@ -743,7 +743,7 @@ input[readonly] {
 }
 
 .logo-login {
-  width: min(460px, 100%);
+  width: min(360px, 100%);
   height: auto;
 }
 
