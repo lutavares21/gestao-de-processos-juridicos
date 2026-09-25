@@ -613,8 +613,7 @@ input[readonly] {
   right: 0;
   bottom: 0;
   width: 3px;
-  background: linear-gradient(180deg, transparent, var(--dourado-logo), transparent);
-  box-shadow: 0 0 24px 2px rgba(199, 154, 77, 0.55);
+  background: #d4a017;
 }
 
 .inicio-glow {
@@ -717,8 +716,7 @@ input[readonly] {
     bottom: 0;
     width: auto;
     height: 3px;
-    background: linear-gradient(90deg, transparent, var(--dourado-logo), transparent);
-    box-shadow: 0 0 18px 1px rgba(199, 154, 77, 0.55);
+    background: #d4a017;
   }
 
   .inicio-userbar {
@@ -852,7 +850,7 @@ input[readonly] {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #f0c04a, #c79a4d 45%, #96722f);
+  background: #d4a017;
 }
 
 .inicio-blocos .bloco-inicio:hover {
