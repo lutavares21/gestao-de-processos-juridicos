@@ -750,7 +750,7 @@ input[readonly] {
 .caixa-login {
   width: 100%;
   max-width: 380px;
-  padding: 60px 20px;
+  padding: 0 20px 60px;
 }
 
 .caixa-login .bloco-inicio {
