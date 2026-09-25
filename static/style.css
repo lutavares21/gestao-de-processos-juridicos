@@ -603,10 +603,6 @@ input[readonly] {
   content: "";
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
-  background-size: 42px 42px;
   pointer-events: none;
 }
 
@@ -628,14 +624,6 @@ input[readonly] {
   opacity: 0.5;
   pointer-events: none;
   animation: inicio-pulsar 7s ease-in-out infinite;
-}
-
-.inicio-glow-1 {
-  width: 320px;
-  height: 320px;
-  top: -90px;
-  left: -70px;
-  background: rgba(199, 154, 77, 0.45);
 }
 
 .inicio-glow-2 {
@@ -663,9 +651,8 @@ input[readonly] {
 }
 
 .logo-grande {
-  width: min(300px, 100%);
+  width: min(440px, 100%);
   height: auto;
-  filter: drop-shadow(0 10px 26px rgba(0, 0, 0, 0.4));
 }
 
 .inicio-tagline {
