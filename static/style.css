@@ -55,7 +55,7 @@ body {
   content: "";
   position: absolute;
   top: 0;
-  right: -6px;
+  right: -8px;
   bottom: 0;
   width: 3px;
   background: var(--tinta);
@@ -65,9 +65,9 @@ body {
   content: "";
   position: absolute;
   top: 0;
-  right: -3px;
+  right: -5px;
   bottom: 0;
-  width: 3px;
+  width: 5px;
   background: var(--dourado-logo);
 }
 
