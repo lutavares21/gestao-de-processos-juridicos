@@ -44,7 +44,7 @@ body {
 
 /* --- Menu lateral --- */
 .menu-lateral {
-  width: 232px;
+  width: 280px;
   flex-shrink: 0;
   background: var(--papel);
   border-right: 3px solid var(--tinta);
@@ -63,14 +63,12 @@ body {
 }
 
 .menu-lateral .logo-menu {
-  margin: 0 8px 22px;
-  padding: 8px;
-  background: var(--creme-logo);
-  border-radius: 10px;
+  margin: 0 0 22px;
+  padding: 0;
 }
 
 .menu-lateral .logo-menu img {
-  max-width: 100%;
+  width: 100%;
   height: auto;
   display: block;
   margin: 0 auto;
@@ -82,9 +80,9 @@ body {
   gap: 10px;
   color: var(--texto);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
-  padding: 11px 24px;
+  padding: 12px 24px;
   border-left: 3px solid transparent;
 }
 
@@ -118,9 +116,9 @@ body {
   gap: 10px;
   color: var(--texto);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
-  padding: 11px 24px;
+  padding: 12px 24px;
   border-left: 3px solid transparent;
   cursor: default;
 }
@@ -160,10 +158,10 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 9px 24px 9px 40px;
+  padding: 10px 24px 10px 40px;
   color: var(--texto-suave);
   text-decoration: none;
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 500;
   border-left: 3px solid transparent;
 }
@@ -178,10 +176,14 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
-  color: #c9d2e3;
+  color: var(--texto);
   flex-shrink: 0;
+}
+
+.submenu li a:hover .badge-ativos {
+  color: #fff;
 }
 
 .badge-ativos .bolinha-verde {
