@@ -1247,7 +1247,7 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
   font-size: 30px;
   margin: 0 0 6px 0;
   letter-spacing: 0.2px;
-  color: #000;
+  color: var(--tinta);
 }
 .dash-header .dash-subtitulo{
   color: #000;
