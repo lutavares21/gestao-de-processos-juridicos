@@ -1695,9 +1695,8 @@ canvas{ max-width: 100%; }
 }
 
 .menu-panorama-hero {
-  background: linear-gradient(135deg, var(--dash-navy) 0%, var(--dash-navy-2) 100%);
-  border-radius: 6px;
-  padding: 22px 22px 18px;
+  background: none;
+  padding: 0 0 18px;
   margin-bottom: 20px;
   text-align: center;
 }
@@ -1706,7 +1705,7 @@ canvas{ max-width: 100%; }
   font-family: var(--fonte-titulo);
   font-weight: 600;
   font-size: 21px;
-  color: #fbf8f1;
+  color: var(--tinta);
   letter-spacing: 0.02em;
   margin: 0;
 }
@@ -1722,9 +1721,9 @@ canvas{ max-width: 100%; }
 
 .menu-panorama-subtitulo {
   font-family: var(--fonte-titulo);
-  font-style: italic;
+  font-style: normal;
   font-size: 13px;
-  color: #ccd1dc;
+  color: #000;
   margin-top: 10px;
 }
 
