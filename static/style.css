@@ -1199,8 +1199,8 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 }
 
 .dash-header-logo {
-  flex: 0 0 320px;
-  max-width: 320px;
+  flex: 0 0 400px;
+  max-width: 400px;
   order: 0;
 }
 
