@@ -1650,7 +1650,7 @@ canvas{ max-width: 100%; }
 }
 
 .inicio-blocos > * {
-  animation: panorama-entrada 4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: panorama-entrada 3.4s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: 1.4s;
 }
 @keyframes panorama-entrada {
