@@ -1653,8 +1653,8 @@ canvas{ max-width: 100%; }
 .img-entrada {
   opacity: 0;
   transform: scale(0.8) rotate(-4deg);
-  transition: opacity 0.9s cubic-bezier(0.34, 1.56, 0.64, 1),
-              transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 1.8s cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform 1.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .img-entrada.carregada {
@@ -1664,29 +1664,29 @@ canvas{ max-width: 100%; }
 
 /* Tela de escolha do tipo */
 .menu-panorama-hero {
-  animation: panorama-entrada 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 0.25s;
+  animation: panorama-entrada 1.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.4s;
 }
 
 .menu-panorama-card {
-  animation: panorama-entrada 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: panorama-entrada 1.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.menu-panorama-card:nth-child(1) { animation-delay: 0.55s; }
-.menu-panorama-card:nth-child(2) { animation-delay: 0.72s; }
-.menu-panorama-card:nth-child(3) { animation-delay: 0.89s; }
-.menu-panorama-card:nth-child(4) { animation-delay: 1.06s; }
-.menu-panorama-card:nth-child(5) { animation-delay: 1.23s; }
-.menu-panorama-card:nth-child(6) { animation-delay: 1.40s; }
+.menu-panorama-card:nth-child(1) { animation-delay: 1.0s; }
+.menu-panorama-card:nth-child(2) { animation-delay: 1.35s; }
+.menu-panorama-card:nth-child(3) { animation-delay: 1.7s; }
+.menu-panorama-card:nth-child(4) { animation-delay: 2.05s; }
+.menu-panorama-card:nth-child(5) { animation-delay: 2.4s; }
+.menu-panorama-card:nth-child(6) { animation-delay: 2.75s; }
 
 /* Tela de análise (dashboard) */
 .dash-header-logo {
-  animation: panorama-entrada 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 0.15s;
+  animation: panorama-entrada 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.25s;
 }
 
 .dash-header-conteudo {
-  animation: panorama-entrada 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 0.35s;
+  animation: panorama-entrada 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.6s;
 }
 
 .botao-inicio-simples {
