@@ -1199,8 +1199,8 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 }
 
 .dash-header-ilustracao {
-  flex: 0 0 170px;
-  max-width: 170px;
+  flex: 0 0 280px;
+  max-width: 280px;
 }
 
 .dash-header-ilustracao img {
@@ -1215,11 +1215,10 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 }
 
 .dash-header{
-  background: linear-gradient(135deg, var(--dash-navy) 0%, var(--dash-navy-2) 100%);
-  border-radius: 16px;
-  padding: 32px 36px;
-  color: #fff;
-  margin-bottom: 28px;
+  background: none;
+  padding: 8px 0 24px;
+  color: var(--texto);
+  margin-bottom: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1232,9 +1231,10 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
   font-size: 30px;
   margin: 0 0 6px 0;
   letter-spacing: 0.2px;
+  color: var(--texto);
 }
 .dash-header .dash-subtitulo{
-  color: #f1f3f8;
+  color: var(--texto-suave);
   font-size: 15px;
 }
 .dash-header .dash-data{
@@ -1250,13 +1250,14 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
   justify-content: center;
   gap: 10px;
   margin-top: 0;
-  color: #f1f3f8;
+  color: var(--texto);
   font-size: 14.5px;
 }
 .dash-filtro-tipo select{
   width: auto;
   min-width: 160px;
   background: #fff;
+  border: 1px solid var(--borda);
 }
 
 .dash-grid-kpi{
