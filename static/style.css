@@ -1628,9 +1628,29 @@ canvas{ max-width: 100%; }
 /* ------------------------------------------------------------------
    Páginas sem menu lateral (ex.: escolha do tipo no Panorama Jurídico)
    ------------------------------------------------------------------ */
+@keyframes panorama-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .pagina-sem-menu {
   min-height: 100vh;
   background: var(--papel);
+}
+
+.pagina-sem-menu .botao-inicio-simples,
+.pagina-sem-menu > .container {
+  animation: panorama-entrada 0.5s ease-out both;
+}
+
+.pagina-sem-menu > .container {
+  animation-delay: 0.08s;
 }
 
 .botao-inicio-simples {
@@ -1704,7 +1724,7 @@ canvas{ max-width: 100%; }
 .menu-panorama-hero h1 {
   font-family: var(--fonte-titulo);
   font-weight: 600;
-  font-size: 21px;
+  font-size: 23px;
   color: var(--tinta);
   letter-spacing: 0.02em;
   margin: 0;
@@ -1722,7 +1742,7 @@ canvas{ max-width: 100%; }
 .menu-panorama-subtitulo {
   font-family: var(--fonte-titulo);
   font-style: normal;
-  font-size: 13px;
+  font-size: 15px;
   color: #000;
   margin-top: 10px;
 }
