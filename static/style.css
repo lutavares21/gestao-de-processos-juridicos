@@ -1797,9 +1797,10 @@ canvas{ max-width: 100%; }
 
 .menu-panorama-hero-logo {
   flex: 0 0 auto;
-  width: 260px;
+  width: 270px;
   height: auto;
   display: block;
+  margin-left: -20px;
 }
 
 .menu-panorama-hero-texto {
@@ -1815,6 +1816,7 @@ canvas{ max-width: 100%; }
   color: var(--tinta);
   letter-spacing: 0.02em;
   margin: 0;
+  text-align: center;
 }
 
 .menu-panorama-hero h1::after {
