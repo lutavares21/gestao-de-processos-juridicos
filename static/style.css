@@ -1790,23 +1790,22 @@ canvas{ max-width: 100%; }
   padding: 0 0 18px;
   margin-bottom: 20px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .menu-panorama-hero-logo {
   flex: 0 0 auto;
-  width: 42px;
+  width: 64px;
   height: auto;
   display: block;
-  margin-top: 2px;
 }
 
 .menu-panorama-hero-texto {
   flex: 1 1 auto;
   min-width: 0;
-  text-align: left;
+  text-align: center;
 }
 
 .menu-panorama-hero h1 {
@@ -1824,7 +1823,7 @@ canvas{ max-width: 100%; }
   width: 42px;
   height: 2px;
   background: var(--dash-gold);
-  margin: 12px 0 0;
+  margin: 12px auto 0;
 }
 
 .menu-panorama-subtitulo {
