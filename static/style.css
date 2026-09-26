@@ -1198,9 +1198,22 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
   }
 }
 
+.dash-header-logo {
+  flex: 0 0 130px;
+  max-width: 130px;
+  order: 0;
+}
+
+.dash-header-logo img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 .dash-header-ilustracao {
   flex: 0 0 280px;
   max-width: 280px;
+  order: 2;
 }
 
 .dash-header-ilustracao img {
@@ -1212,6 +1225,7 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 .dash-header-conteudo {
   flex: 1;
   min-width: 0;
+  order: 1;
 }
 
 .dash-header{
