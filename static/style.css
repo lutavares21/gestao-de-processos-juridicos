@@ -1769,8 +1769,8 @@ canvas{ max-width: 100%; }
 }
 
 .menu-panorama-ilustracao {
-  flex: 1 1 480px;
-  max-width: 480px;
+  flex: 1 1 540px;
+  max-width: 560px;
 }
 
 .menu-panorama-ilustracao img {
@@ -1780,8 +1780,8 @@ canvas{ max-width: 100%; }
 }
 
 .menu-panorama-conteudo {
-  flex: 1 1 460px;
-  max-width: 640px;
+  flex: 1 1 380px;
+  max-width: 420px;
   width: 100%;
 }
 
@@ -1792,12 +1792,12 @@ canvas{ max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 40px;
+  gap: 20px;
 }
 
 .menu-panorama-hero-logo {
   flex: 0 0 auto;
-  width: 350px;
+  width: 220px;
   height: auto;
   display: block;
 }
