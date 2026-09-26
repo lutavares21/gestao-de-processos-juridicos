@@ -1800,13 +1800,15 @@ canvas{ max-width: 100%; }
   width: 270px;
   height: auto;
   display: block;
-  margin-left: -20px;
+  margin-right: -20px;
+  order: 2;
 }
 
 .menu-panorama-hero-texto {
   flex: 1 1 auto;
   min-width: 0;
   text-align: center;
+  order: 1;
 }
 
 .menu-panorama-hero h1 {
