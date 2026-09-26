@@ -45,7 +45,7 @@ body {
 
 /* --- Menu lateral --- */
 .menu-lateral {
-  width: 280px;
+  width: 250px;
   flex-shrink: 0;
   background: var(--papel);
   padding: 26px 0 20px;
@@ -78,7 +78,7 @@ body {
 }
 
 .menu-lateral .logo-menu img {
-  width: 100%;
+  width: 88%;
   height: auto;
   display: block;
   margin: 0 auto;
