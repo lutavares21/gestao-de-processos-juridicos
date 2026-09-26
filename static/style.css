@@ -1811,7 +1811,7 @@ canvas{ max-width: 100%; }
 .menu-panorama-hero h1 {
   font-family: var(--fonte-titulo);
   font-weight: 600;
-  font-size: 23px;
+  font-size: 32px;
   color: var(--tinta);
   letter-spacing: 0.02em;
   margin: 0;
