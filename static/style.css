@@ -1789,7 +1789,21 @@ canvas{ max-width: 100%; }
   background: none;
   padding: 0 0 18px;
   margin-bottom: 20px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.menu-panorama-hero-logo {
+  flex: 0 0 auto;
+  width: 60px;
+  height: auto;
+  display: block;
+}
+
+.menu-panorama-hero-texto {
+  text-align: left;
 }
 
 .menu-panorama-hero h1 {
@@ -1807,7 +1821,7 @@ canvas{ max-width: 100%; }
   width: 42px;
   height: 2px;
   background: var(--dash-gold);
-  margin: 12px auto 0;
+  margin: 12px 0 0;
 }
 
 .menu-panorama-subtitulo {
