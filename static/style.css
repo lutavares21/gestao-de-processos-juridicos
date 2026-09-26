@@ -1673,18 +1673,13 @@ canvas{ max-width: 100%; }
   animation: panorama-entrada 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Ilustração: só anima quando a imagem termina de carregar de verdade,
-   para nunca parecer que travou. Efeito bem visível (zoom + leve giro). */
+/* Ilustração: mesma abordagem da logo (CSS puro, via @keyframes), que
+   dispara sempre no carregamento da página - independe de eventos de
+   imagem, então funciona igual com ou sem cache do navegador. */
 .img-entrada {
   opacity: 0;
   transform: scale(0.25);
-  transition: opacity 5s cubic-bezier(0.22, 1, 0.36, 1),
-              transform 5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.img-entrada.carregada {
-  opacity: 1;
-  transform: scale(1);
+  animation: logo-cresce 5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Tela de escolha do tipo */

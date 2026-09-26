@@ -17,7 +17,7 @@
           <div class="menu-panorama-layout">
 
             <div class="menu-panorama-ilustracao">
-              <img src="{{ url_for('static', filename='images/panorama.png') }}" alt="Ilustração de análise jurídica" class="img-entrada" onload="this.classList.add('carregada')">
+              <img src="{{ url_for('static', filename='images/panorama.png') }}" alt="Ilustração de análise jurídica" class="img-entrada">
             </div>
 
             <div class="menu-panorama-conteudo">
@@ -398,19 +398,6 @@
 {% endblock %}
 
 {% block scripts_extra %}
-<script>
-  // Garante que a ilustração sempre entre com efeito, mesmo se o navegador
-  // já tiver a imagem em cache e não disparar o evento "load" de novo.
-  document.querySelectorAll('img.img-entrada').forEach(function (img) {
-    if (img.complete && img.naturalWidth > 0) {
-      img.classList.add('carregada');
-    } else {
-      img.addEventListener('load', function () {
-        img.classList.add('carregada');
-      });
-    }
-  });
-</script>
 {% if not mostrar_menu %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script>
