@@ -1769,8 +1769,8 @@ canvas{ max-width: 100%; }
 }
 
 .menu-panorama-ilustracao {
-  flex: 1 1 540px;
-  max-width: 560px;
+  flex: 1 1 480px;
+  max-width: 480px;
 }
 
 .menu-panorama-ilustracao img {
@@ -1780,8 +1780,8 @@ canvas{ max-width: 100%; }
 }
 
 .menu-panorama-conteudo {
-  flex: 1 1 380px;
-  max-width: 420px;
+  flex: 1 1 460px;
+  max-width: 640px;
   width: 100%;
 }
 
@@ -1792,12 +1792,12 @@ canvas{ max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 20px;
+  gap: 40px;
 }
 
 .menu-panorama-hero-logo {
   flex: 0 0 auto;
-  width: 150px;
+  width: 350px;
   height: auto;
   display: block;
 }
@@ -1805,7 +1805,7 @@ canvas{ max-width: 100%; }
 .menu-panorama-hero-texto {
   flex: 1 1 auto;
   min-width: 0;
-  text-align: left;
+  text-align: center;
 }
 
 .menu-panorama-hero h1 {
@@ -1823,7 +1823,7 @@ canvas{ max-width: 100%; }
   width: 42px;
   height: 2px;
   background: var(--dash-gold);
-  margin: 12px 0 0;
+  margin: 12px auto 0;
 }
 
 .menu-panorama-subtitulo {
