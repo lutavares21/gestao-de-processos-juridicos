@@ -1221,9 +1221,10 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
   color: #fff;
   margin-bottom: 28px;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 16px;
 }
 .dash-header h1{
@@ -1233,8 +1234,8 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
   letter-spacing: 0.2px;
 }
 .dash-header .dash-subtitulo{
-  color: #c7d0e0;
-  font-size: 14px;
+  color: #f1f3f8;
+  font-size: 15px;
 }
 .dash-header .dash-data{
   font-size: 13px;
@@ -1246,10 +1247,11 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 .dash-filtro-tipo{
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  margin-top: 14px;
-  color: #c7d0e0;
-  font-size: 13.5px;
+  margin-top: 0;
+  color: #f1f3f8;
+  font-size: 14.5px;
 }
 .dash-filtro-tipo select{
   width: auto;
