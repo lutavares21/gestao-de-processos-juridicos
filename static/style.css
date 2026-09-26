@@ -31,7 +31,7 @@
 
 body {
   margin: 0;
-  background: var(--papel);
+  background: var(--creme-logo);
   color: var(--texto);
   font-family: var(--fonte-corpo);
   font-size: 15px;
@@ -1664,7 +1664,7 @@ canvas{ max-width: 100%; }
 
 .pagina-sem-menu {
   min-height: 100vh;
-  background: var(--papel);
+  background: var(--creme-logo);
 }
 
 .pagina-sem-menu .botao-inicio-simples {
@@ -1797,7 +1797,7 @@ canvas{ max-width: 100%; }
 
 .menu-panorama-hero-logo {
   flex: 0 0 auto;
-  width: 220px;
+  width: 250px;
   height: auto;
   display: block;
 }
