@@ -94,7 +94,7 @@
             <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TavisJur - Gestão Jurídica Inteligente">
           </div>
           <div class="dash-header-ilustracao">
-            <img src="{{ url_for('static', filename='images/panorama.png') }}" alt="Ilustração de análise jurídica" class="img-entrada" onload="this.classList.add('carregada')">
+            <img src="{{ url_for('static', filename='images/panorama.png') }}" alt="Ilustração de análise jurídica" class="dash-img-sobe" onload="this.classList.add('carregada')">
           </div>
           <div class="dash-header-conteudo">
         <div class="dash-header">
@@ -401,7 +401,7 @@
 <script>
   // Garante que a ilustração sempre entre com efeito, mesmo se o navegador
   // já tiver a imagem em cache e não disparar o evento "load" de novo.
-  document.querySelectorAll('img.img-entrada').forEach(function (img) {
+  document.querySelectorAll('img.img-entrada, img.dash-img-sobe').forEach(function (img) {
     if (img.complete && img.naturalWidth > 0) {
       img.classList.add('carregada');
     } else {

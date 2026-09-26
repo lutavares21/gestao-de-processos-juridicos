@@ -1662,6 +1662,21 @@ canvas{ max-width: 100%; }
   transform: scale(1) rotate(0deg);
 }
 
+/* Na página de análise, a ilustração usa o mesmo efeito "subindo" do
+   resto da página, em vez do zoom/giro - só que só dispara quando a
+   imagem termina de carregar de verdade (evita parecer travamento). */
+.dash-img-sobe {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 1.4s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dash-img-sobe.carregada {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Tela de escolha do tipo */
 .menu-panorama-hero {
   animation: panorama-entrada 1.6s cubic-bezier(0.22, 1, 0.36, 1) both;
