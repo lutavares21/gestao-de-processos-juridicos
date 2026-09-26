@@ -1578,22 +1578,52 @@ canvas{ max-width: 100%; }
    entrar no painel executivo)
    ------------------------------------------------------------------ */
 .menu-panorama {
-  max-width: 780px;
-  margin: 40px auto;
-  text-align: center;
+  max-width: 1100px;
+  margin: 30px auto;
+  text-align: left;
+}
+
+.menu-panorama-layout {
+  display: flex;
+  align-items: center;
+  gap: 44px;
+}
+
+@media (max-width: 900px) {
+  .menu-panorama-layout {
+    flex-direction: column;
+  }
+}
+
+.menu-panorama-ilustracao {
+  flex: 1 1 440px;
+  max-width: 460px;
+}
+
+.menu-panorama-ilustracao img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.menu-panorama-conteudo {
+  flex: 1 1 380px;
+  max-width: 420px;
+  width: 100%;
 }
 
 .menu-panorama-hero {
   background: linear-gradient(135deg, var(--dash-navy) 0%, var(--dash-navy-2) 100%);
   border-radius: 6px;
-  padding: 38px 28px 30px;
-  margin-bottom: 30px;
+  padding: 22px 22px 18px;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
 .menu-panorama-hero h1 {
   font-family: var(--fonte-titulo);
   font-weight: 600;
-  font-size: 28px;
+  font-size: 21px;
   color: #fbf8f1;
   letter-spacing: 0.02em;
   margin: 0;
@@ -1602,39 +1632,33 @@ canvas{ max-width: 100%; }
 .menu-panorama-hero h1::after {
   content: "";
   display: block;
-  width: 56px;
+  width: 42px;
   height: 2px;
   background: var(--dash-gold);
-  margin: 16px auto 0;
+  margin: 12px auto 0;
 }
 
 .menu-panorama-subtitulo {
   font-family: var(--fonte-titulo);
   font-style: italic;
-  font-size: 14.5px;
+  font-size: 13px;
   color: #ccd1dc;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .menu-panorama-grade {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 18px;
-}
-
-@media (max-width: 640px) {
-  .menu-panorama-grade {
-    grid-template-columns: 1fr;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .menu-panorama-card {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 26px 18px 22px;
+  justify-content: flex-start;
+  gap: 14px;
+  padding: 14px 18px;
   background: #fff;
   border: 1px solid var(--borda);
   border-left: 4px solid var(--tinta);
@@ -1651,8 +1675,9 @@ canvas{ max-width: 100%; }
 }
 
 .menu-panorama-icone {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
   color: var(--dash-navy);
   transition: color 0.15s, transform 0.15s;
 }
@@ -1670,9 +1695,10 @@ canvas{ max-width: 100%; }
 
 .menu-panorama-card .titulo {
   font-family: var(--fonte-titulo);
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--tinta);
+  text-align: left;
 }
 
 .menu-panorama-card .legenda {
