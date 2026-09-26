@@ -1199,8 +1199,8 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 }
 
 .dash-header-logo {
-  flex: 0 0 400px;
-  max-width: 400px;
+  flex: 0 0 390px;
+  max-width: 390px;
   order: 0;
 }
 
@@ -1247,10 +1247,10 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
   font-size: 30px;
   margin: 0 0 6px 0;
   letter-spacing: 0.2px;
-  color: var(--texto);
+  color: #000;
 }
 .dash-header .dash-subtitulo{
-  color: var(--texto-suave);
+  color: #000;
   font-size: 15px;
 }
 .dash-header .dash-data{
@@ -1266,7 +1266,7 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
   justify-content: center;
   gap: 10px;
   margin-top: 0;
-  color: var(--texto);
+  color: #000;
   font-size: 14.5px;
 }
 .dash-filtro-tipo select{
