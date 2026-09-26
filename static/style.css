@@ -1648,26 +1648,35 @@ canvas{ max-width: 100%; }
   animation: panorama-entrada 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Tela de escolha do tipo */
-.menu-panorama-ilustracao {
-  animation: panorama-entrada 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 0.15s;
+/* Ilustração: só anima quando a imagem termina de carregar de verdade,
+   para nunca parecer que travou. Efeito bem visível (zoom + leve giro). */
+.img-entrada {
+  opacity: 0;
+  transform: scale(0.8) rotate(-4deg);
+  transition: opacity 0.9s cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.img-entrada.carregada {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+/* Tela de escolha do tipo */
 .menu-panorama-hero {
-  animation: panorama-entrada 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 0.28s;
+  animation: panorama-entrada 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.25s;
 }
 
 .menu-panorama-card {
-  animation: panorama-entrada 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: panorama-entrada 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.menu-panorama-card:nth-child(1) { animation-delay: 0.38s; }
-.menu-panorama-card:nth-child(2) { animation-delay: 0.46s; }
-.menu-panorama-card:nth-child(3) { animation-delay: 0.54s; }
-.menu-panorama-card:nth-child(4) { animation-delay: 0.62s; }
-.menu-panorama-card:nth-child(5) { animation-delay: 0.70s; }
-.menu-panorama-card:nth-child(6) { animation-delay: 0.78s; }
+.menu-panorama-card:nth-child(1) { animation-delay: 0.55s; }
+.menu-panorama-card:nth-child(2) { animation-delay: 0.72s; }
+.menu-panorama-card:nth-child(3) { animation-delay: 0.89s; }
+.menu-panorama-card:nth-child(4) { animation-delay: 1.06s; }
+.menu-panorama-card:nth-child(5) { animation-delay: 1.23s; }
+.menu-panorama-card:nth-child(6) { animation-delay: 1.40s; }
 
 /* Tela de análise (dashboard) */
 .dash-header-logo {
@@ -1676,13 +1685,8 @@ canvas{ max-width: 100%; }
 }
 
 .dash-header-conteudo {
-  animation: panorama-entrada 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 0.3s;
-}
-
-.dash-header-ilustracao {
   animation: panorama-entrada 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 0.45s;
+  animation-delay: 0.35s;
 }
 
 .botao-inicio-simples {
