@@ -1646,12 +1646,10 @@ canvas{ max-width: 100%; }
 
 .inicio-userbar {
   animation: panorama-entrada 4s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 0.6s;
 }
 
 .inicio-blocos > * {
   animation: panorama-entrada 3.4s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 1.4s;
 }
 @keyframes panorama-entrada {
   from {
