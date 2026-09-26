@@ -1629,18 +1629,29 @@ canvas{ max-width: 100%; }
    Página Início: mesmo efeito de subir usado no Panorama Jurídico,
    com duração uniforme de 1.1s em cascata.
    ------------------------------------------------------------------ */
+@keyframes logo-cresce {
+  from {
+    opacity: 0;
+    transform: scale(0.25);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .inicio-painel-logo-conteudo {
-  animation: panorama-entrada 3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: logo-cresce 5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .inicio-userbar {
-  animation: panorama-entrada 3s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 0.4s;
+  animation: panorama-entrada 4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.6s;
 }
 
 .inicio-blocos > * {
-  animation: panorama-entrada 3s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 0.8s;
+  animation: panorama-entrada 4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 1.4s;
 }
 @keyframes panorama-entrada {
   from {
