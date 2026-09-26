@@ -1211,10 +1211,10 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 }
 
 .dash-header-ilustracao {
-  flex: 0 0 350px;
-  max-width: 350px;
+  flex: 0 0 320px;
+  max-width: 320px;
   order: 2;
-  margin-top: -18px;
+  margin-top: -34px;
 }
 
 .dash-header-ilustracao img {
