@@ -1639,7 +1639,7 @@ canvas{ max-width: 100%; }
 
 .menu-panorama {
   max-width: 1180px;
-  margin: 30px auto;
+  margin: 4px auto 30px;
   padding-left: 70px;
   text-align: left;
 }
