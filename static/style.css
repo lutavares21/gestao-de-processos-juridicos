@@ -1689,6 +1689,24 @@ canvas{ max-width: 100%; }
   animation-delay: 0.6s;
 }
 
+/* Demais blocos da página de análise (alerta, KPIs, gráficos, tabelas...)
+   entram em cascata, um depois do outro, sem precisar de classes extras
+   em cada bloco. */
+.pagina-sem-menu .container > *:not(.dash-header-layout):not(.menu-panorama) {
+  opacity: 0;
+  animation: panorama-entrada 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.pagina-sem-menu .container > *:nth-child(2)  { animation-delay: 0.95s; }
+.pagina-sem-menu .container > *:nth-child(3)  { animation-delay: 1.15s; }
+.pagina-sem-menu .container > *:nth-child(4)  { animation-delay: 1.35s; }
+.pagina-sem-menu .container > *:nth-child(5)  { animation-delay: 1.55s; }
+.pagina-sem-menu .container > *:nth-child(6)  { animation-delay: 1.75s; }
+.pagina-sem-menu .container > *:nth-child(7)  { animation-delay: 1.95s; }
+.pagina-sem-menu .container > *:nth-child(8)  { animation-delay: 2.15s; }
+.pagina-sem-menu .container > *:nth-child(9)  { animation-delay: 2.35s; }
+.pagina-sem-menu .container > *:nth-child(10) { animation-delay: 2.55s; }
+.pagina-sem-menu .container > *:nth-child(n+11) { animation-delay: 2.75s; }
+
 .botao-inicio-simples {
   display: inline-flex;
   align-items: center;
