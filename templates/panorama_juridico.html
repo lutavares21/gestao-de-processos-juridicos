@@ -76,13 +76,24 @@
   </div>
 </div>
 {% else %}
-{{ super() }}
+<div class="pagina-sem-menu">
+  <a href="{{ url_for('inicio') }}" class="botao-inicio-simples">Início</a>
+
+  <div class="container" style="max-width: 1280px;">
+    {{ self.conteudo() }}
+  </div>
+</div>
 {% endif %}
 {% endblock %}
 
 {% block conteudo %}
 {% if not mostrar_menu %}
         <!-- CABEÇALHO EXECUTIVO -->
+        <div class="dash-header-layout">
+          <div class="dash-header-ilustracao">
+            <img src="{{ url_for('static', filename='images/panorama.png') }}" alt="Ilustração de análise jurídica">
+          </div>
+          <div class="dash-header-conteudo">
         <div class="dash-header">
           <div>
             <h1>Panorama Jurídico</h1>
@@ -103,6 +114,8 @@
               <option value="tributario" disabled title="Em breve.">Processo Tributário</option>
             </select>
           </form>
+        </div>
+          </div>
         </div>
 
         <!-- ATENÇÃO DA DIRETORIA -->
