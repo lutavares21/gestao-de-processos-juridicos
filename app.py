@@ -2094,26 +2094,36 @@ def montar_panorama_recuperacao():
             return url_for("processos_civel_recuperacao", status="ativo")
         return url_for("processos_civel_recuperacao", ids=",".join(str(i) for i in ids))
 
+    def refs(ids):
+        """Processos (id + número) citados em um aviso, em ordem de número."""
+        validos = [i for i in set(ids) if i in mapa_processos]
+        validos.sort(key=lambda i: str(mapa_processos[i].numero_processo))
+        return [{"id": i, "numero": mapa_processos[i].numero_processo} for i in validos]
+
     avisos = []
     if parados:
         avisos.append({
             "texto": f"{parados} processo(s) ativo(s) sem movimentação há mais de 90 dias.",
             "url": link_lista(ids_parados),
+            "processos": refs(ids_parados),
         })
     if vencidos_mais_1ano:
         avisos.append({
             "texto": f"{vencidos_mais_1ano} título(s) exigível(is) vencido(s) há mais de 1 ano.",
             "url": link_lista(ids_venc_1ano),
+            "processos": refs(ids_venc_1ano),
         })
     if ac["repasses_pendentes"]:
         avisos.append({
             "texto": f"{ac['repasses_pendentes']} parcela(s) recebida(s) sem pagamento ao advogado registrado.",
             "url": link_lista(ids_repasse),
+            "processos": refs(ids_repasse),
         })
     if ac["sem_valor"]:
         avisos.append({
             "texto": f"{ac['sem_valor']} parcela(s) vencida(s) sem valor informado, não computada(s) como inadimplência.",
             "url": link_lista(ids_sem_valor),
+            "processos": refs(ids_sem_valor),
         })
     proximas = [
         r["p"] for r in ativos
@@ -2125,6 +2135,7 @@ def montar_panorama_recuperacao():
             "texto": f"{len(proximas)} processo(s) ativo(s) com audiência nos próximos 30 dias.",
             "url": url_for("agenda", tipo="civel_recuperacao",
                            data_de=hoje.isoformat(), data_ate=em_30_dias.isoformat()),
+            "processos": refs([p_.id for p_ in proximas]),
         })
     dados["avisos"] = avisos
 

@@ -67,12 +67,17 @@
   {% endfor %}
   {% endif %}
   {% if dados.avisos %}
-  <div class="dash-alerta-subtitulo" style="margin-top:10px;">Pendências de acompanhamento (clique para abrir os processos correspondentes).</div>
+  <div class="dash-alerta-titulo" style="margin-top:14px;">Pendências de acompanhamento</div>
   {% endif %}
   {% for aviso in dados.avisos %}
   <div class="dash-alerta-linha">
-    {% if aviso is mapping and aviso.url %}<a class="motivo" style="text-decoration:underline; color:inherit;" href="{{ aviso.url }}">{{ aviso.texto }} →</a>
-    {% else %}<span class="motivo">{{ aviso.texto if aviso is mapping else aviso }}</span>{% endif %}
+    <span class="motivo">{{ aviso.texto if aviso is mapping else aviso }}</span>
+    {% if aviso is mapping and aviso.processos %}
+    <span style="margin-left:auto; text-align:right; max-width:55%;">
+      {{ 'Processo' if aviso.processos|length == 1 else 'Processos' }}
+      {% for pr in aviso.processos[:5] %}<a href="{{ url_for('processo_detalhe', processo_id=pr.id) }}" style="text-decoration:underline; color:inherit;">{{ pr.numero }}</a>{% if not loop.last %}, {% endif %}{% endfor %}{% if aviso.processos|length > 5 %}, <a href="{{ aviso.url }}" style="text-decoration:underline; color:inherit;">e mais {{ aviso.processos|length - 5 }}</a>{% endif %}
+    </span>
+    {% endif %}
   </div>
   {% endfor %}
 </div>
