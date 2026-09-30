@@ -1442,6 +1442,13 @@ def processos_civel_recuperacao():
             query = query.filter(Processo.titulos_recuperacao.any(
                 TituloRecuperacao.vencimento <= data_ate))
 
+    # Filtro por lista de ids - usado pelos links do Panorama de Recuperação
+    # (ex.: processos sem movimentação, parcelas sem valor informado).
+    ids_param = texto("ids")
+    if ids_param:
+        ids_lista = [int(x) for x in ids_param.split(",") if x.strip().isdigit()]
+        query = query.filter(Processo.id.in_(ids_lista))
+
     processos = query.order_by(Processo.data_cadastro.desc()).all()
 
     campos_filtro = [
@@ -1449,7 +1456,7 @@ def processos_civel_recuperacao():
         "juizado", "comarca", "uf", "tipo_acao", "centro_resultado",
         "escritorio", "resultado", "status", "risco", "grau_instancia",
         "titulo_status", "data_distribuicao_de", "data_distribuicao_ate",
-        "vencimento_de", "vencimento_ate",
+        "vencimento_de", "vencimento_ate", "ids",
     ]
     filtros_ativos = any(f.get(c, "").strip() for c in campos_filtro)
 
@@ -1728,6 +1735,53 @@ FASES_PROCESSUAIS = {
     "nao_informado": "Não informado",
 }
 
+# Centros de Resultado do cadastro (valor gravado = código).
+CENTROS_RESULTADO = {
+    "271": "271 - Audiologia",
+    "290": "290 - Bernafon",
+    "245": "245 - Call Center",
+    "220": "220 - Departamento Financeiro",
+    "273": "273 - Diatec",
+    "211": "211 - Diretoria Executiva",
+    "501": "501 - Distribuidores",
+    "302": "302 - Expansão",
+    "800": "800 - Expatriados",
+    "246": "246 - Hub Teleconsulta",
+    "253": "253 - Interacoustics - Distribuidores",
+    "1111": "1111 - Laboratório",
+    "237": "237 - Licitação e Legalização",
+    "234": "234 - Logística",
+    "242": "242 - Marketing",
+    "601": "601 - Marketing B2B",
+    "700": "700 - México",
+    "402": "402 - Neurelec",
+    "254": "254 - Oticon Governo",
+    "400": "400 - Oticon Medical",
+    "301": "301 - Philips",
+    "281": "281 - Produtos e Regulatórios",
+    "249": "249 - Programa Parceria",
+    "251": "251 - RH/Depto.Pessoal",
+    "258": "258 - Sonic",
+    "502": "502 - Sonic Distribuidores",
+    "236": "236 - Suprimentos",
+    "213": "213 - Telex Licença",
+    "261": "261 - TI - Informática",
+}
+
+TIPOS_ACAO_RECUPERACAO = {
+    "acao_civel": "Ação Cível",
+    "acao_trabalhista": "Ação Trabalhista",
+    "cobranca_extrajudicial": "Cobrança Extrajudicial",
+    "cobranca_judicial": "Cobrança Judicial",
+}
+
+
+def nome_centro_resultado(codigo):
+    """"271" -> "271 - Audiologia"; "rateio" -> "Rateio entre CRs"."""
+    if codigo == "rateio":
+        return "Rateio entre CRs"
+    return CENTROS_RESULTADO.get(str(codigo), str(codigo))
+
 
 def montar_panorama_recuperacao():
     hoje = date.today()
@@ -1754,9 +1808,11 @@ def montar_panorama_recuperacao():
             selectinload(Processo.titulos_recuperacao),
             selectinload(Processo.acordos_recebimento),
             selectinload(Processo.movimentos),
+            selectinload(Processo.partes),
         )
         .all()
     )
+    mapa_processos = {p.id: p for p in processos}
 
     # ---- Resumo por processo (base para quase tudo abaixo) ----------------
     resumo = []
@@ -1819,6 +1875,7 @@ def montar_panorama_recuperacao():
     aging = {nome: {"qtd": 0, "valor": 0.0} for nome, _, _ in faixas}
     aging["Sem vencimento"] = {"qtd": 0, "valor": 0.0}
     vencidos_mais_1ano = 0
+    ids_venc_1ano = set()
     for t in exigiveis:
         if not t.vencimento:
             nome = "Sem vencimento"
@@ -1828,6 +1885,7 @@ def montar_panorama_recuperacao():
                         if (ini is None or dias >= ini) and (fim is None or dias <= fim))
             if dias > 365:
                 vencidos_mais_1ano += 1
+                ids_venc_1ano.add(t.processo_id)
         aging[nome]["qtd"] += 1
         aging[nome]["valor"] += total_titulo(t)
     dados["aging"] = [{"faixa": k, **v} for k, v in aging.items()]
@@ -1843,6 +1901,14 @@ def montar_panorama_recuperacao():
             g["processos"].add(t.processo_id)
         lista = sorted(grupos.values(), key=lambda g: g["valor"], reverse=True)
         for g in lista:
+            # O campo Cliente da planilha é um ID; o(s) réu(s) do processo ajudam a identificar o devedor.
+            nomes_reus = []
+            for pid in g["processos"]:
+                proc = mapa_processos.get(pid)
+                if proc:
+                    nomes_reus.extend(x.nome for x in proc.partes if x.tipo == "reu" and x.nome)
+            unicos = list(dict.fromkeys(nomes_reus))
+            g["reus"] = ", ".join(unicos[:2]) + (f" (+{len(unicos) - 2})" if len(unicos) > 2 else "")
             g["processos"] = len(g["processos"])
         return lista
 
@@ -1861,6 +1927,7 @@ def montar_panorama_recuperacao():
           "situacao": {"pendente": 0, "parcial": 0, "pago": 0}}
     processos_com_acordo = 0
     atrasadas = []
+    ids_repasse, ids_sem_valor = set(), set()
     previsto_mes, recebido_mes = {}, {}
     for r in resumo:
         parcelas = r["p"].acordos_recebimento
@@ -1876,6 +1943,7 @@ def montar_panorama_recuperacao():
             if (situacao != "pago" and a.valor_parcela is None
                     and a.vencimento and a.vencimento < hoje):
                 ac["sem_valor"] += 1
+                ids_sem_valor.add(r["p"].id)
             ac["valor_acordado"] += valor_parcela
             ac["recebido"] += recebido
             ac["em_aberto"] += aberto
@@ -1884,6 +1952,7 @@ def montar_panorama_recuperacao():
             ac["pago_adv"] += num(a.valor_pago_adv)
             if recebido > 0 and not a.data_pagto_adv and not a.valor_pago_adv:
                 ac["repasses_pendentes"] += 1
+                ids_repasse.add(r["p"].id)
             if a.vencimento:
                 chave = (a.vencimento.year, a.vencimento.month)
                 previsto_mes[chave] = previsto_mes.get(chave, 0.0) + valor_parcela
@@ -1954,7 +2023,8 @@ def montar_panorama_recuperacao():
         f["qtd"] += 1
         f["valor"] += em_aberto(r)
         if r["p"].centro_resultado:
-            c = crs.setdefault(r["p"].centro_resultado, {"nome": r["p"].centro_resultado, "qtd": 0, "valor": 0.0})
+            nome_cr = nome_centro_resultado(r["p"].centro_resultado)
+            c = crs.setdefault(nome_cr, {"nome": nome_cr, "qtd": 0, "valor": 0.0})
             c["qtd"] += 1
             c["valor"] += em_aberto(r)
     dados["fases"] = sorted(fases.values(), key=lambda f: f["valor"], reverse=True)
@@ -1964,6 +2034,7 @@ def montar_panorama_recuperacao():
     idade = {"Até 1 ano": [0, 0.0], "1 a 2 anos": [0, 0.0], "2 a 3 anos": [0, 0.0],
              "+ de 3 anos": [0, 0.0], "Sem data": [0, 0.0]}
     parados, valor_parados = 0, 0.0
+    ids_parados = []
     for r in ativos:
         p = r["p"]
         if p.data_distribuicao:
@@ -1980,6 +2051,7 @@ def montar_panorama_recuperacao():
         if referencia and (hoje - referencia).days > 90:
             parados += 1
             valor_parados += em_aberto(r)
+            ids_parados.append(p.id)
     dados["idade_ativos"] = [{"faixa": k, "qtd": v[0], "valor": v[1]} for k, v in idade.items()]
     dados["parados"] = {"qtd": parados, "valor": valor_parados}
 
@@ -1987,18 +2059,73 @@ def montar_panorama_recuperacao():
                 for p in processos if p.status == "arquivado" and p.data_arquivamento and p.data_distribuicao]
     dados["tempo_medio_meses"] = round(sum(duracoes) / len(duracoes) / 30.4, 1) if duracoes else None
 
+    # ---- 11b. Desempenho por tipo de ação ----------------------------------
+    tipos = {}
+    for r in resumo:
+        chave = TIPOS_ACAO_RECUPERACAO.get(r["p"].tipo_acao, "Não informado")
+        x = tipos.setdefault(chave, {"nome": chave, "processos": 0, "cobrado": 0.0, "recuperado": 0.0})
+        x["processos"] += 1
+        x["cobrado"] += r["cobrado"]
+        x["recuperado"] += r["recuperado"]
+    lista_tipos = sorted(tipos.values(), key=lambda x: x["cobrado"], reverse=True)
+    for x in lista_tipos:
+        x["taxa"] = round(100 * x["recuperado"] / x["cobrado"], 1) if x["cobrado"] else None
+    dados["tipos_acao"] = lista_tipos
+
+    # ---- 11c. Processos arquivados (encerrados) ----------------------------
+    arquivados = [r for r in resumo if r["p"].status == "arquivado"]
+    cobrado_arq = sum(r["cobrado"] for r in arquivados)
+    recuperado_arq = sum(r["recuperado"] for r in arquivados)
+    dados["encerrados"] = {
+        "qtd": len(arquivados),
+        "cobrado": cobrado_arq,
+        "recuperado": recuperado_arq,
+        "taxa": round(100 * recuperado_arq / cobrado_arq, 1) if cobrado_arq else None,
+        "nao_recuperado": sum(num(r["p"].economia_gerada) for r in resumo),
+    }
+
     # ---- 12. Atenção da diretoria -----------------------------------------
     atrasadas.sort(key=lambda x: x["valor"], reverse=True)
     dados["atencao_parcelas"] = atrasadas[:5]
+    def link_lista(ids):
+        """Link para a listagem de recuperação filtrada pelos processos citados."""
+        ids = sorted(set(ids))
+        if len(ids) > 400:  # evita URL gigante
+            return url_for("processos_civel_recuperacao", status="ativo")
+        return url_for("processos_civel_recuperacao", ids=",".join(str(i) for i in ids))
+
     avisos = []
     if parados:
-        avisos.append(f"{parados} processo(s) ativo(s) sem movimentação há mais de 90 dias.")
+        avisos.append({
+            "texto": f"{parados} processo(s) ativo(s) sem movimentação há mais de 90 dias.",
+            "url": link_lista(ids_parados),
+        })
     if vencidos_mais_1ano:
-        avisos.append(f"{vencidos_mais_1ano} título(s) exigível(is) vencido(s) há mais de 1 ano.")
+        avisos.append({
+            "texto": f"{vencidos_mais_1ano} título(s) exigível(is) vencido(s) há mais de 1 ano.",
+            "url": link_lista(ids_venc_1ano),
+        })
     if ac["repasses_pendentes"]:
-        avisos.append(f"{ac['repasses_pendentes']} parcela(s) recebida(s) sem pagamento ao advogado registrado.")
+        avisos.append({
+            "texto": f"{ac['repasses_pendentes']} parcela(s) recebida(s) sem pagamento ao advogado registrado.",
+            "url": link_lista(ids_repasse),
+        })
     if ac["sem_valor"]:
-        avisos.append(f"{ac['sem_valor']} parcela(s) vencida(s) sem valor informado, não computada(s) como inadimplência.")
+        avisos.append({
+            "texto": f"{ac['sem_valor']} parcela(s) vencida(s) sem valor informado, não computada(s) como inadimplência.",
+            "url": link_lista(ids_sem_valor),
+        })
+    proximas = [
+        r["p"] for r in ativos
+        if any(d_ and hoje <= d_ <= em_30_dias
+               for d_ in (r["p"].data_audiencia_1, r["p"].data_audiencia_2, r["p"].data_audiencia_3))
+    ]
+    if proximas:
+        avisos.append({
+            "texto": f"{len(proximas)} processo(s) ativo(s) com audiência nos próximos 30 dias.",
+            "url": url_for("agenda", tipo="civel_recuperacao",
+                           data_de=hoje.isoformat(), data_ate=em_30_dias.isoformat()),
+        })
     dados["avisos"] = avisos
 
     return dados

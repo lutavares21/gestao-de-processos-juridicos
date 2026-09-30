@@ -56,7 +56,7 @@
   <div class="dash-alerta-subtitulo">Parcelas de acordo vencidas e não quitadas, em ordem decrescente de valor.</div>
   {% for a in dados.atencao_parcelas %}
   <div class="dash-alerta-linha">
-    {% if a.processo_id is defined %}<a class="num" href="{{ url_for('processo_detalhe', processo_id=a.processo_id) }}">{{ a.numero_processo }}</a>{% else %}<span class="num">{{ a.numero_processo }}</span>{% endif %}
+    {% if a.processo_id is defined %}<a class="num" style="text-decoration:underline; color:inherit;" href="{{ url_for('processo_detalhe', processo_id=a.processo_id) }}">{{ a.numero_processo }}</a>{% else %}<span class="num">{{ a.numero_processo }}</span>{% endif %}
     <span class="motivo">Parcela {{ a.parcela }} · {{ a.dias }} dias de atraso</span>
     {% set texto_moeda = a.valor|moeda %}
     <span class="val">
@@ -66,8 +66,14 @@
   </div>
   {% endfor %}
   {% endif %}
+  {% if dados.avisos %}
+  <div class="dash-alerta-subtitulo" style="margin-top:10px;">Pendências de acompanhamento (clique para abrir os processos correspondentes).</div>
+  {% endif %}
   {% for aviso in dados.avisos %}
-  <div class="dash-alerta-linha"><span class="motivo">{{ aviso }}</span></div>
+  <div class="dash-alerta-linha">
+    {% if aviso is mapping and aviso.url %}<a class="motivo" style="text-decoration:underline; color:inherit;" href="{{ aviso.url }}">{{ aviso.texto }} →</a>
+    {% else %}<span class="motivo">{{ aviso.texto if aviso is mapping else aviso }}</span>{% endif %}
+  </div>
   {% endfor %}
 </div>
 {% endif %}
@@ -198,12 +204,13 @@
     {% if dados.top_devedores %}
     <table class="dash-tabela">
       <thead>
-        <tr><th style="text-align:left;">Devedor</th><th style="text-align:center;">Títulos</th><th style="text-align:center;">Processos</th><th style="text-align:right;">Valor atualizado</th></tr>
+        <tr><th style="text-align:left;">ID Cliente</th><th style="text-align:left;">Réu(s)</th><th style="text-align:center;">Títulos</th><th style="text-align:center;">Processos</th><th style="text-align:right;">Valor atualizado</th></tr>
       </thead>
       <tbody>
         {% for d in dados.top_devedores %}
         <tr>
           <td>{{ d.nome }}</td>
+          <td>{{ d.reus or '—' }}</td>
           <td style="text-align:center;">{{ d.titulos }}</td>
           <td style="text-align:center;">{{ d.processos }}</td>
           <td style="text-align:right; white-space:nowrap;">{{ d.valor|moeda }}</td>
@@ -272,6 +279,47 @@
     {% else %}
     <div class="dash-vazio">Não há escritórios informados.</div>
     {% endif %}
+  </div>
+</div>
+
+<!-- TIPO DE AÇÃO + ENCERRADOS -->
+<div class="dash-row duas-colunas">
+  <div class="dash-painel">
+    <div class="dash-secao-titulo">Desempenho por tipo de ação</div>
+    {% if dados.tipos_acao %}
+    <table class="dash-tabela">
+      <thead>
+        <tr><th style="text-align:left;">Tipo de ação</th><th style="text-align:center;">Processos</th><th style="text-align:right;">Valor cobrado</th><th style="text-align:right;">Valor recuperado</th><th style="text-align:center;">Taxa de recuperação</th></tr>
+      </thead>
+      <tbody>
+        {% for x in dados.tipos_acao %}
+        <tr>
+          <td>{{ x.nome }}</td>
+          <td style="text-align:center;">{{ x.processos }}</td>
+          <td style="text-align:right; white-space:nowrap;">{{ x.cobrado|moeda }}</td>
+          <td style="text-align:right; white-space:nowrap;">{{ x.recuperado|moeda }}</td>
+          <td style="text-align:center;">{{ (x.taxa ~ '%') if x.taxa is not none else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="dash-vazio" style="text-align:left; padding-top:10px;">Taxa de recuperação = valor recuperado ÷ valor cobrado, considerando todos os processos do tipo de ação.</div>
+    {% else %}
+    <div class="dash-vazio">Nenhum processo cadastrado.</div>
+    {% endif %}
+  </div>
+  <div class="dash-painel">
+    <div class="dash-secao-titulo">Processos encerrados (arquivados)</div>
+    <table class="dash-tabela">
+      <tbody>
+        <tr><td>Processos arquivados</td><td style="text-align:right;">{{ dados.encerrados.qtd }}</td></tr>
+        <tr><td>Valor cobrado</td><td style="text-align:right;">{{ dados.encerrados.cobrado|moeda }}</td></tr>
+        <tr><td>Valor recuperado</td><td style="text-align:right;">{{ dados.encerrados.recuperado|moeda }}</td></tr>
+        <tr><td><strong>Taxa de recuperação (encerrados)</strong></td><td style="text-align:right;"><strong>{{ (dados.encerrados.taxa ~ '%') if dados.encerrados.taxa is not none else '—' }}</strong></td></tr>
+        <tr><td>Saldo não recuperado informado (todos os processos)</td><td style="text-align:right;">{{ dados.encerrados.nao_recuperado|moeda }}</td></tr>
+      </tbody>
+    </table>
+    <div class="dash-vazio" style="text-align:left; padding-top:10px;">A taxa dos encerrados mede a recuperação efetivamente consumada; o saldo não recuperado corresponde ao campo informado no cadastro de cada processo.</div>
   </div>
 </div>
 
