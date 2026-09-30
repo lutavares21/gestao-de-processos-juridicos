@@ -1,0 +1,413 @@
+{% extends "base_painel.html" %}
+
+{% block titulo %}Panorama Jurídico - Recuperação de Crédito{% endblock %}
+{% block cabecalho %}
+
+{% endblock %}
+{% block container_attrs %} style="max-width: 1280px;"{% endblock %}
+
+{% block corpo %}
+<div class="pagina-sem-menu">
+  <a href="{{ url_for('inicio') }}" class="botao-inicio-simples">Início</a>
+  <div class="container" style="max-width: 1280px;">
+    {{ self.conteudo() }}
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+{% set f = dados.financeiro %}
+{% set ac = dados.acordos %}
+
+<!-- CABEÇALHO -->
+<div class="dash-header-layout">
+  <div class="dash-header-logo">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TavisJur - Gestão Jurídica Inteligente">
+  </div>
+  <div class="dash-header-ilustracao">
+    <img src="{{ url_for('static', filename='images/panorama.png') }}" alt="Ilustração de análise jurídica">
+  </div>
+  <div class="dash-header-conteudo">
+    <div class="dash-header">
+      <div>
+        <h1>Panorama Jurídico</h1>
+        <div class="dash-subtitulo">Recuperação de Crédito - carteira, recuperação, acordos e inadimplência</div>
+      </div>
+      <form method="GET" action="{{ url_for('panorama_juridico') }}" class="dash-filtro-tipo">
+        <label for="tipo">Selecione o tipo de processo:</label>
+        <select id="tipo" name="tipo" onchange="this.form.submit()">
+          <option value="civel">Cível</option>
+          <option value="civel_recuperacao" selected>Cível - Recuperação de Crédito</option>
+          <option value="civel_trabalhista">Cível + Trabalhista</option>
+          <option value="licitatorio" disabled title="Em breve.">Processo Licitatório</option>
+          <option value="trabalhista">Trabalhista</option>
+          <option value="tributario" disabled title="Em breve.">Processo Tributário</option>
+        </select>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ATENÇÃO DA DIRETORIA -->
+{% if dados.atencao_parcelas or dados.avisos %}
+<div class="dash-alerta">
+  <div class="dash-alerta-titulo">⚠ Atenção</div>
+  {% if dados.atencao_parcelas %}
+  <div class="dash-alerta-subtitulo">Maiores parcelas de acordo em atraso.</div>
+  {% for a in dados.atencao_parcelas %}
+  <div class="dash-alerta-linha">
+    <span class="num">{{ a.numero_processo }}</span>
+    <span class="motivo">Parcela {{ a.parcela }} · {{ a.dias }} dias em atraso</span>
+    {% set texto_moeda = a.valor|moeda %}
+    <span class="val">
+      <span>{{ texto_moeda.split(' ')[0] }}</span>
+      <span>{{ texto_moeda.split(' ', 1)[1] }}</span>
+    </span>
+  </div>
+  {% endfor %}
+  {% endif %}
+  {% for aviso in dados.avisos %}
+  <div class="dash-alerta-linha"><span class="motivo">{{ aviso }}</span></div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- KPIs DE PROCESSOS -->
+<div class="dash-grid-kpi dash-grid-kpi-5">
+  <div class="dash-kpi">
+    <div class="dash-kpi-label">Total de processos</div>
+    <div class="dash-kpi-valor">{{ dados.total }}</div>
+    <div class="dash-kpi-nota">{{ dados.total_titulos }} título(s) na carteira</div>
+  </div>
+  <div class="dash-kpi">
+    <div class="dash-kpi-label">Ativos</div>
+    <div class="dash-kpi-valor">{{ dados.ativo }}</div>
+    <div class="dash-kpi-nota">Em cobrança</div>
+  </div>
+  <div class="dash-kpi">
+    <div class="dash-kpi-label">Arquivados</div>
+    <div class="dash-kpi-valor">{{ dados.arquivado }}</div>
+    <div class="dash-kpi-nota">{{ (dados.tempo_medio_meses ~ ' meses em média') if dados.tempo_medio_meses is not none else 'Encerrados' }}</div>
+  </div>
+  <div class="dash-kpi">
+    <div class="dash-kpi-label">Suspensos</div>
+    <div class="dash-kpi-valor">{{ dados.suspenso }}</div>
+    <div class="dash-kpi-nota">Aguardando</div>
+  </div>
+  <div class="dash-kpi">
+    <div class="dash-kpi-label">Taxa de êxito</div>
+    <div class="dash-kpi-valor">{{ (dados.taxa_exito ~ '%') if dados.taxa_exito is not none else '—' }}</div>
+    <div class="dash-kpi-nota">Ganhamos + acordos / com resultado</div>
+  </div>
+</div>
+
+<!-- KPIs FINANCEIROS -->
+<div class="dash-grid-kpi dash-grid-kpi-3">
+  <div class="dash-kpi destaque-ouro">
+    <div class="dash-kpi-label">Carteira em cobrança</div>
+    <div class="dash-kpi-valor">{{ f.carteira_exigivel|moeda }}</div>
+    <div class="dash-kpi-nota">Títulos de processos ativos, exceto indeferidos</div>
+  </div>
+  <div class="dash-kpi destaque-verde">
+    <div class="dash-kpi-label">Valor recuperado</div>
+    <div class="dash-kpi-valor">{{ f.recuperado|moeda }}</div>
+    <div class="dash-kpi-nota">{{ (f.taxa_recuperacao ~ '% do total cobrado') if f.taxa_recuperacao is not none else 'Acumulado' }}</div>
+  </div>
+  <div class="dash-kpi destaque-vermelho">
+    <div class="dash-kpi-label">Custo de recuperação</div>
+    <div class="dash-kpi-valor">{{ f.custo|moeda }}</div>
+    <div class="dash-kpi-nota">{{ (f.custo_pct ~ '% do recuperado · ') if f.custo_pct is not none else '' }}Líquido: {{ f.liquido|moeda }}</div>
+  </div>
+</div>
+
+<div class="dash-grid-kpi dash-grid-kpi-3">
+  <div class="dash-kpi destaque-vermelho">
+    <div class="dash-kpi-label">Parcelas em atraso</div>
+    <div class="dash-kpi-valor">{{ ac.em_atraso|moeda }}</div>
+    <div class="dash-kpi-nota">{{ (ac.inadimplencia_pct ~ '% das parcelas vencidas') if ac.inadimplencia_pct is not none else 'Nenhuma parcela vencida' }}</div>
+  </div>
+  <div class="dash-kpi destaque-ouro">
+    <div class="dash-kpi-label">A receber em 30 dias</div>
+    <div class="dash-kpi-valor">{{ ac.a_vencer_30d|moeda }}</div>
+    <div class="dash-kpi-nota">Parcelas de acordo a vencer</div>
+  </div>
+  <div class="dash-kpi">
+    <div class="dash-kpi-label">Processos com acordo</div>
+    <div class="dash-kpi-valor">{{ ac.processos_com_acordo }}</div>
+    <div class="dash-kpi-nota">{{ (ac.pct_processos_com_acordo ~ '% dos processos') if ac.pct_processos_com_acordo is not none else '—' }}</div>
+  </div>
+</div>
+
+<!-- AGING + SITUAÇÃO DOS TÍTULOS -->
+<div class="dash-row duas-colunas">
+  <div class="dash-painel">
+    <div class="dash-secao-titulo">Carteira por tempo de vencimento</div>
+    <div class="dash-chart-wrap"><canvas id="graficoAging"></canvas></div>
+    <div class="dash-vazio" style="text-align:left; padding-top:10px;">Títulos de processos ativos, exceto indeferidos. Quanto mais antigo o vencimento, menor a chance de recuperação.</div>
+  </div>
+  <div class="dash-painel" style="display:flex; flex-direction:column;">
+    <div class="dash-secao-titulo">Situação dos títulos (processos ativos)</div>
+    <div class="dash-chart-wrap"><canvas id="graficoTitulos"></canvas></div>
+    <table class="dash-tabela" style="margin-top:14px;">
+      <tbody>
+        <tr><td>Saldo principal</td><td style="text-align:right;">{{ dados.composicao.saldo|moeda }}</td></tr>
+        <tr><td>Juros</td><td style="text-align:right;">{{ dados.composicao.juros|moeda }}</td></tr>
+        <tr><td>Correção</td><td style="text-align:right;">{{ dados.composicao.correcao|moeda }}</td></tr>
+        <tr><td>Outros</td><td style="text-align:right;">{{ dados.composicao.outros|moeda }}</td></tr>
+        {% if dados.composicao.acrescimo_pct is not none %}
+        <tr><td><strong>Acréscimos sobre o principal</strong></td><td style="text-align:right;"><strong>{{ dados.composicao.acrescimo_pct }}%</strong></td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- FLUXO + ACORDOS -->
+<div class="dash-row duas-colunas">
+  <div class="dash-painel">
+    <div class="dash-secao-titulo">Acordos - previsto x recebido (6 meses atrás · 6 à frente)</div>
+    <div class="dash-chart-wrap"><canvas id="graficoFluxo"></canvas></div>
+  </div>
+  <div class="dash-painel">
+    <div class="dash-secao-titulo">Acordos - situação das parcelas</div>
+    <table class="dash-tabela">
+      <tbody>
+        <tr><td>Valor acordado</td><td style="text-align:right;">{{ ac.valor_acordado|moeda }}</td></tr>
+        <tr><td>Recebido</td><td style="text-align:right;">{{ ac.recebido|moeda }}</td></tr>
+        <tr><td>Em aberto</td><td style="text-align:right;">{{ ac.em_aberto|moeda }}</td></tr>
+        <tr><td>Em atraso</td><td style="text-align:right; color:var(--dash-vermelho); font-weight:700;">{{ ac.em_atraso|moeda }}</td></tr>
+        <tr><td>Parcelas: pendentes / parciais / recebidas</td><td style="text-align:right;">{{ ac.situacao.pendente }} / {{ ac.situacao.parcial }} / {{ ac.situacao.pago }}</td></tr>
+        <tr><td>Honorários de êxito</td><td style="text-align:right;">{{ ac.honorarios_exito|moeda }}</td></tr>
+        <tr><td>Sucumbência</td><td style="text-align:right;">{{ ac.sucumbencia|moeda }}</td></tr>
+        <tr><td>Pago ao advogado</td><td style="text-align:right;">{{ ac.pago_adv|moeda }}</td></tr>
+        <tr><td>Repasses pendentes ao advogado</td><td style="text-align:right;">{{ ac.repasses_pendentes }} parcela(s)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- DEVEDORES + COMPANIES -->
+<div class="dash-row duas-colunas">
+  <div class="dash-painel">
+    <div class="dash-secao-titulo">Maiores devedores</div>
+    {% if dados.top_devedores %}
+    <table class="dash-tabela">
+      <thead>
+        <tr><th style="text-align:left;">Cliente</th><th style="text-align:center;">Títulos</th><th style="text-align:center;">Processos</th><th style="text-align:right;">Valor</th></tr>
+      </thead>
+      <tbody>
+        {% for d in dados.top_devedores %}
+        <tr>
+          <td>{{ d.nome }}</td>
+          <td style="text-align:center;">{{ d.titulos }}</td>
+          <td style="text-align:center;">{{ d.processos }}</td>
+          <td style="text-align:right; white-space:nowrap;">{{ d.valor|moeda }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if dados.concentracao_top5 is not none %}
+    <div class="dash-vazio" style="text-align:left; padding-top:10px;">Os 5 maiores devedores concentram {{ dados.concentracao_top5 }}% da carteira em cobrança.</div>
+    {% endif %}
+    {% else %}
+    <div class="dash-vazio">Nenhum título em cobrança cadastrado.</div>
+    {% endif %}
+  </div>
+
+  <div class="dash-painel">
+    <div class="dash-secao-titulo">Carteira por company</div>
+    {% if dados.top_companies %}
+    <table class="dash-tabela">
+      <thead>
+        <tr><th style="text-align:left;">Company</th><th style="text-align:center;">Títulos</th><th style="text-align:center;">Processos</th><th style="text-align:right;">Valor</th></tr>
+      </thead>
+      <tbody>
+        {% for c in dados.top_companies %}
+        <tr>
+          <td>{{ c.nome }}</td>
+          <td style="text-align:center;">{{ c.titulos }}</td>
+          <td style="text-align:center;">{{ c.processos }}</td>
+          <td style="text-align:right; white-space:nowrap;">{{ c.valor|moeda }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="dash-vazio">Nenhum título em cobrança cadastrado.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- RESULTADO + ESCRITÓRIOS -->
+<div class="dash-row duas-colunas">
+  <div class="dash-painel" style="display:flex; flex-direction:column;">
+    <div class="dash-secao-titulo">Resultado dos processos</div>
+    <div class="dash-chart-wrap grande"><canvas id="graficoResultado"></canvas></div>
+  </div>
+  <div class="dash-painel">
+    <div class="dash-secao-titulo">Desempenho por escritório</div>
+    {% if dados.escritorios %}
+    <table class="dash-tabela">
+      <thead>
+        <tr><th style="text-align:left;">Escritório</th><th style="text-align:center;">Proc.</th><th style="text-align:right;">Cobrado</th><th style="text-align:right;">Recuperado</th><th style="text-align:center;">%</th></tr>
+      </thead>
+      <tbody>
+        {% for e in dados.escritorios %}
+        <tr>
+          <td>{{ e.nome }}</td>
+          <td style="text-align:center;">{{ e.processos }}</td>
+          <td style="text-align:right; white-space:nowrap;">{{ e.cobrado|moeda }}</td>
+          <td style="text-align:right; white-space:nowrap;">{{ e.recuperado|moeda }}</td>
+          <td style="text-align:center;">{{ (e.taxa ~ '%') if e.taxa is not none else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="dash-vazio" style="text-align:left; padding-top:10px;">% = recuperado / cobrado em todos os processos do escritório.</div>
+    {% else %}
+    <div class="dash-vazio">Nenhum escritório informado.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- FASE + IDADE + CR -->
+<div class="dash-row duas-colunas">
+  <div class="dash-painel">
+    <div class="dash-secao-titulo">Processos ativos por fase processual</div>
+    {% if dados.fases %}
+    <table class="dash-tabela">
+      <thead><tr><th style="text-align:left;">Fase</th><th style="text-align:center;">Processos</th><th style="text-align:right;">A recuperar</th></tr></thead>
+      <tbody>
+        {% for x in dados.fases %}
+        <tr><td>{{ x.nome }}</td><td style="text-align:center;">{{ x.qtd }}</td><td style="text-align:right; white-space:nowrap;">{{ x.valor|moeda }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="dash-vazio">Nenhum processo ativo.</div>
+    {% endif %}
+
+    <div class="dash-secao-titulo" style="margin-top:22px;">Idade dos processos ativos</div>
+    <table class="dash-tabela">
+      <thead><tr><th style="text-align:left;">Tempo desde a distribuição</th><th style="text-align:center;">Processos</th><th style="text-align:right;">A recuperar</th></tr></thead>
+      <tbody>
+        {% for x in dados.idade_ativos if x.qtd %}
+        <tr><td>{{ x.faixa }}</td><td style="text-align:center;">{{ x.qtd }}</td><td style="text-align:right; white-space:nowrap;">{{ x.valor|moeda }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if dados.parados.qtd %}
+    <div class="dash-legenda-item" style="margin-top:8px;"><span class="dash-legenda-cor" style="background:var(--dash-vermelho)"></span>{{ dados.parados.qtd }} processo(s) sem movimentação há mais de 90 dias ({{ dados.parados.valor|moeda }} a recuperar).</div>
+    {% endif %}
+  </div>
+
+  <div class="dash-painel">
+    <div class="dash-secao-titulo">A recuperar por Centro de Resultado</div>
+    {% if dados.top_centros_resultado %}
+    <table class="dash-tabela">
+      <thead><tr><th style="text-align:left;">Centro de resultado</th><th style="text-align:center;">Processos ativos</th><th style="text-align:right;">A recuperar</th></tr></thead>
+      <tbody>
+        {% for c in dados.top_centros_resultado %}
+        <tr><td>{{ c.nome }}</td><td style="text-align:center;">{{ c.qtd }}</td><td style="text-align:right; white-space:nowrap;">{{ c.valor|moeda }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="dash-vazio" style="text-align:left; padding-top:10px;">A recuperar = total cobrado menos o que já foi recuperado em cada processo ativo.</div>
+    {% else %}
+    <div class="dash-vazio">Nenhum centro de resultado informado nos processos ativos.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+  const d = {{ dados|tojson }};
+  const navy = "#16233d", gold = "#b7924b", verde = "#1f8a5f", vermelho = "#b3402f", amarelo = "#c08a1e", cinza = "#8b95a1";
+  const reais = v => 'R$ ' + v.toLocaleString('pt-BR');
+
+  if (typeof Chart === "undefined") {
+    console.error("Chart.js não carregou - verifique a conexão com o CDN.");
+  } else {
+    Chart.defaults.font.family = "Inter, sans-serif";
+    Chart.defaults.color = "#5b6472";
+
+    function vazio(id, texto) {
+      document.getElementById(id).replaceWith(
+        Object.assign(document.createElement('div'), { className: 'dash-vazio', innerText: texto })
+      );
+    }
+
+    // Aging da carteira
+    try {
+      const cores = [verde, "#8bc34a", amarelo, "#d9822b", vermelho, cinza];
+      new Chart(document.getElementById('graficoAging'), {
+        type: 'bar',
+        data: {
+          labels: d.aging.map(x => x.faixa),
+          datasets: [{ data: d.aging.map(x => x.valor), backgroundColor: cores, borderRadius: 6 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false },
+            tooltip: { callbacks: { afterLabel: c => d.aging[c.dataIndex].qtd + ' título(s)' } } },
+          scales: { y: { ticks: { callback: reais } } }
+        }
+      });
+    } catch (e) { console.error("Erro no gráfico de aging:", e); }
+
+    // Situação dos títulos
+    try {
+      const s = d.titulos_status;
+      const total = s.deferido.qtd + s.em_analise.qtd + s.indeferido.qtd;
+      if (total > 0) {
+        new Chart(document.getElementById('graficoTitulos'), {
+          type: 'doughnut',
+          data: {
+            labels: ['Deferido', 'Em análise', 'Indeferido'],
+            datasets: [{ data: [s.deferido.qtd, s.em_analise.qtd, s.indeferido.qtd], backgroundColor: [verde, gold, vermelho] }]
+          },
+          options: { responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' },
+              tooltip: { callbacks: { afterLabel: c => reais([s.deferido, s.em_analise, s.indeferido][c.dataIndex].valor) } } } }
+        });
+      } else { vazio('graficoTitulos', 'Nenhum título cadastrado nos processos ativos.'); }
+    } catch (e) { console.error("Erro no gráfico de títulos:", e); }
+
+    // Fluxo previsto x recebido
+    try {
+      new Chart(document.getElementById('graficoFluxo'), {
+        type: 'bar',
+        data: {
+          labels: d.fluxo_mensal.map(m => m.label),
+          datasets: [
+            { label: 'Previsto (vencimento)', data: d.fluxo_mensal.map(m => m.previsto), backgroundColor: navy, borderRadius: 4 },
+            { label: 'Recebido', data: d.fluxo_mensal.map(m => m.recebido), backgroundColor: verde, borderRadius: 4 },
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } },
+          scales: { y: { ticks: { callback: reais } } } }
+      });
+    } catch (e) { console.error("Erro no gráfico de fluxo:", e); }
+
+    // Resultado dos processos
+    try {
+      const r = d.resultado;
+      const total = r.ganhamos + r.acordo + r.perdemos + r.extinto_sem_resolucao_merito;
+      if (total > 0) {
+        new Chart(document.getElementById('graficoResultado'), {
+          type: 'doughnut',
+          data: {
+            labels: ['Ganhamos', 'Acordo', 'Perdemos', 'Extinto sem resolução do mérito'],
+            datasets: [{ data: [r.ganhamos, r.acordo, r.perdemos, r.extinto_sem_resolucao_merito],
+              backgroundColor: [verde, "#8bc34a", vermelho, cinza] }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+      } else { vazio('graficoResultado', 'Nenhum processo com resultado registrado ainda.'); }
+    } catch (e) { console.error("Erro no gráfico de resultado:", e); }
+  }
+</script>
+{% endblock %}

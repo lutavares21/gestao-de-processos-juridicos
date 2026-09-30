@@ -8,7 +8,7 @@ import io
 import os
 import re
 import unicodedata
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify
 from flask_login import (
@@ -16,6 +16,7 @@ from flask_login import (
 )
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, case
+from sqlalchemy.orm import selectinload
 from werkzeug.security import check_password_hash, generate_password_hash
 from models import (
     db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR,
@@ -1696,6 +1697,305 @@ def processo_editar(processo_id):
     return redirect(url_for("processo_detalhe", processo_id=processo.id))
 
 
+# ---------------------------------------------------------------------------
+# PANORAMA - CÍVEL / RECUPERAÇÃO DE CRÉDITO
+# ---------------------------------------------------------------------------
+# Aqui a empresa é CREDORA (cobra o que lhe devem), então a lógica é o oposto
+# do panorama cível/trabalhista (onde é ré e se mede exposição/risco de perda).
+# Em vez de provisionado/gasto/economizado, o painel mede:
+#   carteira em cobrança -> recuperado -> inadimplência dos acordos -> custo.
+#
+# Regras de negócio adotadas (ajuste aqui se a diretoria pensar diferente):
+#   * Cobrado (por processo) = soma do "Total" dos títulos; se o processo não
+#     tem títulos, cai para o Valor da causa.
+#   * Recuperado (por processo) = o maior entre o campo "Valor Recuperado"
+#     (valor_final) e a soma dos Valores Recebidos das parcelas do acordo.
+#     Usa-se o maior (e não a soma) para não contar duas vezes o mesmo
+#     dinheiro quando o operador preenche os dois lugares.
+#   * Carteira exigível = títulos de processos ATIVOS que não estão
+#     "indeferidos" (título indeferido não é cobrável).
+#   * Parcela em atraso = vencida e com situação diferente de "Recebido".
+#   * Custo de recuperação = honorários advocatícios + periciais + custas.
+#   * Taxa de êxito = (ganhamos + acordo) / todos os processos com resultado.
+
+FASES_PROCESSUAIS = {
+    "primeira_instancia": "1ª Instância",
+    "segunda_instancia_tj": "2ª Instância - TJ",
+    "segunda_instancia_trf": "2ª Instância - TRF",
+    "execucao": "Execução",
+    "stj": "Tribunal Superior - STJ",
+    "stf": "Tribunal Superior - STF",
+    "nao_informado": "Não informado",
+}
+
+
+def montar_panorama_recuperacao():
+    hoje = date.today()
+    em_30_dias = hoje + timedelta(days=30)
+    nomes_mes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+                 "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+
+    def num(valor):
+        return float(valor or 0)
+
+    def total_titulo(t):
+        if t.total is not None:
+            return float(t.total)
+        base = t.saldo if t.saldo is not None else t.valor
+        return num(base) + num(t.juros) + num(t.correcao) + num(t.outros)
+
+    def deslocar_mes(ano, mes, delta):
+        indice = ano * 12 + (mes - 1) + delta
+        return indice // 12, indice % 12 + 1
+
+    processos = (
+        Processo.query.filter_by(origem_cadastro="civel_recuperacao")
+        .options(
+            selectinload(Processo.titulos_recuperacao),
+            selectinload(Processo.acordos_recebimento),
+            selectinload(Processo.movimentos),
+        )
+        .all()
+    )
+
+    # ---- Resumo por processo (base para quase tudo abaixo) ----------------
+    resumo = []
+    for p in processos:
+        titulos_total = sum(total_titulo(t) for t in p.titulos_recuperacao)
+        cobrado = titulos_total or num(p.valor_causa)
+        recebido_acordo = sum(num(a.valor_recebido) for a in p.acordos_recebimento)
+        recuperado = max(num(p.valor_final), recebido_acordo)
+        custo = num(p.honorarios_advogado) + num(p.honorarios_periciais) + num(p.custas_processuais)
+        resumo.append({"p": p, "cobrado": cobrado, "recuperado": recuperado, "custo": custo})
+    ativos = [r for r in resumo if r["p"].status == "ativo"]
+
+    dados = {"total": len(processos)}
+
+    # ---- 1. Visão geral ---------------------------------------------------
+    for status in ("ativo", "arquivado", "suspenso"):
+        dados[status] = sum(1 for p in processos if p.status == status)
+    dados["total_titulos"] = sum(len(p.titulos_recuperacao) for p in processos)
+
+    # ---- 2. Financeiro ----------------------------------------------------
+    cobrado_total = sum(r["cobrado"] for r in resumo)
+    recuperado_total = sum(r["recuperado"] for r in resumo)
+    custo_total = sum(r["custo"] for r in resumo)
+
+    titulos_ativos = [t for r in ativos for t in r["p"].titulos_recuperacao]
+    exigiveis = [t for t in titulos_ativos if t.status != "indeferido"]
+
+    dados["financeiro"] = {
+        "carteira_exigivel": sum(total_titulo(t) for t in exigiveis),
+        "cobrado_total": cobrado_total,
+        "recuperado": recuperado_total,
+        "taxa_recuperacao": round(100 * recuperado_total / cobrado_total, 1) if cobrado_total else None,
+        "custo": custo_total,
+        "custo_pct": round(100 * custo_total / recuperado_total, 1) if recuperado_total else None,
+        "liquido": recuperado_total - custo_total,
+    }
+
+    # ---- 3. Composição da carteira exigível -------------------------------
+    saldo = sum(num(t.saldo if t.saldo is not None else t.valor) for t in exigiveis)
+    juros = sum(num(t.juros) for t in exigiveis)
+    correcao = sum(num(t.correcao) for t in exigiveis)
+    outros = sum(num(t.outros) for t in exigiveis)
+    dados["composicao"] = {
+        "saldo": saldo, "juros": juros, "correcao": correcao, "outros": outros,
+        "acrescimo_pct": round(100 * (juros + correcao + outros) / saldo, 1) if saldo else None,
+    }
+
+    # ---- 4. Situação dos títulos (carteira dos processos ativos) ----------
+    dados["titulos_status"] = {
+        chave: {
+            "qtd": sum(1 for t in titulos_ativos if (t.status or "em_analise") == chave),
+            "valor": sum(total_titulo(t) for t in titulos_ativos if (t.status or "em_analise") == chave),
+        }
+        for chave in ("deferido", "em_analise", "indeferido")
+    }
+
+    # ---- 5. Aging (vencimento da carteira exigível) -----------------------
+    faixas = [("A vencer", None, 0), ("1-90 dias", 1, 90), ("91-180 dias", 91, 180),
+              ("181-365 dias", 181, 365), ("+ de 1 ano", 366, None)]
+    aging = {nome: {"qtd": 0, "valor": 0.0} for nome, _, _ in faixas}
+    aging["Sem vencimento"] = {"qtd": 0, "valor": 0.0}
+    vencidos_mais_1ano = 0
+    for t in exigiveis:
+        if not t.vencimento:
+            nome = "Sem vencimento"
+        else:
+            dias = (hoje - t.vencimento).days
+            nome = next(n for n, ini, fim in faixas
+                        if (ini is None or dias >= ini) and (fim is None or dias <= fim))
+            if dias > 365:
+                vencidos_mais_1ano += 1
+        aging[nome]["qtd"] += 1
+        aging[nome]["valor"] += total_titulo(t)
+    dados["aging"] = [{"faixa": k, **v} for k, v in aging.items()]
+
+    # ---- 6. Devedores e companies (carteira exigível) ---------------------
+    def agrupar(chave_fn):
+        grupos = {}
+        for t in exigiveis:
+            nome = (chave_fn(t) or "Não informado").strip().upper()
+            g = grupos.setdefault(nome, {"nome": nome, "titulos": 0, "valor": 0.0, "processos": set()})
+            g["titulos"] += 1
+            g["valor"] += total_titulo(t)
+            g["processos"].add(t.processo_id)
+        lista = sorted(grupos.values(), key=lambda g: g["valor"], reverse=True)
+        for g in lista:
+            g["processos"] = len(g["processos"])
+        return lista
+
+    devedores = agrupar(lambda t: t.cliente)
+    total_exigivel = dados["financeiro"]["carteira_exigivel"]
+    dados["top_devedores"] = devedores[:8]
+    dados["concentracao_top5"] = (
+        round(100 * sum(g["valor"] for g in devedores[:5]) / total_exigivel, 1) if total_exigivel else None
+    )
+    dados["top_companies"] = agrupar(lambda t: t.company)[:6]
+
+    # ---- 7. Acordos / parcelas --------------------------------------------
+    ac = {"valor_acordado": 0.0, "recebido": 0.0, "em_aberto": 0.0, "em_atraso": 0.0,
+          "a_vencer_30d": 0.0, "vencido_total": 0.0, "honorarios_exito": 0.0,
+          "sucumbencia": 0.0, "pago_adv": 0.0, "repasses_pendentes": 0,
+          "situacao": {"pendente": 0, "parcial": 0, "pago": 0}}
+    processos_com_acordo = 0
+    atrasadas = []
+    previsto_mes, recebido_mes = {}, {}
+    for r in resumo:
+        parcelas = r["p"].acordos_recebimento
+        if parcelas:
+            processos_com_acordo += 1
+        for a in parcelas:
+            valor_parcela, recebido = num(a.valor_parcela), num(a.valor_recebido)
+            situacao = a.situacao if a.situacao in ac["situacao"] else ("pago" if recebido else "pendente")
+            aberto = 0.0 if situacao == "pago" else max(valor_parcela - recebido, 0.0)
+            ac["situacao"][situacao] += 1
+            ac["valor_acordado"] += valor_parcela
+            ac["recebido"] += recebido
+            ac["em_aberto"] += aberto
+            ac["honorarios_exito"] += num(a.honorarios_exito)
+            ac["sucumbencia"] += num(a.sucumbencia)
+            ac["pago_adv"] += num(a.valor_pago_adv)
+            if recebido > 0 and not a.data_pagto_adv and not a.valor_pago_adv:
+                ac["repasses_pendentes"] += 1
+            if a.vencimento:
+                chave = (a.vencimento.year, a.vencimento.month)
+                previsto_mes[chave] = previsto_mes.get(chave, 0.0) + valor_parcela
+                if a.vencimento < hoje:
+                    ac["vencido_total"] += valor_parcela
+                    if aberto > 0:
+                        ac["em_atraso"] += aberto
+                        atrasadas.append({
+                            "numero_processo": r["p"].numero_processo, "valor": aberto,
+                            "parcela": a.parcela or "—", "dias": (hoje - a.vencimento).days,
+                        })
+                elif a.vencimento <= em_30_dias:
+                    ac["a_vencer_30d"] += aberto
+            if a.data_recebimento and recebido:
+                chave = (a.data_recebimento.year, a.data_recebimento.month)
+                recebido_mes[chave] = recebido_mes.get(chave, 0.0) + recebido
+    ac["inadimplencia_pct"] = (
+        round(100 * ac["em_atraso"] / ac["vencido_total"], 1) if ac["vencido_total"] else None
+    )
+    ac["processos_com_acordo"] = processos_com_acordo
+    ac["pct_processos_com_acordo"] = round(100 * processos_com_acordo / len(processos), 1) if processos else None
+    dados["acordos"] = ac
+
+    # Fluxo mês a mês: 6 meses para trás + mês atual + 6 para frente
+    fluxo = []
+    for delta in range(-6, 7):
+        ano, mes = deslocar_mes(hoje.year, hoje.month, delta)
+        fluxo.append({
+            "label": f"{nomes_mes[mes - 1]}/{str(ano)[2:]}",
+            "previsto": previsto_mes.get((ano, mes), 0.0),
+            "recebido": recebido_mes.get((ano, mes), 0.0),
+        })
+    dados["fluxo_mensal"] = fluxo
+
+    # ---- 8. Resultado dos processos ---------------------------------------
+    resultados = {k: sum(1 for p in processos if p.resultado == k)
+                  for k in ("ganhamos", "acordo", "perdemos", "extinto_sem_resolucao_merito")}
+    dados["resultado"] = resultados
+    com_resultado = sum(resultados.values())
+    dados["taxa_exito"] = (
+        round(100 * (resultados["ganhamos"] + resultados["acordo"]) / com_resultado, 1)
+        if com_resultado else None
+    )
+
+    # ---- 9. Desempenho por escritório -------------------------------------
+    escritorios = {}
+    for r in resumo:
+        nome = r["p"].escritorio or "Não informado"
+        e = escritorios.setdefault(nome, {"nome": nome, "processos": 0, "cobrado": 0.0, "recuperado": 0.0})
+        e["processos"] += 1
+        e["cobrado"] += r["cobrado"]
+        e["recuperado"] += r["recuperado"]
+    lista_esc = sorted(escritorios.values(), key=lambda e: e["cobrado"], reverse=True)[:8]
+    for e in lista_esc:
+        e["taxa"] = round(100 * e["recuperado"] / e["cobrado"], 1) if e["cobrado"] else None
+    dados["escritorios"] = lista_esc
+
+    # ---- 10. Fase processual e Centro de Resultado (só ativos) ------------
+    def em_aberto(r):
+        return max(r["cobrado"] - r["recuperado"], 0.0)
+
+    fases = {}
+    crs = {}
+    for r in ativos:
+        chave = FASES_PROCESSUAIS.get(r["p"].grau_instancia, "Não informado")
+        f = fases.setdefault(chave, {"nome": chave, "qtd": 0, "valor": 0.0})
+        f["qtd"] += 1
+        f["valor"] += em_aberto(r)
+        if r["p"].centro_resultado:
+            c = crs.setdefault(r["p"].centro_resultado, {"nome": r["p"].centro_resultado, "qtd": 0, "valor": 0.0})
+            c["qtd"] += 1
+            c["valor"] += em_aberto(r)
+    dados["fases"] = sorted(fases.values(), key=lambda f: f["valor"], reverse=True)
+    dados["top_centros_resultado"] = sorted(crs.values(), key=lambda c: c["valor"], reverse=True)[:6]
+
+    # ---- 11. Idade, tempo de tramitação e processos parados ---------------
+    idade = {"Até 1 ano": [0, 0.0], "1 a 2 anos": [0, 0.0], "2 a 3 anos": [0, 0.0],
+             "+ de 3 anos": [0, 0.0], "Sem data": [0, 0.0]}
+    parados, valor_parados = 0, 0.0
+    for r in ativos:
+        p = r["p"]
+        if p.data_distribuicao:
+            anos = (hoje - p.data_distribuicao).days / 365.25
+            faixa = ("Até 1 ano" if anos < 1 else "1 a 2 anos" if anos < 2
+                     else "2 a 3 anos" if anos < 3 else "+ de 3 anos")
+        else:
+            faixa = "Sem data"
+        idade[faixa][0] += 1
+        idade[faixa][1] += em_aberto(r)
+
+        datas_mov = [m.data_movimento for m in p.movimentos if m.data_movimento]
+        referencia = max(datas_mov) if datas_mov else p.data_distribuicao
+        if referencia and (hoje - referencia).days > 90:
+            parados += 1
+            valor_parados += em_aberto(r)
+    dados["idade_ativos"] = [{"faixa": k, "qtd": v[0], "valor": v[1]} for k, v in idade.items()]
+    dados["parados"] = {"qtd": parados, "valor": valor_parados}
+
+    duracoes = [(p.data_arquivamento - p.data_distribuicao).days
+                for p in processos if p.status == "arquivado" and p.data_arquivamento and p.data_distribuicao]
+    dados["tempo_medio_meses"] = round(sum(duracoes) / len(duracoes) / 30.4, 1) if duracoes else None
+
+    # ---- 12. Atenção da diretoria -----------------------------------------
+    atrasadas.sort(key=lambda x: x["valor"], reverse=True)
+    dados["atencao_parcelas"] = atrasadas[:5]
+    avisos = []
+    if parados:
+        avisos.append(f"{parados} processo(s) ativo(s) sem movimentação há mais de 90 dias.")
+    if vencidos_mais_1ano:
+        avisos.append(f"{vencidos_mais_1ano} título(s) exigível(is) vencido(s) há mais de 1 ano.")
+    if ac["repasses_pendentes"]:
+        avisos.append(f"{ac['repasses_pendentes']} parcela(s) recebida(s) sem pagamento ao advogado registrado.")
+    dados["avisos"] = avisos
+
+    return dados
+
+
 @app.route("/panorama-juridico")
 @login_required
 def panorama_juridico():
@@ -1709,19 +2009,27 @@ def panorama_juridico():
     # "civel_trabalhista" é o único tipo que junta mais de uma origem de
     # cadastro (Cível + Trabalhista) - não existe um "todos" genérico que
     # some literalmente todos os tipos de processo do sistema.
-    tipos_processo_validos = {"civel", "trabalhista", "civel_trabalhista"}
+    tipos_processo_validos = {"civel", "trabalhista", "civel_trabalhista", "civel_recuperacao"}
     tipo_param = request.args.get("tipo")
     if tipo_param not in tipos_processo_validos:
         return render_template("panorama_juridico.html", mostrar_menu=True)
     tipo_selecionado = tipo_param
+
+    # Recuperação de Crédito tem análise própria (empresa credora: carteira,
+    # recuperado, acordos, inadimplência) - ver montar_panorama_recuperacao().
+    if tipo_selecionado == "civel_recuperacao":
+        return render_template(
+            "panorama_recuperacao.html", dados=montar_panorama_recuperacao(),
+            tipo_selecionado=tipo_selecionado, mostrar_menu=False,
+        )
 
     # Filtro por tipo de processo. "civel_trabalhista" não aplica nenhum
     # filtro extra de origem_cadastro, pois já é a junção dos dois.
     #
     # Cível - Recuperação de Crédito fica de fora deste panorama: a análise
     # de recuperação de crédito é muito diferente (não fala em risco/
-    # sentença/pedidos como os outros tipos) e vai ganhar um panorama
-    # próprio depois. Até lá, nenhum processo com origem_cadastro=
+    # sentença/pedidos como os outros tipos) e tem panorama próprio
+    # (montar_panorama_recuperacao). Nenhum processo com origem_cadastro=
     # "civel_recuperacao" deve aparecer aqui - nem nas somas/contagens de
     # "Cível + Trabalhista", nem como opção selecionável no filtro.
 
