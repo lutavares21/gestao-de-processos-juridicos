@@ -1857,7 +1857,7 @@ def montar_panorama_recuperacao():
     # ---- 7. Acordos / parcelas --------------------------------------------
     ac = {"valor_acordado": 0.0, "recebido": 0.0, "em_aberto": 0.0, "em_atraso": 0.0,
           "a_vencer_30d": 0.0, "vencido_total": 0.0, "honorarios_exito": 0.0,
-          "sucumbencia": 0.0, "pago_adv": 0.0, "repasses_pendentes": 0,
+          "sucumbencia": 0.0, "pago_adv": 0.0, "repasses_pendentes": 0, "sem_valor": 0,
           "situacao": {"pendente": 0, "parcial": 0, "pago": 0}}
     processos_com_acordo = 0
     atrasadas = []
@@ -1871,6 +1871,11 @@ def montar_panorama_recuperacao():
             situacao = a.situacao if a.situacao in ac["situacao"] else ("pago" if recebido else "pendente")
             aberto = 0.0 if situacao == "pago" else max(valor_parcela - recebido, 0.0)
             ac["situacao"][situacao] += 1
+            # Parcela vencida, não quitada e sem valor informado: não entra no
+            # cálculo de inadimplência (saldo em aberto = 0), então é sinalizada.
+            if (situacao != "pago" and a.valor_parcela is None
+                    and a.vencimento and a.vencimento < hoje):
+                ac["sem_valor"] += 1
             ac["valor_acordado"] += valor_parcela
             ac["recebido"] += recebido
             ac["em_aberto"] += aberto
@@ -1887,6 +1892,7 @@ def montar_panorama_recuperacao():
                     if aberto > 0:
                         ac["em_atraso"] += aberto
                         atrasadas.append({
+                            "processo_id": r["p"].id,
                             "numero_processo": r["p"].numero_processo, "valor": aberto,
                             "parcela": a.parcela or "—", "dias": (hoje - a.vencimento).days,
                         })
@@ -1991,6 +1997,8 @@ def montar_panorama_recuperacao():
         avisos.append(f"{vencidos_mais_1ano} título(s) exigível(is) vencido(s) há mais de 1 ano.")
     if ac["repasses_pendentes"]:
         avisos.append(f"{ac['repasses_pendentes']} parcela(s) recebida(s) sem pagamento ao advogado registrado.")
+    if ac["sem_valor"]:
+        avisos.append(f"{ac['sem_valor']} parcela(s) vencida(s) sem valor informado, não computada(s) como inadimplência.")
     dados["avisos"] = avisos
 
     return dados
