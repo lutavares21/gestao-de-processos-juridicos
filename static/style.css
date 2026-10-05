@@ -614,9 +614,9 @@ input[readonly] {
   max-width: 520px;
   flex-shrink: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 40px;
+  padding: 16px 40px 24px;
   overflow: hidden;
   background: var(--creme-logo);
 }
@@ -660,18 +660,24 @@ input[readonly] {
 /* Logo menor na página inicial (escopo restrito ao painel, para não
    afetar outras telas que usem .logo-grande) */
 .inicio-painel-logo .logo-grande {
-  width: min(280px, 100%);
+  width: min(216px, 100%);
+  margin: 0;
+  border: 0;
+  padding: 0;
 }
 
 /* Imagem inteira (sem recorte): a altura acompanha a janela e a largura
    segue a proporção original da foto, então tudo cabe na tela. */
 .inicio-imagem {
-  height: min(54vh, 520px);
+  height: min(64vh, 620px);
   width: auto;
   max-width: 100%;
   object-fit: contain;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(27, 42, 74, 0.18);
+  margin: 0;
+  border: 0;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .inicio-tagline {
