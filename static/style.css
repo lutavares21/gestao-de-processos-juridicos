@@ -652,7 +652,7 @@ input[readonly] {
   gap: 20px;
   /* largura única: logo e foto ocupam 100% dela, então ficam alinhadas
      nas duas laterais */
-  width: min(300px, 100%);
+  width: min(400px, 100%);
 }
 
 .logo-grande {
@@ -670,12 +670,18 @@ input[readonly] {
   padding: 0;
 }
 
-/* Imagem inteira (sem recorte), com a mesma largura da logo; a altura
-   segue a proporção original da foto. */
+/* Foto com a mesma largura da logo. A caixa é 6:7 (mais larga que a foto
+   original, que é bem vertical): mostra o holograma e a mão e a base se
+   dissolve no fundo da página, sem corte seco. */
 .inicio-imagem {
   display: block;
   width: 100%;
+  aspect-ratio: 6 / 7;
   height: auto;
+  object-fit: cover;
+  object-position: top;
+  -webkit-mask-image: linear-gradient(to bottom, #000 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 80%, transparent 100%);
   margin: 0;
   border: 0;
   padding: 0;
