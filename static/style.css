@@ -657,6 +657,15 @@ input[readonly] {
   height: auto;
 }
 
+.inicio-imagem {
+  width: min(400px, 100%);
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: center 8%;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(27, 42, 74, 0.18);
+}
+
 .inicio-tagline {
   margin: 0;
   color: #dfe4f0;
