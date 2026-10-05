@@ -650,6 +650,9 @@ input[readonly] {
   align-items: center;
   text-align: center;
   gap: 20px;
+  /* largura única: logo e foto ocupam 100% dela, então ficam alinhadas
+     nas duas laterais */
+  width: min(300px, 100%);
 }
 
 .logo-grande {
@@ -660,19 +663,19 @@ input[readonly] {
 /* Logo menor na página inicial (escopo restrito ao painel, para não
    afetar outras telas que usem .logo-grande) */
 .inicio-painel-logo .logo-grande {
-  width: min(216px, 100%);
+  width: 100%;
+  height: auto;
   margin: 0;
   border: 0;
   padding: 0;
 }
 
-/* Imagem inteira (sem recorte): a altura acompanha a janela e a largura
-   segue a proporção original da foto, então tudo cabe na tela. */
+/* Imagem inteira (sem recorte), com a mesma largura da logo; a altura
+   segue a proporção original da foto. */
 .inicio-imagem {
-  height: min(64vh, 620px);
-  width: auto;
-  max-width: 100%;
-  object-fit: contain;
+  display: block;
+  width: 100%;
+  height: auto;
   margin: 0;
   border: 0;
   padding: 0;
