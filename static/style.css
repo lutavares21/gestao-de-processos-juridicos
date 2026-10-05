@@ -1205,7 +1205,7 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 .dash-header-layout {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
 }
 
 @media (max-width: 760px) {
@@ -1216,8 +1216,8 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 }
 
 .dash-header-logo {
-  flex: 0 0 390px;
-  max-width: 390px;
+  flex: 0 0 250px;
+  max-width: 250px;
   order: 0;
 }
 
@@ -1228,10 +1228,10 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 }
 
 .dash-header-ilustracao {
-  flex: 0 0 320px;
-  max-width: 320px;
+  flex: 0 0 200px;
+  max-width: 200px;
   order: 2;
-  margin-top: -34px;
+  margin-top: -20px;
 }
 
 .dash-header-ilustracao img {
@@ -1244,31 +1244,31 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
   flex: 1;
   min-width: 0;
   order: 1;
-  margin-right: 70px;
+  margin-right: 24px;
 }
 
 .dash-header{
   background: none;
-  padding: 8px 0 24px;
+  padding: 0 0 8px;
   color: var(--texto);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 16px;
+  gap: 8px;
 }
 .dash-header h1{
   font-family: var(--fonte-titulo, 'Source Serif 4', serif);
-  font-size: 30px;
-  margin: 0 0 6px 0;
+  font-size: 24px;
+  margin: 0 0 2px 0;
   letter-spacing: 0.2px;
   color: var(--tinta);
 }
 .dash-header .dash-subtitulo{
   color: #000;
-  font-size: 15px;
+  font-size: 13.5px;
 }
 .dash-header .dash-data{
   font-size: 13px;
@@ -1284,7 +1284,7 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
   gap: 10px;
   margin-top: 0;
   color: #000;
-  font-size: 14.5px;
+  font-size: 13.5px;
 }
 .dash-filtro-tipo select{
   width: auto;
@@ -1745,7 +1745,7 @@ canvas{ max-width: 100%; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin: 24px 0 0 32px;
+  margin: 14px 0 0 32px;
   padding: 8px 16px;
   border: 1px solid var(--tinta);
   border-radius: 20px;
