@@ -8,7 +8,7 @@
   --tinta-clara: #2e4470;
   --selo: #7a2e3b;
   --selo-claro: #9a3e4d;
-  --creme-logo: #f4f3ef;
+  --creme-logo: #f5f3ef;
   --dourado-logo: #c79a4d;
   --dourado-vivo: #f0a52e;
   --papel: #f7f6f3;
@@ -604,7 +604,7 @@ input[readonly] {
 .inicio-split {
   min-height: 100vh;
   display: flex;
-  background: linear-gradient(160deg, #0c1730 0%, #1b2a4a 55%, #24396a 100%);
+  background: var(--creme-logo);
 }
 
 .inicio-painel-logo {
@@ -618,7 +618,7 @@ input[readonly] {
   justify-content: center;
   padding: 40px;
   overflow: hidden;
-  background: var(--papel);
+  background: var(--creme-logo);
 }
 
 .inicio-painel-logo::before {
@@ -626,16 +626,6 @@ input[readonly] {
   position: absolute;
   inset: 0;
   pointer-events: none;
-}
-
-.inicio-painel-logo::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 3px;
-  background: #d4a017;
 }
 
 .inicio-glow {
@@ -729,16 +719,6 @@ input[readonly] {
     max-width: none;
     min-width: 0;
     padding: 32px 20px;
-  }
-
-  .inicio-painel-logo::after {
-    top: auto;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: auto;
-    height: 3px;
-    background: #d4a017;
   }
 
   .inicio-userbar {
