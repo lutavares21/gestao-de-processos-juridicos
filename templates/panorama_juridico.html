@@ -118,6 +118,7 @@
               <option value="trabalhista" {% if tipo_selecionado == 'trabalhista' %}selected{% endif %}>Trabalhista</option>
               <option value="tributario" disabled title="Em breve.">Processo Tributário</option>
             </select>
+            {% include "_filtro_periodo.html" %}
           </form>
         </div>
           </div>
@@ -264,7 +265,7 @@
           </div>
 
           <div class="dash-painel">
-            <div class="dash-secao-titulo">Novos processos distribuídos - últimos 12 meses</div>
+            <div class="dash-secao-titulo">{{ dados.evolucao_titulo }}</div>
             <div class="dash-chart-wrap"><canvas id="graficoEvolucao"></canvas></div>
           </div>
 
