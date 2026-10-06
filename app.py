@@ -312,12 +312,18 @@ def preencher_campos_processo(processo, form):
     processo.tipo_acao = form.get("tipo_acao")
     processo.data_distribuicao = texto_para_data(form.get("data_distribuicao"))
     processo.valor_causa = texto_para_numero(form.get("valor_causa"))
-    processo.data_audiencia_1 = texto_para_data(form.get("data_audiencia_1"))
-    processo.audiencia_1_horario = form.get("audiencia_1_horario") or None
-    processo.audiencia_1_tipo = form.get("audiencia_1_tipo") or None
-    processo.audiencia_1_link = form.get("audiencia_1_link") or None
-    processo.data_audiencia_2 = texto_para_data(form.get("data_audiencia_2"))
-    processo.data_audiencia_3 = texto_para_data(form.get("data_audiencia_3"))
+    # Aceita os nomes novos dos campos do formulário e, por enquanto, também
+    # os antigos (data_audiencia_1 etc.), para o cadastro não quebrar enquanto
+    # os templates não forem atualizados.
+    def campo(novo, antigo):
+        return form.get(novo) or form.get(antigo)
+
+    processo.proxima_audiencia = texto_para_data(campo("proxima_audiencia", "data_audiencia_1"))
+    processo.proxima_audiencia_horario = campo("proxima_audiencia_horario", "audiencia_1_horario") or None
+    processo.proxima_audiencia_tipo = campo("proxima_audiencia_tipo", "audiencia_1_tipo") or None
+    processo.proxima_audiencia_link = campo("proxima_audiencia_link", "audiencia_1_link") or None
+    processo.ultima_audiencia = texto_para_data(campo("ultima_audiencia", "data_audiencia_2"))
+    processo.audiencia_inicial = texto_para_data(campo("audiencia_inicial", "data_audiencia_3"))
     processo.data_arquivamento = texto_para_data(form.get("data_arquivamento"))
     processo.centro_resultado = form.get("centro_resultado")
     processo.escritorio = form.get("escritorio")
@@ -1481,8 +1487,8 @@ def processos_civel_recuperacao():
 @app.route("/agenda")
 @login_required
 def agenda():
-    """Agenda de audiências: reúne as audiências (1, 2 e 3) de todos os
-    processos cíveis, cíveis-recuperação, trabalhistas, tributários
+    """Agenda de audiências: mostra a "Próxima Audiência" cadastrada em cada
+    um dos processos cíveis, cíveis-recuperação, trabalhistas, tributários
     (estes últimos ainda são processos cíveis com tipo_acao='tributario',
     já que não existe cadastro próprio para tributário) e licitatórios
     (origem_cadastro='licitatorio' - o cadastro ainda não existe, então
@@ -1534,13 +1540,7 @@ def agenda():
     if uf:
         query = query.filter(Processo.uf == uf)
 
-    query = query.filter(
-        db.or_(
-            Processo.data_audiencia_1.isnot(None),
-            Processo.data_audiencia_2.isnot(None),
-            Processo.data_audiencia_3.isnot(None),
-        )
-    )
+    query = query.filter(Processo.proxima_audiencia.isnot(None))
 
     processos = query.all()
 
@@ -1566,35 +1566,21 @@ def agenda():
         else:
             tipo_processo = "civel"
 
-        slots = [
-            (1, p.data_audiencia_1, p.audiencia_1_horario, p.audiencia_1_tipo),
-            (2, p.data_audiencia_2, None, None),
-            (3, p.data_audiencia_3, None, None),
-        ]
-        candidatos = []
-        for numero_audiencia, data_aud, horario, tipo_aud in slots:
-            if not data_aud:
-                continue
-            if data_aud < data_de_obj:
-                continue
-            if data_ate_obj and data_aud > data_ate_obj:
-                continue
-            if tipo_audiencia and tipo_aud != tipo_audiencia:
-                continue
-            candidatos.append((numero_audiencia, data_aud, horario, tipo_aud))
+        # A data da agenda é a "Próxima Audiência" cadastrada no processo,
+        # junto com o horário, a modalidade e o link dela.
+        data_aud = p.proxima_audiencia
+        horario = p.proxima_audiencia_horario
+        tipo_aud = p.proxima_audiencia_tipo
+        link_audiencia = p.proxima_audiencia_link
 
-        if not candidatos:
+        if data_aud < data_de_obj:
+            continue
+        if data_ate_obj and data_aud > data_ate_obj:
+            continue
+        if tipo_audiencia and tipo_aud != tipo_audiencia:
             continue
 
-        # De todas as audiências do processo que passaram nos filtros, só a
-        # mais próxima (menor data) entra na agenda.
-        numero_audiencia, data_aud, horario, tipo_aud = min(candidatos, key=lambda c: c[1])
-
-        # Link da audiência e advogado(s) da empresa (lado "reu") - só a
-        # primeira audiência tem link cadastrado (audiencia_1_link); nas
-        # demais (2ª e 3ª) o campo fica vazio, já que o modelo não guarda
-        # link para elas.
-        link_audiencia = p.audiencia_1_link if numero_audiencia == 1 else None
+        # Advogado(s) da empresa (lado "reu").
         nomes_advogados = [adv.nome for adv in p.advogados if adv.lado == "reu"]
         advogados = ", ".join(nomes_advogados) if nomes_advogados else "—"
 
@@ -1606,7 +1592,6 @@ def agenda():
             "data": data_aud,
             "horario": horario,
             "tipo_audiencia": tipo_aud,
-            "numero_audiencia": numero_audiencia,
             "juizado": p.juizado,
             "comarca": p.comarca,
             "uf": p.uf,
@@ -2127,8 +2112,7 @@ def montar_panorama_recuperacao():
         })
     proximas = [
         r["p"] for r in ativos
-        if any(d_ and hoje <= d_ <= em_30_dias
-               for d_ in (r["p"].data_audiencia_1, r["p"].data_audiencia_2, r["p"].data_audiencia_3))
+        if r["p"].proxima_audiencia and hoje <= r["p"].proxima_audiencia <= em_30_dias
     ]
     if proximas:
         avisos.append({

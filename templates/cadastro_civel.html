@@ -110,16 +110,16 @@
             </div>
             <div class="linha">
               <div class="campo">
-                <label for="data_audiencia_1">Próxima audiência</label>
-                <input type="date" id="data_audiencia_1" name="data_audiencia_1">
+                <label for="proxima_audiencia">Próxima audiência</label>
+                <input type="date" id="proxima_audiencia" name="proxima_audiencia">
               </div>
               <div class="campo campo-pequeno">
-                <label for="audiencia_1_horario">Horário</label>
-                <input type="time" id="audiencia_1_horario" name="audiencia_1_horario">
+                <label for="proxima_audiencia_horario">Horário</label>
+                <input type="time" id="proxima_audiencia_horario" name="proxima_audiencia_horario">
               </div>
               <div class="campo">
-                <label for="audiencia_1_tipo">Modalidade da audiência</label>
-                <select id="audiencia_1_tipo" name="audiencia_1_tipo" onchange="alternarLinkAudiencia()">
+                <label for="proxima_audiencia_tipo">Modalidade da audiência</label>
+                <select id="proxima_audiencia_tipo" name="proxima_audiencia_tipo" onchange="alternarLinkAudiencia()">
                   <option value="">Selecione</option>
                   <option value="hibrida">Híbrida</option>
                   <option value="presencial">Presencial</option>
@@ -128,18 +128,18 @@
                 </select>
               </div>
               <div class="campo oculto" id="campo_link_audiencia">
-                <label for="audiencia_1_link">Link da audiência</label>
-                <input type="text" id="audiencia_1_link" name="audiencia_1_link" placeholder="https://...">
+                <label for="proxima_audiencia_link">Link da audiência</label>
+                <input type="text" id="proxima_audiencia_link" name="proxima_audiencia_link" placeholder="https://...">
               </div>
             </div>
             <div class="linha">
               <div class="campo campo-pequeno">
-                <label for="data_audiencia_2">Última audiência</label>
-                <input type="date" id="data_audiencia_2" name="data_audiencia_2">
+                <label for="ultima_audiencia">Última audiência</label>
+                <input type="date" id="ultima_audiencia" name="ultima_audiencia">
               </div>
               <div class="campo">
-                <label for="data_audiencia_3">Audiência inicial</label>
-                <input type="date" id="data_audiencia_3" name="data_audiencia_3">
+                <label for="audiencia_inicial">Audiência inicial</label>
+                <input type="date" id="audiencia_inicial" name="audiencia_inicial">
               </div>
             </div>
             <div class="linha">
@@ -536,7 +536,7 @@
 
     // Mostra o campo de link da audiência quando o tipo não é presencial
     function alternarLinkAudiencia() {
-      const tipo = document.getElementById('audiencia_1_tipo').value;
+      const tipo = document.getElementById('proxima_audiencia_tipo').value;
       const mostrar = tipo === 'telepresencial' || tipo === 'videoconferencia' || tipo === 'hibrida';
       document.getElementById('campo_link_audiencia').classList.toggle('oculto', !mostrar);
     }

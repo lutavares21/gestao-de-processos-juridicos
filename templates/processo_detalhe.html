@@ -129,19 +129,19 @@
             {{ cv('Valor da causa (R$)', p.valor_causa|moeda if p.valor_causa is not none else '') }}
           </div>
           <div class="linha">
-            {{ cv('Próxima audiência', p.data_audiencia_1.strftime('%d/%m/%Y') if p.data_audiencia_1 else '') }}
-            {{ cv('Horário', p.audiencia_1_horario, 'campo-pequeno') }}
-            {{ cv('Modalidade da audiência', rotulos_modalidade.get(p.audiencia_1_tipo)) }}
-            {% if p.audiencia_1_link %}
+            {{ cv('Próxima audiência', p.proxima_audiencia.strftime('%d/%m/%Y') if p.proxima_audiencia else '') }}
+            {{ cv('Horário', p.proxima_audiencia_horario, 'campo-pequeno') }}
+            {{ cv('Modalidade da audiência', rotulos_modalidade.get(p.proxima_audiencia_tipo)) }}
+            {% if p.proxima_audiencia_link %}
             <div class="campo">
               <label>Link da audiência</label>
-              <div class="valor"><a href="{{ p.audiencia_1_link }}" target="_blank" rel="noopener">{{ p.audiencia_1_link }}</a></div>
+              <div class="valor"><a href="{{ p.proxima_audiencia_link }}" target="_blank" rel="noopener">{{ p.proxima_audiencia_link }}</a></div>
             </div>
             {% endif %}
           </div>
           <div class="linha">
-            {{ cv('Última audiência', p.data_audiencia_2.strftime('%d/%m/%Y') if p.data_audiencia_2 else '', 'campo-pequeno') }}
-            {{ cv('Audiência inicial', p.data_audiencia_3.strftime('%d/%m/%Y') if p.data_audiencia_3 else '') }}
+            {{ cv('Última audiência', p.ultima_audiencia.strftime('%d/%m/%Y') if p.ultima_audiencia else '', 'campo-pequeno') }}
+            {{ cv('Audiência inicial', p.audiencia_inicial.strftime('%d/%m/%Y') if p.audiencia_inicial else '') }}
           </div>
           <div class="linha">
             {{ cv('Data do arquivamento', p.data_arquivamento.strftime('%d/%m/%Y') if p.data_arquivamento else '', 'campo-pequeno') }}

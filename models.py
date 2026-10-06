@@ -76,13 +76,15 @@ class Processo(db.Model):
     # --- Datas e audiências ---
     data_distribuicao = db.Column(db.Date, nullable=False)
     valor_causa = db.Column(db.Numeric(14, 2))
-    data_audiencia_1 = db.Column(db.Date)
-    audiencia_1_horario = db.Column(db.String(5))   # 'HH:MM'
-    audiencia_1_tipo = db.Column(db.String(20))
-    # 'presencial', 'telepresencial', 'videoconferencia', 'hibrida'
-    audiencia_1_link = db.Column(db.String(255))
-    data_audiencia_2 = db.Column(db.Date)
-    data_audiencia_3 = db.Column(db.Date)
+    # Os nomes das colunas no banco continuam os antigos (data_audiencia_1 etc.),
+    # então NÃO precisa migrar o banco: só o nome usado no código mudou.
+    proxima_audiencia = db.Column("data_audiencia_1", db.Date)
+    proxima_audiencia_horario = db.Column("audiencia_1_horario", db.String(5))   # 'HH:MM'
+    proxima_audiencia_tipo = db.Column("audiencia_1_tipo", db.String(20))
+    # modalidade: 'presencial', 'telepresencial', 'videoconferencia', 'hibrida'
+    proxima_audiencia_link = db.Column("audiencia_1_link", db.String(255))
+    ultima_audiencia = db.Column("data_audiencia_2", db.Date)
+    audiencia_inicial = db.Column("data_audiencia_3", db.Date)
     data_arquivamento = db.Column(db.Date)
 
     # --- Organização interna ---
@@ -148,6 +150,33 @@ class Processo(db.Model):
     acordos_recebimento = db.relationship(
         "AcordoRecebimento", backref="processo", cascade="all, delete-orphan"
     )
+
+    # --- Nomes antigos (compatibilidade, somente leitura) ---
+    # Templates que ainda usam p.data_audiencia_1 etc. continuam funcionando
+    # até serem atualizados. Depois de trocar todos, este bloco pode ser apagado.
+    @property
+    def data_audiencia_1(self):
+        return self.proxima_audiencia
+
+    @property
+    def audiencia_1_horario(self):
+        return self.proxima_audiencia_horario
+
+    @property
+    def audiencia_1_tipo(self):
+        return self.proxima_audiencia_tipo
+
+    @property
+    def audiencia_1_link(self):
+        return self.proxima_audiencia_link
+
+    @property
+    def data_audiencia_2(self):
+        return self.ultima_audiencia
+
+    @property
+    def data_audiencia_3(self):
+        return self.audiencia_inicial
 
     @property
     def dias_ativos(self):
