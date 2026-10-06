@@ -2,6 +2,7 @@
    Sistema de Gestão de Processos Jurídicos - Estilo Base
    Paleta: tinta (azul-marinho escuro) + selo (vinho)
    ----------------------------------------------------------- */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&display=swap");
 
 :root {
   --tinta: #1b2a4a;
@@ -1799,10 +1800,10 @@ canvas{ max-width: 100%; }
   position: relative;
   top: 32px; /* desce a frase sem mexer na imagem */
   text-align: center;
-  font-family: var(--fonte-titulo);
+  font-family: "Playfair Display", Georgia, serif; /* fonte de destaque */
   font-size: 23px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-weight: 800;
+  letter-spacing: 0.01em;
   line-height: 1.4;
   color: #00102c; /* azul-escuro do "T" da logo */
   animation: panorama-entrada 1.6s cubic-bezier(0.22, 1, 0.36, 1) both;
