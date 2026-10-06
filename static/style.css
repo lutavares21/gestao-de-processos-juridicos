@@ -1794,7 +1794,8 @@ canvas{ max-width: 100%; }
 }
 
 .menu-panorama-frase {
-  margin: 0 0 6px;
+  width: fit-content;
+  margin: 0 0 6px -70px; /* encosta na esquerda, alinhada ao botão Início */
   text-align: center;
   font-family: var(--fonte-titulo);
   font-size: 21px;
@@ -1805,10 +1806,17 @@ canvas{ max-width: 100%; }
   animation-delay: 0.4s;
 }
 
+@media (max-width: 900px) {
+  .menu-panorama-frase {
+    margin-left: 0;
+  }
+}
+
 .menu-panorama-ilustracao img {
   width: 100%;
   height: auto;
   display: block;
+  margin-top: -28px; /* sobe a imagem */
 }
 
 .menu-panorama-conteudo {
