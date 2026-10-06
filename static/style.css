@@ -1795,22 +1795,23 @@ canvas{ max-width: 100%; }
 
 .menu-panorama-frase {
   width: fit-content;
-  margin: 0 0 6px -40px; /* posição horizontal (mais negativo = mais à esquerda) */
+  margin: 0 0 6px -10px; /* posição horizontal (mais negativo = mais à esquerda) */
   position: relative;
-  top: 18px; /* desce a frase sem mexer na imagem */
+  top: 32px; /* desce a frase sem mexer na imagem */
   text-align: center;
   font-family: var(--fonte-titulo);
-  font-size: 21px;
+  font-size: 23px;
   font-weight: 600;
+  letter-spacing: 0.02em;
   line-height: 1.4;
-  color: var(--tinta);
+  color: #00102c; /* azul-escuro do "T" da logo */
   animation: panorama-entrada 1.6s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: 0.4s;
 }
 
 @media (max-width: 900px) {
   .menu-panorama-frase {
-    margin-left: 0;
+    margin-left: 24px;
   }
 }
 
@@ -1818,7 +1819,7 @@ canvas{ max-width: 100%; }
   width: 100%;
   height: auto;
   display: block;
-  margin-top: -28px; /* sobe a imagem */
+  margin-top: -56px; /* sobe a imagem */
 }
 
 .menu-panorama-conteudo {
