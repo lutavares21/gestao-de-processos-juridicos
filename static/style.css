@@ -1795,7 +1795,9 @@ canvas{ max-width: 100%; }
 
 .menu-panorama-frase {
   width: fit-content;
-  margin: 0 0 6px -70px; /* encosta na esquerda, alinhada ao botão Início */
+  margin: 0 0 6px -40px; /* posição horizontal (mais negativo = mais à esquerda) */
+  position: relative;
+  top: 18px; /* desce a frase sem mexer na imagem */
   text-align: center;
   font-family: var(--fonte-titulo);
   font-size: 21px;
