@@ -1205,7 +1205,7 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 .dash-header-layout {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
 }
 
 @media (max-width: 760px) {
@@ -1216,8 +1216,8 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 }
 
 .dash-header-logo {
-  flex: 0 0 340px;
-  max-width: 340px;
+  flex: 0 0 450px;
+  max-width: 450px;
   order: 0;
 }
 
@@ -1228,10 +1228,10 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 }
 
 .dash-header-ilustracao {
-  flex: 0 0 270px;
-  max-width: 270px;
+  flex: 0 0 370px;
+  max-width: 370px;
   order: 2;
-  margin-top: -26px;
+  margin-top: -40px;
 }
 
 .dash-header-ilustracao img {
@@ -1244,31 +1244,32 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
   flex: 1;
   min-width: 0;
   order: 1;
-  margin-right: 40px;
+  margin-right: 24px;
 }
 
 .dash-header{
   background: none;
-  padding: 0 0 12px;
+  padding: 12px 0 32px;
   color: var(--texto);
-  margin-bottom: 6px;
+  margin-bottom: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 12px;
+  gap: 22px;
 }
 .dash-header h1{
   font-family: var(--fonte-titulo, 'Source Serif 4', serif);
-  font-size: 30px;
-  margin: 0 0 4px 0;
+  font-size: 38px;
+  margin: 0 0 8px 0;
   letter-spacing: 0.2px;
   color: var(--tinta);
 }
 .dash-header .dash-subtitulo{
   color: #000;
-  font-size: 15px;
+  font-size: 18px;
+  line-height: 1.45;
 }
 .dash-header .dash-data{
   font-size: 13px;
@@ -1279,70 +1280,20 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 
 .dash-filtro-tipo{
   display: flex;
-  flex-wrap: wrap;
-  row-gap: 8px;
   align-items: center;
   justify-content: center;
   gap: 10px;
   margin-top: 0;
   color: #000;
-  font-size: 14.5px;
+  font-size: 17px;
 }
 .dash-filtro-tipo select{
   width: auto;
-  min-width: 160px;
+  min-width: 220px;
+  font-size: 16px;
+  padding: 11px 14px;
   background: #fff;
   border: 1px solid var(--borda);
-}
-
-/* Filtro de período (data de distribuição) - 2ª linha do formulário do
-   cabeçalho dos panoramas */
-.dash-filtro-periodo{
-  flex: 1 0 100%;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-.dash-filtro-periodo-rotulo{
-  font-weight: 600;
-  color: var(--tinta);
-}
-.dash-filtro-periodo input[type="date"]{
-  width: auto;
-  padding: 5px 8px;
-  font-size: 13px;
-}
-.dash-filtro-btn{
-  padding: 6px 14px;
-  border: 1px solid var(--tinta);
-  border-radius: 3px;
-  background: var(--tinta);
-  color: #fff;
-  font-family: var(--fonte-corpo);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.dash-filtro-btn:hover{
-  background: var(--tinta-clara);
-  border-color: var(--tinta-clara);
-}
-.dash-filtro-limpar{
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--selo-claro);
-  text-decoration: none;
-}
-.dash-filtro-limpar:hover{
-  text-decoration: underline;
-}
-.dash-filtro-periodo-info{
-  flex: 1 0 100%;
-  text-align: center;
-  font-size: 12.5px;
-  color: var(--texto-suave);
 }
 
 .dash-grid-kpi{
@@ -1797,7 +1748,7 @@ canvas{ max-width: 100%; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin: 14px 0 0 32px;
+  margin: 24px 0 0 32px;
   padding: 8px 16px;
   border: 1px solid var(--tinta);
   border-radius: 20px;
@@ -1840,6 +1791,18 @@ canvas{ max-width: 100%; }
 .menu-panorama-ilustracao {
   flex: 1 1 540px;
   max-width: 560px;
+}
+
+.menu-panorama-frase {
+  margin: 0 0 6px;
+  text-align: center;
+  font-family: var(--fonte-titulo);
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--tinta);
+  animation: panorama-entrada 1.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.4s;
 }
 
 .menu-panorama-ilustracao img {
