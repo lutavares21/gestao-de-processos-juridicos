@@ -617,7 +617,7 @@ input[readonly] {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 16px 24px 24px;
+  padding: 80px 24px 24px; /* desce logo + imagem, alinhando com o topo dos cards */
   overflow: hidden;
   background: var(--creme-logo);
 }
