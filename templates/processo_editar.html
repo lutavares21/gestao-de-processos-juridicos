@@ -517,7 +517,14 @@
           <button type="submit" class="btn btn-salvar">Salvar alterações</button>
 
         </form>
-      
+
+        <!-- EXCLUIR PROCESSO (formulário separado, fora do formulário de edição) -->
+        <form method="POST" action="{{ url_for('processo_excluir', processo_id=p.id) }}" class="secao secao-perigo" style="margin-top:24px;" onsubmit="return confirmarExclusao()">
+          <h2>Excluir processo</h2>
+          <p class="aviso-limite" style="margin-bottom:14px;">Esta ação é definitiva: o processo e todos os dados vinculados a ele serão removidos e não poderão ser recuperados.</p>
+          <button type="submit" class="btn btn-excluir">Excluir processo</button>
+        </form>
+
 {% endblock %}
 
 {% block scripts_extra %}
@@ -719,6 +726,17 @@
     // Confirmação obrigatória antes de salvar as alterações do processo
     function confirmarEdicao() {
       return confirm('ATENÇÃO: ESTA AÇÃO NÃO PODERÁ SER DESFEITA.\n\nTEM CERTEZA QUE DESEJA SALVAR AS ALTERAÇÕES NESTE PROCESSO?');
+    }
+
+    // Confirmação formal antes de excluir o processo definitivamente
+    function confirmarExclusao() {
+      const numero = {{ p.numero_processo|tojson }};
+      return confirm(
+        'CONFIRMAÇÃO DE EXCLUSÃO\n\n' +
+        'Confirma a exclusão definitiva do processo nº ' + numero + '?\n\n' +
+        'Esta ação é IRREVERSÍVEL. Todos os dados vinculados ao processo (partes, advogados, pedidos, movimentos e valores) serão permanentemente removidos e não poderão ser recuperados.\n\n' +
+        'Deseja realmente prosseguir com a exclusão?'
+      );
     }
 
     // Ao carregar a página, calcula o total dos pedidos já existentes (trabalhista)

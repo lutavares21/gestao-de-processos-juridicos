@@ -1689,6 +1689,33 @@ def processo_editar(processo_id):
     return redirect(url_for("processo_detalhe", processo_id=processo.id))
 
 
+@app.route("/processo/<int:processo_id>/excluir", methods=["POST"])
+@login_required
+def processo_excluir(processo_id):
+    """Exclui o processo e tudo que está ligado a ele (partes, advogados,
+    movimentos, pedidos, rateio, títulos e acordo). A confirmação formal é
+    feita no navegador (processo_editar.html) antes de chegar aqui."""
+    processo = Processo.query.get_or_404(processo_id)
+    numero = processo.numero_processo
+    origem = processo.origem_cadastro
+
+    # Apaga os registros filhos explicitamente, para não sobrar lixo no banco
+    # mesmo que os relacionamentos do modelo não tenham cascade configurado.
+    for modelo in (Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR,
+                   PedidoCivel, TituloRecuperacao, AcordoRecebimento):
+        modelo.query.filter_by(processo_id=processo.id).delete(synchronize_session=False)
+
+    registrar_atividade("processo_excluido", f"Excluiu o processo {numero}")
+    db.session.delete(processo)
+    db.session.commit()
+
+    if origem == "trabalhista":
+        return redirect(url_for("processos_trabalhista"))
+    if origem == "civel_recuperacao":
+        return redirect(url_for("processos_civel_recuperacao"))
+    return redirect(url_for("processos_civel"))
+
+
 # ---------------------------------------------------------------------------
 # PANORAMA - CÍVEL / RECUPERAÇÃO DE CRÉDITO
 # ---------------------------------------------------------------------------
