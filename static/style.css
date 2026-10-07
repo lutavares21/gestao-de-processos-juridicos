@@ -603,6 +603,8 @@ input[readonly] {
 
 /* --- Página Início: logo grande à esquerda, menu à direita --- */
 .inicio-split {
+  /* margem lateral do painel de menus (a mesma de antes) */
+  --inicio-margem: clamp(20px, 2.5vw, 40px);
   min-height: 100vh;
   display: flex;
   background: var(--creme-logo);
@@ -610,14 +612,16 @@ input[readonly] {
 
 .inicio-painel-logo {
   position: relative;
-  width: 33%;
+  /* o painel da imagem cresce exatamente o que o painel de menus perde de
+     margem esquerda (20px), então as caixas do menu mantêm o tamanho */
+  width: calc(33% + var(--inicio-margem) - 20px);
   min-width: 340px;
-  max-width: 520px;
+  max-width: calc(520px + var(--inicio-margem) - 20px);
   flex-shrink: 0;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 80px 24px 24px; /* desce logo + imagem, alinhando com o topo dos cards */
+  padding: 80px 10px 24px; /* desce logo + imagem; laterais menores = imagem maior */
   overflow: hidden;
   background: var(--creme-logo);
 }
@@ -652,7 +656,7 @@ input[readonly] {
   text-align: center;
   gap: 12px;
   /* largura da foto; a logo (menor) fica centralizada sobre ela */
-  width: min(480px, 100%);
+  width: min(560px, 100%);
 }
 
 .logo-grande {
@@ -710,7 +714,7 @@ input[readonly] {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: 28px clamp(20px, 2.5vw, 40px) 60px;
+  padding: 28px var(--inicio-margem) 60px 20px;
 }
 
 .inicio-userbar {
