@@ -613,15 +613,15 @@ input[readonly] {
 .inicio-painel-logo {
   position: relative;
   /* o painel da imagem cresce exatamente o que o painel de menus perde de
-     margem esquerda (20px), então as caixas do menu mantêm o tamanho */
-  width: calc(33% + var(--inicio-margem) - 20px);
+     margem esquerda (14px), então as caixas do menu mantêm o tamanho */
+  width: calc(33% + var(--inicio-margem) - 14px);
   min-width: 340px;
-  max-width: calc(520px + var(--inicio-margem) - 20px);
+  max-width: calc(520px + var(--inicio-margem) - 14px);
   flex-shrink: 0;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 80px 10px 24px; /* desce logo + imagem; laterais menores = imagem maior */
+  padding: 92px 8px 24px; /* topo da logo alinhado ao topo dos cards; laterais menores = imagem maior */
   overflow: hidden;
   background: var(--creme-logo);
 }
@@ -679,7 +679,7 @@ input[readonly] {
 .inicio-imagem {
   display: block;
   width: 100%;
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 4 / 3;
   height: auto;
   object-fit: cover;
   margin: 0;
@@ -714,7 +714,7 @@ input[readonly] {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: 28px var(--inicio-margem) 60px 20px;
+  padding: 28px var(--inicio-margem) 60px 14px;
 }
 
 .inicio-userbar {
