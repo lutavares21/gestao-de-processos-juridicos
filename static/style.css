@@ -610,9 +610,9 @@ input[readonly] {
 
 .inicio-painel-logo {
   position: relative;
-  width: 46%;
+  width: 52%;
   min-width: 340px;
-  max-width: 640px;
+  max-width: 760px;
   flex-shrink: 0;
   display: flex;
   align-items: flex-start;
@@ -652,7 +652,7 @@ input[readonly] {
   text-align: center;
   gap: 12px;
   /* largura da foto; a logo (menor) fica centralizada sobre ela */
-  width: min(560px, 100%);
+  width: min(680px, 100%);
 }
 
 .logo-grande {
@@ -670,27 +670,19 @@ input[readonly] {
   padding: 0;
 }
 
-/* Foto "flutuando" na página, como a logo: mostrada inteira (proporção 3:2),
-   com as bordas dissolvendo suavemente no fundo creme - sem moldura. */
+/* Foto inteira (proporção original 3:2), com cantos arredondados, filete
+   dourado (mesmo tom da logo) e sombra suave - sem desfoque nas bordas. */
 .inicio-imagem {
   display: block;
   width: 100%;
-  aspect-ratio: 3 / 2; /* proporção original da foto: aparece inteira, sem corte */
+  aspect-ratio: 3 / 2;
   height: auto;
-  object-fit: contain;
-  -webkit-mask-image:
-    linear-gradient(to right, transparent 0, #000 5%, #000 95%, transparent 100%),
-    linear-gradient(to bottom, transparent 0, #000 8%, #000 88%, transparent 100%);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    linear-gradient(to right, transparent 0, #000 5%, #000 95%, transparent 100%),
-    linear-gradient(to bottom, transparent 0, #000 8%, #000 88%, transparent 100%);
-  mask-composite: intersect;
+  object-fit: cover;
   margin: 0;
-  border: 0;
   padding: 0;
-  border-radius: 0;
-  box-shadow: none;
+  border: 2px solid var(--dourado-logo);
+  border-radius: 16px;
+  box-shadow: 0 14px 34px rgba(27, 42, 74, 0.25);
 }
 
 .inicio-tagline {
