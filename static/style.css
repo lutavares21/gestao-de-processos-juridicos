@@ -917,9 +917,11 @@ input[readonly] {
   background: #d4a017;
 }
 
-/* Caixa de baixo (Agenda/Panorama): linha do topo em degradê, do azul ao dourado */
+/* Caixa de baixo (Agenda/Panorama): duas linhas no topo, uma dourada (em cima)
+   e uma azul-escura (embaixo), 3px cada */
 .inicio-blocos .bloco-inicio.bloco-largo::before {
-  background: linear-gradient(90deg, var(--tinta), #d4a017);
+  height: 6px;
+  background: linear-gradient(to bottom, #d4a017 0 3px, var(--tinta) 3px 6px);
 }
 
 .inicio-blocos .bloco-inicio:hover {
