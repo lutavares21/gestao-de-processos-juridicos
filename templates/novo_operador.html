@@ -33,7 +33,7 @@
       <div class="linha">
         <div class="campo">
           <label for="email">E-mail</label>
-          <input type="text" id="email" name="email" required value="{{ valores.email if valores else '' }}">
+          <input type="email" id="email" name="email" required pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Informe um e-mail válido, como nome@empresa.com" value="{{ valores.email if valores else '' }}">
         </div>
         <div class="campo">
           <label for="nivel">Nível</label>
@@ -47,11 +47,23 @@
       <div class="linha">
         <div class="campo">
           <label for="senha">Senha</label>
-          <input type="password" id="senha" name="senha" required>
+          <div style="position:relative;">
+            <input type="password" id="senha" name="senha" required style="padding-right:44px;">
+            <button type="button" class="ver-senha" data-alvo="senha" aria-label="Mostrar senha" title="Mostrar senha" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; padding:4px; line-height:0; color:#555;">
+              <svg class="icone-olho" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="icone-olho-fechado" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
         </div>
         <div class="campo">
           <label for="confirmar_senha">Confirmar senha</label>
-          <input type="password" id="confirmar_senha" name="confirmar_senha" required>
+          <div style="position:relative;">
+            <input type="password" id="confirmar_senha" name="confirmar_senha" required style="padding-right:44px;">
+            <button type="button" class="ver-senha" data-alvo="confirmar_senha" aria-label="Mostrar senha" title="Mostrar senha" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; padding:4px; line-height:0; color:#555;">
+              <svg class="icone-olho" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="icone-olho-fechado" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -94,6 +106,33 @@
       blocoAreas.style.display = admin ? 'none' : '';
       avisoAdmin.style.display = admin ? '' : 'none';
     }
+    // Olhinho: mostra / oculta a senha digitada.
+    document.querySelectorAll('.ver-senha').forEach(function (botao) {
+      const campo = document.getElementById(botao.dataset.alvo);
+      const aberto = botao.querySelector('.icone-olho');
+      const fechado = botao.querySelector('.icone-olho-fechado');
+      botao.addEventListener('click', function () {
+        const mostrar = campo.type === 'password';
+        campo.type = mostrar ? 'text' : 'password';
+        aberto.style.display = mostrar ? 'none' : '';
+        fechado.style.display = mostrar ? '' : 'none';
+        const texto = mostrar ? 'Ocultar senha' : 'Mostrar senha';
+        botao.setAttribute('aria-label', texto);
+        botao.title = texto;
+      });
+    });
+
+    // A senha não pode ser igual ao login (o servidor também confere).
+    const campoLogin = document.getElementById('login');
+    const campoSenha = document.getElementById('senha');
+    function conferirSenhaLogin() {
+      const login = campoLogin.value.trim().toLowerCase();
+      const igual = campoSenha.value !== '' && login !== '' && campoSenha.value.toLowerCase() === login;
+      campoSenha.setCustomValidity(igual ? 'A senha não pode ser igual ao login.' : '');
+    }
+    campoSenha.addEventListener('input', conferirSenhaLogin);
+    campoLogin.addEventListener('input', conferirSenhaLogin);
+
     // Editar depende de Cadastrar: marcar um tipo em Cadastrar marca o mesmo
     // tipo em Editar (pode desmarcar); desmarcar em Cadastrar desmarca e
     // bloqueia Editar daquele tipo.

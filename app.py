@@ -116,6 +116,10 @@ FUNCOES_DO_SISTEMA = [
 ]
 
 
+# E-mail precisa ter o formato algo@dominio.ext (sem espaços).
+EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
 def permissao_required(funcao, tipo):
     """Só deixa passar se o operador logado for administrador ou tiver essa
     função liberada para esse tipo de processo. Senão, 403 (acesso negado)."""
@@ -245,10 +249,14 @@ def operador_novo():
         erros.append("Informe o login.")
     if not email:
         erros.append("Informe o e-mail.")
+    elif not EMAIL_REGEX.match(email):
+        erros.append("Informe um e-mail válido (ex.: nome@empresa.com).")
     if not senha:
         erros.append("Informe a senha.")
     if senha != confirmar_senha:
         erros.append("A senha e a confirmação de senha não coincidem.")
+    if senha and login_novo and senha.lower() == login_novo.lower():
+        erros.append("A senha não pode ser igual ao login.")
     if login_novo and Operador.query.filter(func.lower(Operador.login) == login_novo.lower()).first():
         erros.append("Já existe um operador com esse login.")
 
@@ -302,9 +310,17 @@ def operador_editar(operador_id):
         erros.append("Informe o login.")
     if not email:
         erros.append("Informe o e-mail.")
+    elif not EMAIL_REGEX.match(email):
+        erros.append("Informe um e-mail válido (ex.: nome@empresa.com).")
     # A senha é opcional na edição - só troca se o campo for preenchido.
     if senha and senha != confirmar_senha:
         erros.append("A senha e a confirmação de senha não coincidem.")
+    if senha and login_novo and senha.lower() == login_novo.lower():
+        erros.append("A senha não pode ser igual ao login.")
+    elif (not senha and login_novo and login_novo.lower() != operador.login.lower()
+          and check_password_hash(operador.senha_hash, login_novo)):
+        # Trocou o login para algo que é a própria senha atual do operador.
+        erros.append("A senha atual é igual ao novo login. Defina também uma nova senha, diferente do login.")
 
     login_em_uso = Operador.query.filter(
         func.lower(Operador.login) == login_novo.lower(),
