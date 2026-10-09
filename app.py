@@ -288,6 +288,29 @@ def atividades():
     return render_template("atividades.html", registros=registros)
 
 
+@app.route("/atividades/<int:registro_id>/excluir", methods=["POST"])
+@admin_required
+def atividade_excluir(registro_id):
+    """Exclui uma única linha do registro de atividades."""
+    registro = db.session.get(RegistroAtividade, registro_id)
+    if registro is None:
+        abort(404)
+    db.session.delete(registro)
+    db.session.commit()
+    return redirect(url_for("atividades"))
+
+
+@app.route("/atividades/excluir-todas", methods=["POST"])
+@admin_required
+def atividades_excluir_todas():
+    """Apaga todo o registro de atividades. Para não perder o rastro de quem
+    fez a limpeza, fica gravada uma única linha informando a exclusão."""
+    RegistroAtividade.query.delete(synchronize_session=False)
+    registrar_atividade("atividades_excluidas", "Excluiu todo o registro de atividades")
+    db.session.commit()
+    return redirect(url_for("atividades"))
+
+
 def texto_para_data(valor):
     """Converte string 'AAAA-MM-DD' do formulário em objeto date. Retorna None se vazio."""
     if not valor:

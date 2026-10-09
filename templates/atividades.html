@@ -18,6 +18,7 @@
           <th>Operador</th>
           <th>Ação</th>
           <th>Descrição</th>
+          <th>Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -36,17 +37,32 @@
             <span class="selo-status suspenso">Operador editado</span>
             {% elif r.acao == 'operador_excluido' %}
             <span class="selo-status arquivado">Operador excluído</span>
+            {% elif r.acao == 'processo_excluido' %}
+            <span class="selo-status arquivado">Processo excluído</span>
+            {% elif r.acao == 'atividades_excluidas' %}
+            <span class="selo-status arquivado">Registro limpo</span>
             {% else %}
             <span class="selo-status arquivado">{{ r.acao }}</span>
             {% endif %}
           </td>
           <td>{{ r.descricao }}</td>
+          <td style="white-space:nowrap;">
+            <form method="POST" action="{{ url_for('atividade_excluir', registro_id=r.id) }}" style="margin:0;"
+                  onsubmit="return confirm('Confirma a exclusão deste registro de atividade?\n\nEsta ação não poderá ser desfeita.');">
+              <button type="submit" class="btn btn-remover">Excluir</button>
+            </form>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
   <div class="aviso-limite" style="margin-top:10px;">Mostrando todas as atividades registradas, da mais recente para a mais antiga.</div>
+
+  <form method="POST" action="{{ url_for('atividades_excluir_todas') }}" style="margin-top:24px;"
+        onsubmit="return confirm('CONFIRMAÇÃO DE EXCLUSÃO\n\nConfirma a exclusão de TODO o registro de atividades?\n\nEsta ação é IRREVERSÍVEL: o histórico completo das ações dos operadores será permanentemente removido e não poderá ser recuperado.\n\nDeseja realmente prosseguir com a exclusão?');">
+    <button type="submit" class="btn btn-excluir">Excluir todo o registro de atividades</button>
+  </form>
   {% else %}
   <div class="tabela-wrap">
     <div class="estado-vazio">Nenhuma atividade registrada ainda.</div>
