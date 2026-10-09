@@ -15,7 +15,7 @@ from flask_login import (
     LoginManager, login_user, logout_user, login_required, current_user,
 )
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func, case
+from sqlalchemy import func, case, or_, and_, false
 from sqlalchemy.orm import selectinload
 from werkzeug.security import check_password_hash, generate_password_hash
 from models import (
@@ -95,11 +95,16 @@ def admin_required(f):
     return decorado
 
 
-# Tipos de processo. Os códigos são os mesmos de Processo.origem_cadastro.
+# Tipos de processo, na mesma ordem do menu. Os códigos são os de
+# Processo.origem_cadastro; a exceção é "tributario", que ainda é um processo
+# cível com tipo_acao='tributario'. Licitatório e Tributário ainda não têm
+# cadastro próprio, então só a Agenda enxerga esses dois por enquanto.
 AREAS_DO_SISTEMA = {
     "civel": "Cível",
-    "trabalhista": "Trabalhista",
     "civel_recuperacao": "Cível - Recuperação de Crédito",
+    "licitatorio": "Licitatório",
+    "trabalhista": "Trabalhista",
+    "tributario": "Tributário",
 }
 
 # Funções que podem ser liberadas para o operador comum, tipo por tipo:
@@ -1652,8 +1657,19 @@ def agenda():
 
     query = Processo.query
     if not current_user.eh_administrador:
-        tipos_agenda = [t for t in AREAS_DO_SISTEMA if current_user.pode("agenda", t)]
-        query = query.filter(Processo.origem_cadastro.in_(tipos_agenda))
+        # Mesmas definições de tipo usadas no filtro "tipo" logo abaixo.
+        condicoes_por_tipo = {
+            "civel": and_(Processo.origem_cadastro == "civel", Processo.tipo_acao != "tributario"),
+            "civel_recuperacao": Processo.origem_cadastro == "civel_recuperacao",
+            "licitatorio": Processo.origem_cadastro == "licitatorio",
+            "trabalhista": Processo.origem_cadastro == "trabalhista",
+            "tributario": and_(Processo.origem_cadastro == "civel", Processo.tipo_acao == "tributario"),
+        }
+        permitidas = [
+            cond for tipo_agenda, cond in condicoes_por_tipo.items()
+            if current_user.pode("agenda", tipo_agenda)
+        ]
+        query = query.filter(or_(*permitidas) if permitidas else false())
 
     if tipo == "civel":
         query = query.filter(
