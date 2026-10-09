@@ -95,23 +95,35 @@ def admin_required(f):
     return decorado
 
 
-# Áreas do site que podem ser liberadas para o operador comum. Os códigos são
-# os mesmos de Processo.origem_cadastro. Administrador acessa tudo.
+# Tipos de processo. Os códigos são os mesmos de Processo.origem_cadastro.
 AREAS_DO_SISTEMA = {
     "civel": "Cível",
     "trabalhista": "Trabalhista",
     "civel_recuperacao": "Cível - Recuperação de Crédito",
 }
 
+# Funções que podem ser liberadas para o operador comum, tipo por tipo:
+# (código, título, explicação). Administrador acessa tudo.
+FUNCOES_DO_SISTEMA = [
+    ("cadastrar", "Cadastrar processos",
+     "Tipos de processo que o operador pode cadastrar e ver na listagem de processos cadastrados."),
+    ("editar", "Editar processos",
+     "Marcado automaticamente conforme o que foi liberado em Cadastrar. Só dá para editar um tipo se também puder cadastrá-lo."),
+    ("agenda", "Agenda",
+     "Tipos de processo que o operador poderá ver na agenda de audiências."),
+    ("panorama", "Panorama jurídico",
+     "Tipos de processo que o operador poderá analisar no panorama jurídico."),
+]
 
-def area_required(area):
-    """Só deixa passar se o operador logado for administrador ou tiver a
-    área liberada. Quem não tiver recebe 403 (página de acesso negado)."""
+
+def permissao_required(funcao, tipo):
+    """Só deixa passar se o operador logado for administrador ou tiver essa
+    função liberada para esse tipo de processo. Senão, 403 (acesso negado)."""
     def decorador(f):
         @wraps(f)
         @login_required
         def decorado(*args, **kwargs):
-            if not current_user.pode_acessar(area):
+            if not current_user.pode(funcao, tipo):
                 abort(403)
             return f(*args, **kwargs)
         return decorado
@@ -119,13 +131,23 @@ def area_required(area):
 
 
 def areas_do_formulario(form, nivel):
-    """Lê as caixas 'areas' do formulário de operador e devolve o texto
-    guardado no banco (ex.: 'civel,trabalhista'). Administrador não usa
-    esse campo, então fica vazio."""
+    """Lê as caixas 'perm' do formulário de operador (valores no formato
+    'funcao:tipo') e devolve o texto guardado no banco. Administrador não
+    usa esse campo, então fica vazio. 'editar' só vale se o mesmo tipo
+    também estiver marcado em 'cadastrar'."""
     if nivel != "comum":
         return ""
-    marcadas = form.getlist("areas")
-    return ",".join(a for a in AREAS_DO_SISTEMA if a in marcadas)
+    marcadas = set(form.getlist("perm"))
+    resultado = []
+    for funcao, _titulo, _ajuda in FUNCOES_DO_SISTEMA:
+        for tipo in AREAS_DO_SISTEMA:
+            item = f"{funcao}:{tipo}"
+            if item not in marcadas:
+                continue
+            if funcao == "editar" and f"cadastrar:{tipo}" not in marcadas:
+                continue
+            resultado.append(item)
+    return ",".join(resultado)
 
 
 @app.errorhandler(403)
@@ -135,8 +157,8 @@ def acesso_negado(erro):
 
 @app.context_processor
 def injetar_areas_do_sistema():
-    """Disponibiliza a lista de áreas para os templates de operadores."""
-    return dict(areas_do_sistema=AREAS_DO_SISTEMA)
+    """Disponibiliza tipos de processo e funções para os templates de operadores."""
+    return dict(areas_do_sistema=AREAS_DO_SISTEMA, funcoes_do_sistema=FUNCOES_DO_SISTEMA)
 
 
 def registrar_atividade(acao, descricao):
@@ -560,7 +582,7 @@ def inicio():
 
 
 @app.route("/cadastro/civel", methods=["GET", "POST"])
-@area_required("civel")
+@permissao_required("cadastrar", "civel")
 def cadastro_civel():
     if request.method == "GET":
         sucesso = request.args.get("sucesso") == "1"
@@ -1225,7 +1247,7 @@ def preencher_titulos_recuperacao(processo, form):
 
 
 @app.route("/cadastro/civel-recuperacao", methods=["GET", "POST"])
-@area_required("civel_recuperacao")
+@permissao_required("cadastrar", "civel_recuperacao")
 def cadastro_civel_recuperacao():
     if request.method == "GET":
         sucesso = request.args.get("sucesso") == "1"
@@ -1270,7 +1292,7 @@ def cadastro_civel_recuperacao():
 
 
 @app.route("/cadastro/trabalhista", methods=["GET", "POST"])
-@area_required("trabalhista")
+@permissao_required("cadastrar", "trabalhista")
 def cadastro_trabalhista():
     if request.method == "GET":
         sucesso = request.args.get("sucesso") == "1"
@@ -1315,7 +1337,7 @@ def cadastro_trabalhista():
 
 
 @app.route("/processos/civel")
-@area_required("civel")
+@permissao_required("cadastrar", "civel")
 def processos_civel():
     query = Processo.query.filter_by(origem_cadastro="civel")
     f = request.args
@@ -1387,7 +1409,7 @@ def processos_civel():
 
 
 @app.route("/processos/trabalhista")
-@area_required("trabalhista")
+@permissao_required("cadastrar", "trabalhista")
 def processos_trabalhista():
     query = Processo.query.filter_by(origem_cadastro="trabalhista")
     f = request.args
@@ -1465,7 +1487,7 @@ def processos_trabalhista():
 
 
 @app.route("/processos/civel-recuperacao")
-@area_required("civel_recuperacao")
+@permissao_required("cadastrar", "civel_recuperacao")
 def processos_civel_recuperacao():
     """Listagem dos processos de Recuperação de Crédito, com a mesma
     pesquisa processual da trabalhista + os filtros próprios dos títulos
@@ -1614,7 +1636,8 @@ def agenda():
 
     query = Processo.query
     if not current_user.eh_administrador:
-        query = query.filter(Processo.origem_cadastro.in_(list(current_user.areas)))
+        tipos_agenda = [t for t in AREAS_DO_SISTEMA if current_user.pode("agenda", t)]
+        query = query.filter(Processo.origem_cadastro.in_(tipos_agenda))
 
     if tipo == "civel":
         query = query.filter(
@@ -1735,7 +1758,7 @@ def processo_detalhe(processo_id):
 @login_required
 def processo_editar(processo_id):
     processo = Processo.query.get_or_404(processo_id)
-    if not current_user.pode_acessar(processo.origem_cadastro):
+    if not current_user.pode("editar", processo.origem_cadastro):
         abort(403)
 
     if request.method == "GET":
@@ -2346,7 +2369,7 @@ def panorama_juridico():
         return render_template("panorama_juridico.html", mostrar_menu=True)
     tipo_selecionado = tipo_param
     areas_exigidas = {"civel_trabalhista": ["civel", "trabalhista"]}.get(tipo_param, [tipo_param])
-    if not all(current_user.pode_acessar(a) for a in areas_exigidas):
+    if not all(current_user.pode("panorama", a) for a in areas_exigidas):
         abort(403)
     data_inicio, data_fim = periodo_do_panorama()
     periodo = {

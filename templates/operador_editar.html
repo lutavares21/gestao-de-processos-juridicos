@@ -5,7 +5,7 @@
 {% block cabecalho_subtitulo %}Gestão de operadores{% endblock %}
 
 {% block conteudo %}
-{% set marcadas = valores.getlist('areas') if valores else operador.areas %}
+{% set marcadas = valores.getlist('perm') if valores else operador.permissoes %}
 
   <a class="link-voltar" href="{{ url_for('operadores') }}">← Voltar para a lista de operadores</a>
 
@@ -56,16 +56,22 @@
       </div>
 
       <div class="campo" id="bloco-areas" style="margin-bottom:18px;">
-        <label>Áreas liberadas</label>
-        <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
-          {% for codigo, nome in areas_do_sistema.items() %}
-          <label style="display:flex; align-items:center; gap:8px; font-weight:400;">
-            <input type="checkbox" name="areas" value="{{ codigo }}" style="width:auto;" {% if codigo in marcadas %}checked{% endif %}> {{ nome }}
-          </label>
-          {% endfor %}
-        </div>
+        <label>Permissões do operador comum</label>
+        {% for funcao, titulo, ajuda in funcoes_do_sistema %}
+        <fieldset style="border:1px solid #ddd; border-radius:6px; padding:10px 14px; margin:10px 0 0;">
+          <legend style="font-size:13px; font-weight:600; padding:0 6px;">{{ titulo }}</legend>
+          <div class="aviso-limite" style="margin-bottom:8px;">{{ ajuda }}</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            {% for codigo, nome in areas_do_sistema.items() %}
+            <label style="display:flex; align-items:center; gap:8px; font-weight:400;">
+              <input type="checkbox" name="perm" value="{{ funcao }}:{{ codigo }}" data-funcao="{{ funcao }}" data-tipo="{{ codigo }}" style="width:auto;" {% if (funcao ~ ':' ~ codigo) in marcadas %}checked{% endif %}> {{ nome }}
+            </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+        {% endfor %}
         <div class="aviso-limite" style="margin-top:8px;">
-          O operador comum só acessa as áreas marcadas (cadastro, listagem, agenda e panorama). Excluir processos, cadastrar e excluir operadores e ver o registro de atividades é sempre só do administrador.
+          Excluir processos, cadastrar e excluir operadores e ver o registro de atividades é sempre só do administrador.
         </div>
       </div>
       <div class="aviso-limite" id="aviso-areas-admin" style="margin-bottom:18px;">
@@ -100,6 +106,25 @@
       blocoAreas.style.display = admin ? 'none' : '';
       avisoAdmin.style.display = admin ? '' : 'none';
     }
+    // Editar depende de Cadastrar: marcar um tipo em Cadastrar marca o mesmo
+    // tipo em Editar (pode desmarcar); desmarcar em Cadastrar desmarca e
+    // bloqueia Editar daquele tipo.
+    document.querySelectorAll('input[data-funcao="cadastrar"]').forEach(function (cad) {
+      const ed = document.querySelector('input[data-funcao="editar"][data-tipo="' + cad.dataset.tipo + '"]');
+      if (!ed) return;
+      function sincronizar(auto) {
+        if (cad.checked) {
+          ed.disabled = false;
+          if (auto) ed.checked = true;
+        } else {
+          ed.checked = false;
+          ed.disabled = true;
+        }
+      }
+      cad.addEventListener('change', function () { sincronizar(true); });
+      sincronizar(false);
+    });
+
     nivel.addEventListener('change', atualizar);
     atualizar();
   })();

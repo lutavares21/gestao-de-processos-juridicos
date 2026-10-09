@@ -21,7 +21,7 @@
           <th>Login</th>
           <th>E-mail</th>
           <th>Nível</th>
-          <th>Áreas liberadas</th>
+          <th>Permissões</th>
           <th></th>
         </tr>
       </thead>
@@ -40,8 +40,15 @@
           </td>
           <td>
             {% if u.eh_administrador %}Todas
-            {% elif u.areas %}{% for a in u.areas|sort %}{{ areas_do_sistema.get(a, a) }}{% if not loop.last %}, {% endif %}{% endfor %}
-            {% else %}—{% endif %}
+            {% else %}
+            {% set ns = namespace(vazio=true) %}
+            {% for funcao, titulo, ajuda in funcoes_do_sistema %}
+            {% set tipos = [] %}
+            {% for codigo, nome in areas_do_sistema.items() if u.pode(funcao, codigo) %}{% set _ = tipos.append(nome) %}{% endfor %}
+            {% if tipos %}{% set ns.vazio = false %}<div><strong>{{ titulo }}:</strong> {{ tipos|join(', ') }}</div>{% endif %}
+            {% endfor %}
+            {% if ns.vazio %}—{% endif %}
+            {% endif %}
           </td>
           <td><a class="btn-detalhe" href="{{ url_for('operador_editar', operador_id=u.id) }}">Editar</a></td>
         </tr>
