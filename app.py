@@ -95,6 +95,50 @@ def admin_required(f):
     return decorado
 
 
+# Áreas do site que podem ser liberadas para o operador comum. Os códigos são
+# os mesmos de Processo.origem_cadastro. Administrador acessa tudo.
+AREAS_DO_SISTEMA = {
+    "civel": "Cível",
+    "trabalhista": "Trabalhista",
+    "civel_recuperacao": "Cível - Recuperação de Crédito",
+}
+
+
+def area_required(area):
+    """Só deixa passar se o operador logado for administrador ou tiver a
+    área liberada. Quem não tiver recebe 403 (página de acesso negado)."""
+    def decorador(f):
+        @wraps(f)
+        @login_required
+        def decorado(*args, **kwargs):
+            if not current_user.pode_acessar(area):
+                abort(403)
+            return f(*args, **kwargs)
+        return decorado
+    return decorador
+
+
+def areas_do_formulario(form, nivel):
+    """Lê as caixas 'areas' do formulário de operador e devolve o texto
+    guardado no banco (ex.: 'civel,trabalhista'). Administrador não usa
+    esse campo, então fica vazio."""
+    if nivel != "comum":
+        return ""
+    marcadas = form.getlist("areas")
+    return ",".join(a for a in AREAS_DO_SISTEMA if a in marcadas)
+
+
+@app.errorhandler(403)
+def acesso_negado(erro):
+    return render_template("acesso_negado.html"), 403
+
+
+@app.context_processor
+def injetar_areas_do_sistema():
+    """Disponibiliza a lista de áreas para os templates de operadores."""
+    return dict(areas_do_sistema=AREAS_DO_SISTEMA)
+
+
 def registrar_atividade(acao, descricao):
     """Grava uma linha no log de atividades, associada ao operador
     logado no momento. Não faz commit sozinha - a chamada que já vai
@@ -195,6 +239,7 @@ def operador_novo():
         email=email,
         senha_hash=generate_password_hash(senha),
         nivel=nivel,
+        areas_permitidas=areas_do_formulario(form, nivel),
     )
     db.session.add(novo_operador)
     registrar_atividade("operador_criado", f"Criou o operador {nome} ({login_novo})")
@@ -253,6 +298,7 @@ def operador_editar(operador_id):
     operador.login = login_novo
     operador.email = email
     operador.nivel = nivel
+    operador.areas_permitidas = areas_do_formulario(form, nivel)
     if senha:
         operador.senha_hash = generate_password_hash(senha)
 
@@ -514,7 +560,7 @@ def inicio():
 
 
 @app.route("/cadastro/civel", methods=["GET", "POST"])
-@login_required
+@area_required("civel")
 def cadastro_civel():
     if request.method == "GET":
         sucesso = request.args.get("sucesso") == "1"
@@ -1179,7 +1225,7 @@ def preencher_titulos_recuperacao(processo, form):
 
 
 @app.route("/cadastro/civel-recuperacao", methods=["GET", "POST"])
-@login_required
+@area_required("civel_recuperacao")
 def cadastro_civel_recuperacao():
     if request.method == "GET":
         sucesso = request.args.get("sucesso") == "1"
@@ -1224,7 +1270,7 @@ def cadastro_civel_recuperacao():
 
 
 @app.route("/cadastro/trabalhista", methods=["GET", "POST"])
-@login_required
+@area_required("trabalhista")
 def cadastro_trabalhista():
     if request.method == "GET":
         sucesso = request.args.get("sucesso") == "1"
@@ -1269,7 +1315,7 @@ def cadastro_trabalhista():
 
 
 @app.route("/processos/civel")
-@login_required
+@area_required("civel")
 def processos_civel():
     query = Processo.query.filter_by(origem_cadastro="civel")
     f = request.args
@@ -1341,7 +1387,7 @@ def processos_civel():
 
 
 @app.route("/processos/trabalhista")
-@login_required
+@area_required("trabalhista")
 def processos_trabalhista():
     query = Processo.query.filter_by(origem_cadastro="trabalhista")
     f = request.args
@@ -1419,7 +1465,7 @@ def processos_trabalhista():
 
 
 @app.route("/processos/civel-recuperacao")
-@login_required
+@area_required("civel_recuperacao")
 def processos_civel_recuperacao():
     """Listagem dos processos de Recuperação de Crédito, com a mesma
     pesquisa processual da trabalhista + os filtros próprios dos títulos
@@ -1567,6 +1613,8 @@ def agenda():
     data_ate = texto("data_ate")
 
     query = Processo.query
+    if not current_user.eh_administrador:
+        query = query.filter(Processo.origem_cadastro.in_(list(current_user.areas)))
 
     if tipo == "civel":
         query = query.filter(
@@ -1678,6 +1726,8 @@ def agenda():
 @login_required
 def processo_detalhe(processo_id):
     processo = Processo.query.get_or_404(processo_id)
+    if not current_user.pode_acessar(processo.origem_cadastro):
+        abort(403)
     return render_template("processo_detalhe.html", p=processo)
 
 
@@ -1685,6 +1735,8 @@ def processo_detalhe(processo_id):
 @login_required
 def processo_editar(processo_id):
     processo = Processo.query.get_or_404(processo_id)
+    if not current_user.pode_acessar(processo.origem_cadastro):
+        abort(403)
 
     if request.method == "GET":
         return render_template("processo_editar.html", p=processo)
@@ -1748,7 +1800,7 @@ def processo_editar(processo_id):
 
 
 @app.route("/processo/<int:processo_id>/excluir", methods=["POST"])
-@login_required
+@admin_required
 def processo_excluir(processo_id):
     """Exclui o processo e tudo que está ligado a ele (partes, advogados,
     movimentos, pedidos, rateio, títulos e acordo). A confirmação formal é
@@ -2293,6 +2345,9 @@ def panorama_juridico():
     if tipo_param not in tipos_processo_validos:
         return render_template("panorama_juridico.html", mostrar_menu=True)
     tipo_selecionado = tipo_param
+    areas_exigidas = {"civel_trabalhista": ["civel", "trabalhista"]}.get(tipo_param, [tipo_param])
+    if not all(current_user.pode_acessar(a) for a in areas_exigidas):
+        abort(403)
     data_inicio, data_fim = periodo_do_panorama()
     periodo = {
         "data_inicio": data_inicio.isoformat() if data_inicio else "",
