@@ -60,7 +60,6 @@
         {% for funcao, titulo, ajuda in funcoes_do_sistema %}
         <fieldset style="border:1px solid #ddd; border-radius:6px; padding:10px 14px; margin:10px 0 0;">
           <legend style="font-size:13px; font-weight:600; padding:0 6px;">{{ titulo }}</legend>
-          <div class="aviso-limite" style="margin-bottom:8px;">{{ ajuda }}</div>
           <div style="display:flex; flex-direction:column; gap:8px;">
             {% for codigo, nome in areas_do_sistema.items() %}
             <label style="display:flex; align-items:center; gap:8px; font-weight:400;">
