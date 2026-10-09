@@ -1294,6 +1294,41 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
   color: #000;
   font-size: 14px;
 }
+.dash-filtro-tipo{ flex-wrap: wrap; row-gap: 8px; }
+.dash-filtro-periodo{
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13.5px;
+  color: #000;
+}
+.dash-filtro-periodo input[type="date"]{
+  width: auto;
+  font-size: 13.5px;
+  padding: 5px 8px;
+  background: #fff;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+}
+.dash-filtro-periodo .btn-filtrar{
+  background: var(--tinta);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.dash-filtro-periodo .btn-filtrar:hover{ opacity: 0.88; }
+.dash-filtro-periodo .link-limpar{
+  color: var(--selo);
+  font-size: 13.5px;
+  text-decoration: underline;
+}
 .dash-filtro-tipo select{
   width: auto;
   min-width: 190px;

@@ -43,6 +43,14 @@
           <option value="trabalhista">Trabalhista</option>
           <option value="tributario" disabled title="Em breve.">Processo Tributário</option>
         </select>
+        <div class="dash-filtro-periodo">
+          <label for="data_inicio">Período (data de distribuição):</label>
+          <input type="date" id="data_inicio" name="data_inicio" value="{{ data_inicio }}">
+          <span>até</span>
+          <input type="date" id="data_fim" name="data_fim" value="{{ data_fim }}">
+          <button type="submit" class="btn-filtrar">Filtrar</button>
+          {% if data_inicio or data_fim %}<a class="link-limpar" href="{{ url_for('panorama_juridico', tipo=tipo_selecionado) }}">Limpar</a>{% endif %}
+        </div>
       </form>
     </div>
   </div>

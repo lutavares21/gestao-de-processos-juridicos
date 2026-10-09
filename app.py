@@ -318,6 +318,31 @@ def texto_para_data(valor):
     return datetime.strptime(valor, "%Y-%m-%d").date()
 
 
+def periodo_do_panorama():
+    """Lê o filtro de período (opcional) da URL: ?data_inicio=AAAA-MM-DD&data_fim=AAAA-MM-DD.
+    Data inválida é ignorada; se vierem invertidas, são trocadas de lugar."""
+    def ler(nome):
+        try:
+            return texto_para_data(request.args.get(nome))
+        except ValueError:
+            return None
+    data_inicio, data_fim = ler("data_inicio"), ler("data_fim")
+    if data_inicio and data_fim and data_inicio > data_fim:
+        data_inicio, data_fim = data_fim, data_inicio
+    return data_inicio, data_fim
+
+
+def filtrar_periodo(query, data_inicio, data_fim):
+    """Aplica o filtro de período do Panorama (pela data de distribuição do
+    processo). Sem datas, devolve a consulta como veio. Com o filtro ativo,
+    processos sem data de distribuição ficam de fora."""
+    if data_inicio:
+        query = query.filter(Processo.data_distribuicao >= data_inicio)
+    if data_fim:
+        query = query.filter(Processo.data_distribuicao <= data_fim)
+    return query
+
+
 def texto_para_numero(valor):
     """Converte string do formulário em número decimal. Retorna None se vazio."""
     if not valor:
@@ -1818,7 +1843,7 @@ def nome_centro_resultado(codigo):
     return CENTROS_RESULTADO.get(str(codigo), str(codigo))
 
 
-def montar_panorama_recuperacao():
+def montar_panorama_recuperacao(data_inicio=None, data_fim=None):
     hoje = date.today()
     em_30_dias = hoje + timedelta(days=30)
     nomes_mes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
@@ -1838,7 +1863,7 @@ def montar_panorama_recuperacao():
         return indice // 12, indice % 12 + 1
 
     processos = (
-        Processo.query.filter_by(origem_cadastro="civel_recuperacao")
+        filtrar_periodo(Processo.query.filter_by(origem_cadastro="civel_recuperacao"), data_inicio, data_fim)
         .options(
             selectinload(Processo.titulos_recuperacao),
             selectinload(Processo.acordos_recebimento),
@@ -2258,13 +2283,18 @@ def panorama_juridico():
     if tipo_param not in tipos_processo_validos:
         return render_template("panorama_juridico.html", mostrar_menu=True)
     tipo_selecionado = tipo_param
+    data_inicio, data_fim = periodo_do_panorama()
+    periodo = {
+        "data_inicio": data_inicio.isoformat() if data_inicio else "",
+        "data_fim": data_fim.isoformat() if data_fim else "",
+    }
 
     # Recuperação de Crédito tem análise própria (empresa credora: carteira,
     # recuperado, acordos, inadimplência) - ver montar_panorama_recuperacao().
     if tipo_selecionado == "civel_recuperacao":
         return render_template(
-            "panorama_recuperacao.html", dados=montar_panorama_recuperacao(),
-            tipo_selecionado=tipo_selecionado, mostrar_menu=False,
+            "panorama_recuperacao.html", dados=montar_panorama_recuperacao(data_inicio, data_fim),
+            tipo_selecionado=tipo_selecionado, mostrar_menu=False, **periodo,
         )
 
     # Filtro por tipo de processo. "civel_trabalhista" não aplica nenhum
@@ -2284,7 +2314,7 @@ def panorama_juridico():
         query = Processo.query.filter(Processo.origem_cadastro != "civel_recuperacao")
         if tipo_selecionado != "civel_trabalhista":
             query = query.filter(Processo.origem_cadastro == tipo_selecionado)
-        return query
+        return filtrar_periodo(query, data_inicio, data_fim)
 
     def contar(**filtros):
         """Conta processos que batem com os filtros dados (além do filtro
@@ -2303,6 +2333,7 @@ def panorama_juridico():
         query = query.filter(Processo.origem_cadastro != "civel_recuperacao")
         if tipo_selecionado != "civel_trabalhista":
             query = query.filter(Processo.origem_cadastro == tipo_selecionado)
+        query = filtrar_periodo(query, data_inicio, data_fim)
         for campo, valor in filtros.items():
             query = query.filter(getattr(Processo, campo) == valor)
         return float(query.scalar() or 0)
@@ -2483,6 +2514,7 @@ def panorama_juridico():
     )
     if tipo_selecionado != "civel_trabalhista":
         top_cr_query = top_cr_query.filter(Processo.origem_cadastro == tipo_selecionado)
+    top_cr_query = filtrar_periodo(top_cr_query, data_inicio, data_fim)
     top_cr = (
         top_cr_query
         .group_by(Processo.centro_resultado)
@@ -2543,6 +2575,7 @@ def panorama_juridico():
     )
     if tipo_selecionado != "civel_trabalhista":
         pedidos_trab_query = pedidos_trab_query.filter(Processo.origem_cadastro == tipo_selecionado)
+    pedidos_trab_query = filtrar_periodo(pedidos_trab_query, data_inicio, data_fim)
     pedidos_trab_query = (
         pedidos_trab_query.group_by(PedidoTrabalhista.verba)
         .order_by(func.count(PedidoTrabalhista.id).desc())
@@ -2571,6 +2604,7 @@ def panorama_juridico():
     )
     if tipo_selecionado != "civel_trabalhista":
         pedidos_civel_query = pedidos_civel_query.filter(Processo.origem_cadastro == tipo_selecionado)
+    pedidos_civel_query = filtrar_periodo(pedidos_civel_query, data_inicio, data_fim)
     pedidos_civel_query = (
         pedidos_civel_query.group_by(PedidoCivel.descricao)
         .order_by(func.count(PedidoCivel.id).desc())
@@ -2589,7 +2623,7 @@ def panorama_juridico():
 
     return render_template(
         "panorama_juridico.html", dados=dados, tipo_selecionado=tipo_selecionado,
-        mostrar_menu=False,
+        mostrar_menu=False, **periodo,
     )
 
 
