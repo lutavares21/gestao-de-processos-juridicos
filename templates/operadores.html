@@ -21,6 +21,7 @@
           <th>Login</th>
           <th>E-mail</th>
           <th>Nível</th>
+          <th>Áreas liberadas</th>
           <th></th>
         </tr>
       </thead>
@@ -36,6 +37,11 @@
             {% else %}
             <span class="selo-status ativo">Comum</span>
             {% endif %}
+          </td>
+          <td>
+            {% if u.eh_administrador %}Todas
+            {% elif u.areas %}{% for a in u.areas|sort %}{{ areas_do_sistema.get(a, a) }}{% if not loop.last %}, {% endif %}{% endfor %}
+            {% else %}—{% endif %}
           </td>
           <td><a class="btn-detalhe" href="{{ url_for('operador_editar', operador_id=u.id) }}">Editar</a></td>
         </tr>

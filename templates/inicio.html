@@ -28,10 +28,10 @@
           <div class="bloco-inicio">
             <h2>Novo cadastro</h2>
             <div class="links-bloco">
-              <a href="{{ url_for('cadastro_civel') }}">Processo Cível</a>
-              <a href="{{ url_for('cadastro_civel_recuperacao') }}">Processo Cível - Recuperação de Crédito</a>
+              {% if current_user.pode_acessar('civel') %}<a href="{{ url_for('cadastro_civel') }}">Processo Cível</a>{% endif %}
+              {% if current_user.pode_acessar('civel_recuperacao') %}<a href="{{ url_for('cadastro_civel_recuperacao') }}">Processo Cível - Recuperação de Crédito</a>{% endif %}
               <a href="#" class="oculto-visual">Processo Licitatório</a>
-              <a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a>
+              {% if current_user.pode_acessar('trabalhista') %}<a href="{{ url_for('cadastro_trabalhista') }}">Processo Trabalhista</a>{% endif %}
               <a href="#" class="oculto-visual">Processos Tributários</a>
             </div>
           </div>
@@ -41,10 +41,10 @@
           <div class="bloco-inicio">
             <h2>Processos Cadastrados</h2>
             <div class="links-bloco">
-              <a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a>
-              <a href="{{ url_for('processos_civel_recuperacao') }}">Processos Cível - Recuperação de Crédito <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_recuperacao_ativos }}</span></a>
+              {% if current_user.pode_acessar('civel') %}<a href="{{ url_for('processos_civel') }}">Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a>{% endif %}
+              {% if current_user.pode_acessar('civel_recuperacao') %}<a href="{{ url_for('processos_civel_recuperacao') }}">Processos Cível - Recuperação de Crédito <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_recuperacao_ativos }}</span></a>{% endif %}
               <a href="#" class="oculto-visual">Processos Licitatórios</a>
-              <a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a>
+              {% if current_user.pode_acessar('trabalhista') %}<a href="{{ url_for('processos_trabalhista') }}">Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a>{% endif %}
               <a href="#" class="oculto-visual">Processos Tributários</a>
             </div>
           </div>

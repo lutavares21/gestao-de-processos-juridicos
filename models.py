@@ -26,9 +26,24 @@ class Operador(db.Model, UserMixin):
     senha_hash = db.Column(db.String(255), nullable=False)
     nivel = db.Column(db.String(20), nullable=False, default="comum")
 
+    # Áreas do site liberadas para o operador comum, separadas por vírgula
+    # (ex.: "civel,trabalhista"). Os códigos são os mesmos de
+    # Processo.origem_cadastro. Administrador ignora este campo: tem acesso
+    # a tudo.
+    areas_permitidas = db.Column(db.String(200), default="")
+
     @property
     def eh_administrador(self):
         return self.nivel == "administrador"
+
+    @property
+    def areas(self):
+        """Conjunto das áreas liberadas (só vale para operador comum)."""
+        return {a for a in (self.areas_permitidas or "").split(",") if a}
+
+    def pode_acessar(self, area):
+        """Administrador acessa tudo; operador comum só as áreas liberadas."""
+        return self.eh_administrador or area in self.areas
 
 
 class RegistroAtividade(db.Model):

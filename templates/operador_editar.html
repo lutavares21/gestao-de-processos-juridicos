@@ -5,6 +5,7 @@
 {% block cabecalho_subtitulo %}Gestão de operadores{% endblock %}
 
 {% block conteudo %}
+{% set marcadas = valores.getlist('areas') if valores else operador.areas %}
 
   <a class="link-voltar" href="{{ url_for('operadores') }}">← Voltar para a lista de operadores</a>
 
@@ -54,6 +55,23 @@
         </div>
       </div>
 
+      <div class="campo" id="bloco-areas" style="margin-bottom:18px;">
+        <label>Áreas liberadas</label>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
+          {% for codigo, nome in areas_do_sistema.items() %}
+          <label style="display:flex; align-items:center; gap:8px; font-weight:400;">
+            <input type="checkbox" name="areas" value="{{ codigo }}" style="width:auto;" {% if codigo in marcadas %}checked{% endif %}> {{ nome }}
+          </label>
+          {% endfor %}
+        </div>
+        <div class="aviso-limite" style="margin-top:8px;">
+          O operador comum só acessa as áreas marcadas (cadastro, listagem, agenda e panorama). Excluir processos, cadastrar e excluir operadores e ver o registro de atividades é sempre só do administrador.
+        </div>
+      </div>
+      <div class="aviso-limite" id="aviso-areas-admin" style="margin-bottom:18px;">
+        Administradores têm acesso a todas as áreas e funções do sistema.
+      </div>
+
       <button type="submit" class="btn btn-salvar">Salvar alterações</button>
     </form>
   </div>
@@ -69,4 +87,21 @@
     </form>
   </div>
 
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+  (function () {
+    const nivel = document.getElementById('nivel');
+    const blocoAreas = document.getElementById('bloco-areas');
+    const avisoAdmin = document.getElementById('aviso-areas-admin');
+    function atualizar() {
+      const admin = nivel.value === 'administrador';
+      blocoAreas.style.display = admin ? 'none' : '';
+      avisoAdmin.style.display = admin ? '' : 'none';
+    }
+    nivel.addEventListener('change', atualizar);
+    atualizar();
+  })();
+</script>
 {% endblock %}
