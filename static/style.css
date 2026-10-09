@@ -1826,7 +1826,7 @@ canvas{ max-width: 100%; }
   width: 100%;
   height: auto;
   display: block;
-  margin-top: -56px; /* sobe a imagem */
+  margin-top: 0; /* a frase agora faz parte da imagem */
 }
 
 .menu-panorama-conteudo {

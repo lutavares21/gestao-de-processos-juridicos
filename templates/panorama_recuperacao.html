@@ -209,16 +209,16 @@
     {% if dados.top_devedores %}
     <table class="dash-tabela">
       <thead>
-        <tr><th style="text-align:left;">ID Cliente</th><th style="text-align:left;">Réu(s)</th><th style="text-align:center;">Títulos</th><th style="text-align:center;">Processos</th><th style="text-align:right;">Valor atualizado</th></tr>
+        <tr><th style="text-align:left;">ID Cliente</th><th style="text-align:left;">Réu(s)</th><th style="text-align:right;">Valor a receber</th><th style="text-align:right;">Valor recebido</th><th style="text-align:right;">Saldo a receber</th></tr>
       </thead>
       <tbody>
         {% for d in dados.top_devedores %}
         <tr>
           <td>{{ d.nome }}</td>
           <td>{{ d.reus or '—' }}</td>
-          <td style="text-align:center;">{{ d.titulos }}</td>
-          <td style="text-align:center;">{{ d.processos }}</td>
           <td style="text-align:right; white-space:nowrap;">{{ d.valor|moeda }}</td>
+          <td style="text-align:right; white-space:nowrap;">{{ d.recebido|moeda }}</td>
+          <td style="text-align:right; white-space:nowrap;">{{ d.saldo|moeda }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -283,6 +283,60 @@
     <div class="dash-vazio" style="text-align:left; padding-top:10px;">Taxa de recuperação = valor recuperado ÷ valor cobrado, considerando todos os processos do escritório.</div>
     {% else %}
     <div class="dash-vazio">Não há escritórios informados.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ÊXITO POR CENTRO DE RESULTADO -->
+<div class="dash-row">
+  <div class="dash-painel">
+    <div class="dash-secao-titulo">Processos com êxito por centro de resultado (acordo ou sentença favorável)</div>
+    {% if dados.exito_cr.linhas %}
+    {% set et = dados.exito_cr.total %}
+    <div class="dash-chart-wrap grande"><canvas id="graficoExitoCR"></canvas></div>
+    <div class="tabela-wrap" style="margin-top:14px; overflow-x:auto;">
+      <table class="dash-tabela">
+        <thead>
+          <tr>
+            <th style="text-align:left;">Centro de resultado</th>
+            <th style="text-align:center;">Processos</th>
+            <th style="text-align:center;">Via acordo</th>
+            <th style="text-align:center;">Via sentença</th>
+            <th style="text-align:right;">Valor cobrado</th>
+            <th style="text-align:right;">Recuperado</th>
+            <th style="text-align:right;">Falta recuperar</th>
+            <th style="text-align:center;">% recuperado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in dados.exito_cr.linhas %}
+          <tr>
+            <td>{{ c.nome }}</td>
+            <td style="text-align:center;">{{ c.qtd }}</td>
+            <td style="text-align:center;">{{ c.qtd_acordo }}</td>
+            <td style="text-align:center;">{{ c.qtd_sentenca }}</td>
+            <td style="text-align:right; white-space:nowrap;">{{ c.cobrado|moeda }}</td>
+            <td style="text-align:right; white-space:nowrap;">{{ c.recuperado|moeda }}</td>
+            <td style="text-align:right; white-space:nowrap;">{{ c.falta|moeda }}</td>
+            <td style="text-align:center;">{{ (c.pct ~ '%') if c.pct is not none else '—' }}</td>
+          </tr>
+          {% endfor %}
+          <tr style="font-weight:700; border-top:2px solid #d9dde3;">
+            <td>Total</td>
+            <td style="text-align:center;">{{ et.qtd }}</td>
+            <td style="text-align:center;">{{ et.qtd_acordo }}</td>
+            <td style="text-align:center;">{{ et.qtd_sentenca }}</td>
+            <td style="text-align:right; white-space:nowrap;">{{ et.cobrado|moeda }}</td>
+            <td style="text-align:right; white-space:nowrap;">{{ et.recuperado|moeda }}</td>
+            <td style="text-align:right; white-space:nowrap;">{{ et.falta|moeda }}</td>
+            <td style="text-align:center;">{{ (et.pct ~ '%') if et.pct is not none else '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="dash-vazio" style="text-align:left; padding-top:10px;">Considera os processos com desfecho "acordo" ou "favorável", ativos ou arquivados. Falta recuperar = valor cobrado − valor recuperado. Processos com rateio entre CRs têm os valores divididos igualmente entre os CRs do rateio, e cada CR do rateio conta o processo na sua quantidade (o total geral conta cada processo uma vez).</div>
+    {% else %}
+    <div class="dash-vazio">Nenhum processo com êxito (acordo ou sentença favorável) registrado até o momento.</div>
     {% endif %}
   </div>
 </div>
@@ -460,6 +514,27 @@
           scales: { y: { ticks: { callback: reais } } } }
       });
     } catch (e) { console.error("Erro no gráfico de fluxo:", e); }
+
+    // Êxito por centro de resultado (10 maiores CRs por valor cobrado)
+    try {
+      const linhasCR = d.exito_cr.linhas.slice(0, 10);
+      if (linhasCR.length > 0) {
+        new Chart(document.getElementById('graficoExitoCR'), {
+          type: 'bar',
+          data: {
+            labels: linhasCR.map(c => c.nome),
+            datasets: [
+              { label: 'Recuperado', data: linhasCR.map(c => c.recuperado), backgroundColor: verde, borderRadius: 4 },
+              { label: 'Falta recuperar', data: linhasCR.map(c => c.falta), backgroundColor: vermelho, borderRadius: 4 },
+            ]
+          },
+          options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' },
+              tooltip: { callbacks: { label: c => c.dataset.label + ': ' + reais(c.parsed.x) } } },
+            scales: { x: { stacked: true, ticks: { callback: reais } }, y: { stacked: true } } }
+        });
+      }
+    } catch (e) { console.error("Erro no gráfico de êxito por CR:", e); }
 
     // Resultado dos processos
     try {

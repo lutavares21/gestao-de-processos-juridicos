@@ -1844,6 +1844,7 @@ def montar_panorama_recuperacao():
             selectinload(Processo.acordos_recebimento),
             selectinload(Processo.movimentos),
             selectinload(Processo.partes),
+            selectinload(Processo.rateio_crs),
         )
         .all()
     )
@@ -1926,16 +1927,36 @@ def montar_panorama_recuperacao():
     dados["aging"] = [{"faixa": k, **v} for k, v in aging.items()]
 
     # ---- 6. Devedores e companies (carteira exigível) ---------------------
+    # O valor recebido é registrado por processo (acordos/valor final), não por
+    # título. Para chegar ao valor recebido de cada devedor, o recebido do
+    # processo é dividido proporcionalmente ao peso dos títulos dele no processo.
+    recuperado_por_processo = {r["p"].id: r["recuperado"] for r in resumo}
+    total_exigivel_por_processo = {}
+    for t in exigiveis:
+        total_exigivel_por_processo[t.processo_id] = (
+            total_exigivel_por_processo.get(t.processo_id, 0.0) + total_titulo(t)
+        )
+
     def agrupar(chave_fn):
         grupos = {}
         for t in exigiveis:
             nome = (chave_fn(t) or "Não informado").strip().upper()
-            g = grupos.setdefault(nome, {"nome": nome, "titulos": 0, "valor": 0.0, "processos": set()})
+            g = grupos.setdefault(nome, {"nome": nome, "titulos": 0, "valor": 0.0, "processos": set(),
+                                         "valor_por_processo": {}})
             g["titulos"] += 1
             g["valor"] += total_titulo(t)
             g["processos"].add(t.processo_id)
+            g["valor_por_processo"][t.processo_id] = (
+                g["valor_por_processo"].get(t.processo_id, 0.0) + total_titulo(t)
+            )
         lista = sorted(grupos.values(), key=lambda g: g["valor"], reverse=True)
         for g in lista:
+            g["recebido"] = sum(
+                recuperado_por_processo.get(pid, 0.0) * valor / total_exigivel_por_processo[pid]
+                for pid, valor in g["valor_por_processo"].items()
+                if total_exigivel_por_processo.get(pid)
+            )
+            g["saldo"] = max(g["valor"] - g["recebido"], 0.0)
             # O campo Cliente da planilha é um ID; o(s) réu(s) do processo ajudam a identificar o devedor.
             nomes_reus = []
             for pid in g["processos"]:
@@ -2064,6 +2085,49 @@ def montar_panorama_recuperacao():
             c["valor"] += em_aberto(r)
     dados["fases"] = sorted(fases.values(), key=lambda f: f["valor"], reverse=True)
     dados["top_centros_resultado"] = sorted(crs.values(), key=lambda c: c["valor"], reverse=True)[:6]
+
+    # ---- 10b. Processos com êxito por Centro de Resultado (CR) ------------
+    # Êxito = resultado "acordo" ou "ganhamos" (sentença favorável), em qualquer
+    # status do processo. Falta recuperar = cobrado - recuperado (nunca negativo).
+    # Processos com rateio entre CRs têm os valores divididos igualmente entre os
+    # CRs do rateio; a quantidade de processos conta 1 em cada CR do rateio, mas
+    # o total geral conta cada processo uma única vez.
+    vias_exito = {"acordo": "qtd_acordo", "ganhamos": "qtd_sentenca"}
+    exito_crs = {}
+    exito_total = {"qtd": 0, "qtd_acordo": 0, "qtd_sentenca": 0,
+                   "cobrado": 0.0, "recuperado": 0.0, "falta": 0.0}
+    for r in resumo:
+        p = r["p"]
+        campo_via = vias_exito.get(p.resultado)
+        if not campo_via:
+            continue
+        falta = max(r["cobrado"] - r["recuperado"], 0.0)
+        if p.centro_resultado == "rateio":
+            codigos = [x.centro_resultado.strip() for x in p.rateio_crs
+                       if x.centro_resultado and x.centro_resultado.strip()]
+            codigos = list(dict.fromkeys(codigos)) or ["rateio"]
+        elif p.centro_resultado:
+            codigos = [p.centro_resultado]
+        else:
+            codigos = [None]
+        for codigo in codigos:
+            nome_cr = nome_centro_resultado(codigo) if codigo else "Sem centro de resultado"
+            c = exito_crs.setdefault(nome_cr, {"nome": nome_cr, "qtd": 0, "qtd_acordo": 0, "qtd_sentenca": 0,
+                                               "cobrado": 0.0, "recuperado": 0.0, "falta": 0.0})
+            c["qtd"] += 1
+            c[campo_via] += 1
+            c["cobrado"] += r["cobrado"] / len(codigos)
+            c["recuperado"] += r["recuperado"] / len(codigos)
+            c["falta"] += falta / len(codigos)
+        exito_total["qtd"] += 1
+        exito_total[campo_via] += 1
+        exito_total["cobrado"] += r["cobrado"]
+        exito_total["recuperado"] += r["recuperado"]
+        exito_total["falta"] += falta
+    linhas_exito = sorted(exito_crs.values(), key=lambda c: c["cobrado"], reverse=True)
+    for c in linhas_exito + [exito_total]:
+        c["pct"] = round(100 * c["recuperado"] / c["cobrado"], 1) if c["cobrado"] else None
+    dados["exito_cr"] = {"linhas": linhas_exito, "total": exito_total}
 
     # ---- 11. Idade, tempo de tramitação e processos parados ---------------
     idade = {"Até 1 ano": [0, 0.0], "1 a 2 anos": [0, 0.0], "2 a 3 anos": [0, 0.0],
