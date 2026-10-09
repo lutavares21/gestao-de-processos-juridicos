@@ -26,14 +26,14 @@
         </div>
         <div class="campo">
           <label for="login">Login</label>
-          <input type="text" id="login" name="login" required value="{{ valores.login if valores else '' }}">
+          <input type="text" id="login" name="login" autocomplete="off" required value="{{ valores.login if valores else '' }}">
         </div>
       </div>
 
       <div class="linha">
         <div class="campo">
           <label for="email">E-mail</label>
-          <input type="email" id="email" name="email" required pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Informe um e-mail válido, como nome@empresa.com" value="{{ valores.email if valores else '' }}">
+          <input type="text" inputmode="email" autocomplete="off" id="email" name="email" required pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Informe um e-mail válido, como nome@empresa.com" value="{{ valores.email if valores else '' }}">
         </div>
         <div class="campo">
           <label for="nivel">Nível</label>
@@ -48,7 +48,7 @@
         <div class="campo">
           <label for="senha">Senha</label>
           <div style="position:relative;">
-            <input type="password" id="senha" name="senha" required style="padding-right:44px;">
+            <input type="password" id="senha" name="senha" autocomplete="new-password" required style="padding-right:44px;">
             <button type="button" class="ver-senha" data-alvo="senha" aria-label="Mostrar senha" title="Mostrar senha" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; padding:4px; line-height:0; color:#555;">
               <svg class="icone-olho" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg class="icone-olho-fechado" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
@@ -58,7 +58,7 @@
         <div class="campo">
           <label for="confirmar_senha">Confirmar senha</label>
           <div style="position:relative;">
-            <input type="password" id="confirmar_senha" name="confirmar_senha" required style="padding-right:44px;">
+            <input type="password" id="confirmar_senha" name="confirmar_senha" autocomplete="new-password" required style="padding-right:44px;">
             <button type="button" class="ver-senha" data-alvo="confirmar_senha" aria-label="Mostrar senha" title="Mostrar senha" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; padding:4px; line-height:0; color:#555;">
               <svg class="icone-olho" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg class="icone-olho-fechado" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
