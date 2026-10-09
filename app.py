@@ -51,6 +51,16 @@ with app.app_context():
         ))
         db.session.commit()
 
+    # Mesma ideia para a coluna "areas_permitidas" dos operadores (áreas do
+    # site liberadas para o operador comum). Se o banco é anterior a ela,
+    # ela é adicionada aqui (uma vez só).
+    colunas_operadores = [c["name"] for c in sa_inspect(db.engine).get_columns("operadores")]
+    if "areas_permitidas" not in colunas_operadores:
+        db.session.execute(sa_text(
+            "ALTER TABLE operadores ADD COLUMN areas_permitidas VARCHAR(200) DEFAULT ''"
+        ))
+        db.session.commit()
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
