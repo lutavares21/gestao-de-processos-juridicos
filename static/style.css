@@ -1289,16 +1289,16 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   margin-top: 0;
   color: #000;
-  font-size: 17px;
+  font-size: 14px;
 }
 .dash-filtro-tipo select{
   width: auto;
-  min-width: 220px;
-  font-size: 16px;
-  padding: 11px 14px;
+  min-width: 190px;
+  font-size: 13.5px;
+  padding: 6px 10px;
   background: #fff;
   border: 1px solid var(--borda);
 }
