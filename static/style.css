@@ -1212,7 +1212,7 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 .dash-header-layout {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
 }
 
 @media (max-width: 760px) {
@@ -1223,8 +1223,8 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 }
 
 .dash-header-logo {
-  flex: 0 0 450px;
-  max-width: 450px;
+  flex: 0 0 360px;
+  max-width: 360px;
   order: 0;
 }
 
@@ -1235,10 +1235,10 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 }
 
 .dash-header-ilustracao {
-  flex: 0 0 370px;
-  max-width: 370px;
+  flex: 0 0 300px;
+  max-width: 300px;
   order: 2;
-  margin-top: -40px;
+  margin-top: -32px;
 }
 
 .dash-header-ilustracao img {
@@ -1256,26 +1256,26 @@ select.selo-pedido-select.situacao-parcial { background: #fbeecb; color: var(--r
 
 .dash-header{
   background: none;
-  padding: 12px 0 32px;
+  padding: 8px 0 20px;
   color: var(--texto);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 22px;
+  gap: 16px;
 }
 .dash-header h1{
   font-family: var(--fonte-titulo, 'Source Serif 4', serif);
-  font-size: 38px;
+  font-size: 32px;
   margin: 0 0 8px 0;
   letter-spacing: 0.2px;
   color: var(--tinta);
 }
 .dash-header .dash-subtitulo{
   color: #000;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.45;
 }
 .dash-header .dash-data{
