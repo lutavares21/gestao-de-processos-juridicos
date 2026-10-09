@@ -46,6 +46,8 @@
         {% if current_user.eh_administrador %}
         <a href="{{ url_for('operadores') }}" class="{{ 'ativo' if request.endpoint in ['operadores', 'operador_novo', 'operador_editar', 'atividades'] else '' }}">Gestão de Operadores</a>
         {% endif %}
+
+        <a href="{{ url_for('logout') }}">Sair</a>
       </nav>
     </aside>
 

@@ -9,7 +9,10 @@
 {% block corpo %}
 {% if mostrar_menu %}
 <div class="pagina-sem-menu">
-  <a href="{{ url_for('inicio') }}" class="botao-inicio-simples">Início</a>
+  <div style="display:flex; flex-direction:column; align-items:flex-start; gap:8px;">
+    <a href="{{ url_for('inicio') }}" class="botao-inicio-simples">Início</a>
+    <a href="{{ url_for('logout') }}" class="botao-inicio-simples">Sair</a>
+  </div>
 
   <div class="container" style="max-width: 1220px; padding-top: 6px;">
         <!-- MENU DE ESCOLHA DO TIPO DE PROCESSO -->
@@ -80,7 +83,10 @@
 </div>
 {% else %}
 <div class="pagina-sem-menu">
-  <a href="{{ url_for('inicio') }}" class="botao-inicio-simples">Início</a>
+  <div style="display:flex; flex-direction:column; align-items:flex-start; gap:8px;">
+    <a href="{{ url_for('inicio') }}" class="botao-inicio-simples">Início</a>
+    <a href="{{ url_for('logout') }}" class="botao-inicio-simples">Sair</a>
+  </div>
 
   <div class="container" style="max-width: 1280px;">
     {{ self.conteudo() }}
