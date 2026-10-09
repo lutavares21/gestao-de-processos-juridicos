@@ -11,6 +11,10 @@ from flask_login import UserMixin
 
 db = SQLAlchemy()
 
+# Funções do sistema que podem ser liberadas, tipo de processo por tipo de
+# processo, para o operador comum.
+FUNCOES_PERMISSAO = ("cadastrar", "editar", "agenda", "panorama")
+
 
 class Operador(db.Model, UserMixin):
     """Operador com acesso ao sistema. A senha nunca é guardada em texto
@@ -26,24 +30,62 @@ class Operador(db.Model, UserMixin):
     senha_hash = db.Column(db.String(255), nullable=False)
     nivel = db.Column(db.String(20), nullable=False, default="comum")
 
-    # Áreas do site liberadas para o operador comum, separadas por vírgula
-    # (ex.: "civel,trabalhista"). Os códigos são os mesmos de
-    # Processo.origem_cadastro. Administrador ignora este campo: tem acesso
-    # a tudo.
-    areas_permitidas = db.Column(db.String(200), default="")
+    # Permissões do operador comum, separadas por vírgula, no formato
+    # "funcao:tipo" (ex.: "cadastrar:civel,editar:civel,agenda:trabalhista").
+    # Funções: cadastrar, editar, agenda, panorama. Os tipos são os mesmos de
+    # Processo.origem_cadastro. Valores antigos, só com o código do tipo
+    # (ex.: "civel"), valem como todas as funções daquele tipo.
+    # Administrador ignora este campo: tem acesso a tudo.
+    areas_permitidas = db.Column(db.String(500), default="")
 
     @property
     def eh_administrador(self):
         return self.nivel == "administrador"
 
     @property
-    def areas(self):
-        """Conjunto das áreas liberadas (só vale para operador comum)."""
-        return {a for a in (self.areas_permitidas or "").split(",") if a}
+    def permissoes(self):
+        """Conjunto de permissões 'funcao:tipo' do operador comum."""
+        resultado = set()
+        for item in (self.areas_permitidas or "").split(","):
+            item = item.strip()
+            if not item:
+                continue
+            if ":" in item:
+                resultado.add(item)
+            else:
+                # Formato antigo: só o tipo -> todas as funções dele.
+                for funcao in FUNCOES_PERMISSAO:
+                    resultado.add(f"{funcao}:{item}")
+        return resultado
 
-    def pode_acessar(self, area):
-        """Administrador acessa tudo; operador comum só as áreas liberadas."""
-        return self.eh_administrador or area in self.areas
+    @property
+    def areas(self):
+        """Tipos de processo em que o operador tem alguma permissão."""
+        return {p.split(":", 1)[1] for p in self.permissoes}
+
+    def pode(self, funcao, tipo):
+        """Administrador pode tudo. Operador comum precisa ter a função
+        liberada para o tipo. Editar só vale se também puder cadastrar
+        aquele tipo."""
+        if self.eh_administrador:
+            return True
+        perms = self.permissoes
+        if f"{funcao}:{tipo}" not in perms:
+            return False
+        if funcao == "editar":
+            return f"cadastrar:{tipo}" in perms
+        return True
+
+    def tem_funcao(self, funcao):
+        """Tem essa função liberada em pelo menos um tipo de processo?
+        (usado nos itens de menu Agenda e Panorama)"""
+        if self.eh_administrador:
+            return True
+        return any(p.startswith(funcao + ":") for p in self.permissoes)
+
+    def pode_acessar(self, tipo):
+        """Tem alguma função liberada para esse tipo de processo?"""
+        return any(self.pode(funcao, tipo) for funcao in FUNCOES_PERMISSAO)
 
 
 class RegistroAtividade(db.Model):
