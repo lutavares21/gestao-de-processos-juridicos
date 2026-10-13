@@ -41,7 +41,7 @@
 </style>
 {% if mostrar_menu %}
 <div class="pagina-sem-menu">
-  {{ mini_menu() }}
+  <a href="{{ url_for('inicio') }}" class="botao-inicio-simples">Início</a>
 
   <div class="container" style="max-width: 1220px; padding-top: 6px;">
         <!-- MENU DE ESCOLHA DO TIPO DE PROCESSO -->
@@ -49,7 +49,7 @@
           <div class="menu-panorama-layout">
 
             <div class="menu-panorama-ilustracao">
-              <img src="{{ url_for('static', filename='images/panorama_inicial.png') }}" alt="Dados que orientam. Gestão que transforma." class="img-entrada">
+              <img src="{{ url_for('static', filename='images/panorama.png') }}" alt="Ilustração de análise jurídica" class="img-entrada">
             </div>
 
             <div class="menu-panorama-conteudo">
