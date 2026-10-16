@@ -21,6 +21,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from models import (
     db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR,
     PedidoCivel, TituloRecuperacao, AcordoRecebimento, Operador, RegistroAtividade,
+    Licitacao,
 )
 
 app = Flask(__name__)
@@ -60,6 +61,45 @@ with app.app_context():
             "ALTER TABLE operadores ADD COLUMN areas_permitidas VARCHAR(200) DEFAULT ''"
         ))
         db.session.commit()
+
+    # Colunas da tabela "licitacoes" acrescentadas depois que a tabela já
+    # existia (create_all não altera tabelas existentes). Cada parte nova do
+    # cadastro licitatório entra aqui.
+    colunas_licitacoes = {c["name"] for c in sa_inspect(db.engine).get_columns("licitacoes")}
+    novas_colunas_licitacoes = {
+        "data_licitacao": "DATE",
+        "horario_licitacao": "VARCHAR(5)",
+        "plataforma": "VARCHAR(100)",
+        "plataforma_outra": "VARCHAR(100)",
+        "tipo_disputa": "VARCHAR(30)",
+        "proxima_data_acompanhamento": "DATE",
+        "proximo_horario_acompanhamento": "VARCHAR(5)",
+        "ultima_data_acompanhamento": "DATE",
+        "ultimo_horario_acompanhamento": "VARCHAR(5)",
+        "penultima_data_acompanhamento": "DATE",
+        "penultimo_horario_acompanhamento": "VARCHAR(5)",
+        "esclarecimento": "VARCHAR(3)",
+        "impugnacao": "VARCHAR(3)",
+        "impugnacao_resultado": "VARCHAR(25)",
+        "recursos": "VARCHAR(3)",
+        "recursos_resultado": "VARCHAR(25)",
+        "contrarrazao": "VARCHAR(3)",
+        "contrarrazao_resultado": "VARCHAR(25)",
+        "resumo_processo": "TEXT",
+        "pilhas_por_aasi": "INTEGER",
+        "desumidificador_por_aasi": "INTEGER",
+        "receptor_por_aasi": "INTEGER",
+        "massa_dreve": "VARCHAR(100)",
+        "molde": "VARCHAR(3)",
+        "adaptacao_aberta": "VARCHAR(3)",
+        "apoio_local": "VARCHAR(3)",
+        "garantia_licitacao": "VARCHAR(3)",
+        "garantia_qual": "VARCHAR(200)",
+    }
+    for nome_coluna, tipo_coluna in novas_colunas_licitacoes.items():
+        if nome_coluna not in colunas_licitacoes:
+            db.session.execute(sa_text(f"ALTER TABLE licitacoes ADD COLUMN {nome_coluna} {tipo_coluna}"))
+    db.session.commit()
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -120,6 +160,68 @@ FUNCOES_DO_SISTEMA = [
      "Tipos de processo que o operador poderá analisar no panorama jurídico."),
 ]
 
+
+# Opções das listas do cadastro de processo licitatório (chave -> texto).
+TIPOS_LICITACAO = {
+    "pregao_eletronico": "Pregão Eletrônico",
+    "pregao_presencial": "Pregão Presencial",
+    "concorrencia": "Concorrência",
+    "credenciamento": "Credenciamento",
+    "dispensa_eletronica": "Dispensa Eletrônica",
+    "concurso": "Concurso",
+    "leilao": "Leilão",
+    "dialogo_competitivo": "Diálogo Competitivo",
+    "orcamento_venda_direta": "Orçamento para Venda Direta",
+}
+
+OBJETOS_LICITACAO = {
+    "aparelho_auditivo": "Aparelho Auditivo",
+    "equipamento_medico": "Equipamento Médico",
+    "implante": "Implante",
+    "aparelho_auditivo_e_implante": "Aparelho Auditivo e Implante",
+    "aparelho_auditivo_e_equipamento": "Aparelho Auditivo e Equipamento",
+}
+
+# Plataformas onde a licitação acontece. "outros" abre um campo para digitar
+# o nome da plataforma.
+PLATAFORMAS_LICITACAO = [
+    "comprasnet.gov.br", "bllcompras.com", "portaldecompraspublicas.com.br",
+    "bnccompras.com", "licitacoes-e2.bb.com.br", "bbmnet.com.br", "bionexo.com",
+    "licita.civap.com.br", "licitanet.com.br", "apoiocotacoes.com",
+    "cotacao.licitacao.sc.gov.br", "peintegrado.pe.gov.br",
+    "portaldecompras.firjan.com.br", "compras.sistemafiergs.org.br",
+    "comprascaragua.com.br", "comprasbr.com.br", "licitacaocamposdojordao.com.br",
+    "transparencia.saltinho.sp.gov.br", "ciensp.no-ip.org",
+    "licitamaisbrasil.com.br", "minhaconta.licitardigital.com.br",
+]
+
+TIPOS_DISPUTA = {
+    "aberto": "Aberto",
+    "aberto_e_fechado": "Aberto e Fechado",
+    "fechado_e_aberto": "Fechado e Aberto",
+}
+
+# Resultado de impugnação, recursos e contrarrazão.
+RESULTADOS_LICITACAO = {
+    "deferido": "Deferido",
+    "parcialmente_deferido": "Parcialmente Deferido",
+    "indeferido": "Indeferido",
+}
+
+# Horário no formato HH:MM (00:00 a 23:59).
+HORARIO_REGEX = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
+
+# Estado -> UF
+ESTADOS_BRASIL = {
+    "Acre": "AC", "Alagoas": "AL", "Amapá": "AP", "Amazonas": "AM", "Bahia": "BA",
+    "Ceará": "CE", "Distrito Federal": "DF", "Espírito Santo": "ES", "Goiás": "GO",
+    "Maranhão": "MA", "Mato Grosso": "MT", "Mato Grosso do Sul": "MS",
+    "Minas Gerais": "MG", "Pará": "PA", "Paraíba": "PB", "Paraná": "PR",
+    "Pernambuco": "PE", "Piauí": "PI", "Rio de Janeiro": "RJ",
+    "Rio Grande do Norte": "RN", "Rio Grande do Sul": "RS", "Rondônia": "RO",
+    "Roraima": "RR", "Santa Catarina": "SC", "São Paulo": "SP", "Sergipe": "SE",
+    "Tocantins": "TO",
+}
 
 # E-mail precisa ter o formato algo@dominio.ext (sem espaços).
 EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -1375,6 +1477,200 @@ def cadastro_trabalhista():
         return render_template("cadastro_trabalhista.html", erro_numero_duplicado=numero_processo)
 
     return redirect(url_for("cadastro_trabalhista", sucesso=1))
+
+
+# ---------------------------------------------------------------------------
+# CADASTRO - PROCESSO LICITATÓRIO
+# ---------------------------------------------------------------------------
+def render_cadastro_licitatorio(**contexto):
+    return render_template(
+        "cadastro_licitatorio.html",
+        tipos_licitacao=TIPOS_LICITACAO,
+        objetos_licitacao=OBJETOS_LICITACAO,
+        estados_brasil=ESTADOS_BRASIL,
+        plataformas_licitacao=PLATAFORMAS_LICITACAO,
+        tipos_disputa=TIPOS_DISPUTA,
+        resultados_licitacao=RESULTADOS_LICITACAO,
+        **contexto,
+    )
+
+
+@app.route("/cadastro/licitatorio", methods=["GET", "POST"])
+@permissao_required("cadastrar", "licitatorio")
+def cadastro_licitatorio():
+    if request.method == "GET":
+        return render_cadastro_licitatorio(sucesso=request.args.get("sucesso") == "1")
+
+    form = request.form
+
+    def campo(nome):
+        return (form.get(nome) or "").strip()
+
+    erros = []
+    if campo("tipo_processo") not in TIPOS_LICITACAO:
+        erros.append("Selecione o tipo de processo.")
+    if campo("participacao") not in ("sim", "nao"):
+        erros.append("Informe se haverá participação (Sim ou Não).")
+    if not campo("edital"):
+        erros.append("Informe o número do edital.")
+    if not campo("orgao_licitante"):
+        erros.append("Informe o órgão licitante.")
+
+    ano = None
+    if campo("ano_licitacao"):
+        if campo("ano_licitacao").isdigit() and 1990 <= int(campo("ano_licitacao")) <= 2100:
+            ano = int(campo("ano_licitacao"))
+        else:
+            erros.append("Informe o ano da licitação com 4 dígitos (ex.: 2026).")
+
+    email = campo("email")
+    if email and not EMAIL_REGEX.match(email):
+        erros.append("Informe um e-mail válido (ex.: nome@orgao.gov.br).")
+
+    estado = campo("estado")
+    if estado and estado not in ESTADOS_BRASIL:
+        erros.append("Selecione um estado válido.")
+
+    if campo("objeto") not in OBJETOS_LICITACAO:
+        erros.append("Selecione o objeto da licitação.")
+
+    # --- Fase inicial - acompanhamento (campos opcionais, mas válidos se preenchidos) ---
+    def data_valida(nome, rotulo):
+        valor = campo(nome)
+        if not valor:
+            return None
+        try:
+            return texto_para_data(valor)
+        except ValueError:
+            erros.append(f"Informe uma data válida em {rotulo}.")
+            return None
+
+    def horario_valido(nome, rotulo):
+        valor = campo(nome)
+        if not valor:
+            return None
+        if not HORARIO_REGEX.match(valor):
+            erros.append(f"Informe um horário válido em {rotulo} (ex.: 14:30).")
+            return None
+        return valor
+
+    data_licitacao = data_valida("data_licitacao", "Data da licitação")
+    horario_licitacao = horario_valido("horario_licitacao", "Horário da licitação")
+    proxima_data = data_valida("proxima_data_acompanhamento", "Próxima data de acompanhamento")
+    proximo_horario = horario_valido("proximo_horario_acompanhamento", "Horário da próxima data de acompanhamento")
+    ultima_data = data_valida("ultima_data_acompanhamento", "Última data de acompanhamento")
+    ultimo_horario = horario_valido("ultimo_horario_acompanhamento", "Horário da última data de acompanhamento")
+    penultima_data = data_valida("penultima_data_acompanhamento", "Penúltima data de acompanhamento")
+    penultimo_horario = horario_valido("penultimo_horario_acompanhamento", "Horário da penúltima data de acompanhamento")
+
+    plataforma = campo("plataforma")
+    plataforma_outra = None
+    if plataforma == "outros":
+        plataforma_outra = campo("plataforma_outra")
+        if not plataforma_outra:
+            erros.append("Informe o nome da plataforma.")
+    elif plataforma and plataforma not in PLATAFORMAS_LICITACAO:
+        erros.append("Selecione uma plataforma válida.")
+
+    tipo_disputa = campo("tipo_disputa")
+    if tipo_disputa and tipo_disputa not in TIPOS_DISPUTA:
+        erros.append("Selecione um tipo de disputa válido.")
+
+    # --- Esclarecimento / impugnação / recursos / contrarrazão ---
+    # Cada item é "sim" ou "nao" (ou vazio). O resultado só vale quando é "sim".
+    respostas = {}
+    for nome, rotulo in (("esclarecimento", "Esclarecimento"), ("impugnacao", "Impugnação"),
+                         ("recursos", "Recursos"), ("contrarrazao", "Contrarrazão"),
+                         ("molde", "Molde"), ("adaptacao_aberta", "Adaptação aberta"),
+                         ("apoio_local", "Apoio local"), ("garantia_licitacao", "Garantia da licitação")):
+        resposta = campo(nome)
+        if resposta not in ("", "sim", "nao"):
+            erros.append(f"Resposta inválida em {rotulo}.")
+            resposta = ""
+        resultado = None
+        if nome in ("impugnacao", "recursos", "contrarrazao") and resposta == "sim":
+            resultado = campo(nome + "_resultado") or None
+            if resultado and resultado not in RESULTADOS_LICITACAO:
+                erros.append(f"Selecione um resultado válido em {rotulo}.")
+                resultado = None
+        respostas[nome] = (resposta or None, resultado)
+
+    resumo_processo = campo("resumo_processo")
+    if len(resumo_processo) > 5000:
+        erros.append("O resumo do processo pode ter no máximo 5.000 caracteres.")
+
+    # --- Custo obrigatório (quantidades por AASI) ---
+    def quantidade(nome, rotulo):
+        valor = campo(nome)
+        if not valor:
+            return None
+        if not re.fullmatch(r"[0-9]{1,3}", valor):
+            erros.append(f"Informe uma quantidade válida em {rotulo} (número inteiro de 0 a 999).")
+            return None
+        return int(valor)
+
+    pilhas = quantidade("pilhas_por_aasi", "Pilhas (cartelas)")
+    desumidificador = quantidade("desumidificador_por_aasi", "Desumidificador")
+    receptor = quantidade("receptor_por_aasi", "Receptor")
+    massa_dreve = campo("massa_dreve")
+
+    # --- Garantia da licitação: "Qual?" só vale quando a resposta é "sim" ---
+    garantia_qual = campo("garantia_qual") if respostas["garantia_licitacao"][0] == "sim" else ""
+
+    if erros:
+        return render_cadastro_licitatorio(erros=erros, valores=form)
+
+    licitacao = Licitacao(
+        tipo_processo=campo("tipo_processo"),
+        participacao=campo("participacao"),
+        edital=campo("edital"),
+        processo_administrativo=campo("processo_administrativo") or None,
+        uasg=campo("uasg") or None,
+        ano_licitacao=ano,
+        orgao_licitante=campo("orgao_licitante"),
+        telefone=campo("telefone") or None,
+        email=email or None,
+        endereco=campo("endereco") or None,
+        municipio=campo("municipio") or None,
+        estado=estado or None,
+        uf=ESTADOS_BRASIL.get(estado),  # a UF sempre vem do estado escolhido
+        objeto=campo("objeto"),
+        data_licitacao=data_licitacao,
+        horario_licitacao=horario_licitacao,
+        plataforma=plataforma or None,
+        plataforma_outra=plataforma_outra or None,
+        tipo_disputa=tipo_disputa or None,
+        proxima_data_acompanhamento=proxima_data,
+        proximo_horario_acompanhamento=proximo_horario,
+        ultima_data_acompanhamento=ultima_data,
+        ultimo_horario_acompanhamento=ultimo_horario,
+        penultima_data_acompanhamento=penultima_data,
+        penultimo_horario_acompanhamento=penultimo_horario,
+        esclarecimento=respostas["esclarecimento"][0],
+        impugnacao=respostas["impugnacao"][0],
+        impugnacao_resultado=respostas["impugnacao"][1],
+        recursos=respostas["recursos"][0],
+        recursos_resultado=respostas["recursos"][1],
+        contrarrazao=respostas["contrarrazao"][0],
+        contrarrazao_resultado=respostas["contrarrazao"][1],
+        resumo_processo=resumo_processo or None,
+        pilhas_por_aasi=pilhas,
+        desumidificador_por_aasi=desumidificador,
+        receptor_por_aasi=receptor,
+        massa_dreve=massa_dreve[:100] or None,
+        molde=respostas["molde"][0],
+        adaptacao_aberta=respostas["adaptacao_aberta"][0],
+        apoio_local=respostas["apoio_local"][0],
+        garantia_licitacao=respostas["garantia_licitacao"][0],
+        garantia_qual=garantia_qual[:200] or None,
+    )
+    db.session.add(licitacao)
+    registrar_atividade(
+        "processo_criado",
+        f"Cadastrou o processo licitatório {licitacao.edital} - {licitacao.orgao_licitante}",
+    )
+    db.session.commit()
+    return redirect(url_for("cadastro_licitatorio", sucesso=1))
 
 
 @app.route("/processos/civel")

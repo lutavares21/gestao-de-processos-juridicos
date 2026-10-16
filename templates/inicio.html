@@ -7,6 +7,7 @@
 {% set cad_civel = current_user.pode('cadastrar', 'civel') %}
 {% set cad_rec = current_user.pode('cadastrar', 'civel_recuperacao') %}
 {% set cad_trab = current_user.pode('cadastrar', 'trabalhista') %}
+{% set cad_lic = current_user.pode('cadastrar', 'licitatorio') %}
 {% set tem_agenda = current_user.tem_funcao('agenda') %}
 {% set tem_panorama = current_user.tem_funcao('panorama') %}
   <div class="inicio-split">
@@ -36,7 +37,7 @@
             <div class="links-bloco">
               <a href="{{ url_for('cadastro_civel') if cad_civel else '#' }}" class="{{ 'desabilitado' if not cad_civel }}"{{ bloqueio(cad_civel) }}>Processo Cível</a>
               <a href="{{ url_for('cadastro_civel_recuperacao') if cad_rec else '#' }}" class="{{ 'desabilitado' if not cad_rec }}"{{ bloqueio(cad_rec) }}>Processo Cível - Recuperação de Crédito</a>
-              <a href="#" class="oculto-visual">Processo Licitatório</a>
+              <a href="{{ url_for('cadastro_licitatorio') if cad_lic else '#' }}" class="{{ 'desabilitado' if not cad_lic }}"{{ bloqueio(cad_lic) }}>Processo Licitatório</a>
               <a href="{{ url_for('cadastro_trabalhista') if cad_trab else '#' }}" class="{{ 'desabilitado' if not cad_trab }}"{{ bloqueio(cad_trab) }}>Processo Trabalhista</a>
               <a href="#" class="oculto-visual">Processos Tributários</a>
             </div>

@@ -1,0 +1,353 @@
+{% extends "base_painel.html" %}
+
+{% block titulo %}Novo Processo Licitatório - Gestão de Processos{% endblock %}
+{% block cabecalho_titulo %}Novo Processo Licitatório{% endblock %}
+{% block cabecalho_subtitulo %}Cadastro de processo licitatório{% endblock %}
+
+{% block conteudo %}
+{% set val = valores if valores else {} %}
+{% macro item_quantidade(nome, titulo, val) %}
+      <div style="display:flex; align-items:center; flex-wrap:wrap; gap:10px 14px; margin-bottom:18px; min-height:40px;">
+        <span class="rotulo-secao" style="margin:0; min-width:170px;">{{ titulo }}</span>
+        <input type="text" inputmode="numeric" id="{{ nome }}" name="{{ nome }}" maxlength="3" pattern="[0-9]{1,3}" title="Número inteiro de 0 a 999" style="width:90px;" value="{{ val.get(nome, '') }}">
+        <span>para cada AASI</span>
+      </div>
+{% endmacro %}
+{% macro item_sim_nao(nome, titulo, com_resultado, val, resultados) %}
+      <div style="display:flex; align-items:flex-end; flex-wrap:wrap; gap:10px 32px; margin-bottom:18px;">
+        <div style="display:flex; align-items:center; gap:18px; min-height:40px; min-width:330px;">
+          <span class="rotulo-secao" style="margin:0; min-width:170px;">{{ titulo }}</span>
+          <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+            <input type="radio" name="{{ nome }}" value="sim" style="width:auto;" {{ 'checked' if val.get(nome) == 'sim' }}> Sim
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+            <input type="radio" name="{{ nome }}" value="nao" style="width:auto;" {{ 'checked' if val.get(nome) == 'nao' }}> Não
+          </label>
+        </div>
+        {% if com_resultado %}
+        <div class="campo" style="max-width:280px; margin:0;">
+          <label for="{{ nome }}_resultado">Resultado</label>
+          <select id="{{ nome }}_resultado" name="{{ nome }}_resultado">
+            <option value="">Selecione o resultado</option>
+            {% for codigo, texto in resultados.items() %}
+            <option value="{{ codigo }}" {{ 'selected' if val.get(nome ~ '_resultado') == codigo }}>{{ texto }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+      </div>
+{% endmacro %}
+
+  {% if sucesso %}
+  <div class="flash" style="background:#e8f5ec; border:1px solid #b7dcc2; color:#1e5e35;">
+    Processo licitatório cadastrado com sucesso.
+  </div>
+  {% endif %}
+
+  {% if erros %}
+  <div class="flash flash-erro">
+    {% for erro in erros %}{{ erro }}{{ "<br>" | safe if not loop.last }}{% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="POST" action="{{ url_for('cadastro_licitatorio') }}" autocomplete="off">
+
+    <!-- TIPO DE PROCESSO -->
+    <div class="secao">
+      <h2>Tipo de processo</h2>
+      <div class="linha">
+        <div class="campo">
+          <label for="tipo_processo">Modalidade</label>
+          <select id="tipo_processo" name="tipo_processo" required>
+            <option value="">Selecione o tipo de processo</option>
+            {% for codigo, nome in tipos_licitacao.items() %}
+            <option value="{{ codigo }}" {{ 'selected' if val.get('tipo_processo') == codigo }}>{{ nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- DADOS DO ÓRGÃO LICITANTE (com a participação à direita do título) -->
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px 24px; margin:22px 0 8px;">
+      <h2 style="margin:0; border:none; padding:0;">Dados do Órgão Licitante</h2>
+      <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
+        <span class="rotulo-secao" style="margin:0;">Participação</span>
+        <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+          <input type="radio" name="participacao" value="sim" required style="width:auto;" {{ 'checked' if val.get('participacao') == 'sim' }}> SIM
+        </label>
+        <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+          <input type="radio" name="participacao" value="nao" required style="width:auto;" {{ 'checked' if val.get('participacao') == 'nao' }}> NÃO
+        </label>
+      </div>
+    </div>
+
+    <div class="secao">
+      <div class="linha">
+        <div class="campo">
+          <label for="edital">Edital nº</label>
+          <input type="text" id="edital" name="edital" required maxlength="60" placeholder="Ex.: 129898/2026" value="{{ val.get('edital', '') }}">
+        </div>
+        <div class="campo">
+          <label for="processo_administrativo">Processo administrativo</label>
+          <input type="text" id="processo_administrativo" name="processo_administrativo" maxlength="60" placeholder="xxxx.xxxxxx.xxxxxx.xxxxxx" value="{{ val.get('processo_administrativo', '') }}">
+        </div>
+        <div class="campo">
+          <label for="uasg">UASG</label>
+          <input type="text" id="uasg" name="uasg" maxlength="20" value="{{ val.get('uasg', '') }}">
+        </div>
+        <div class="campo">
+          <label for="ano_licitacao">Ano da licitação</label>
+          <input type="text" id="ano_licitacao" name="ano_licitacao" inputmode="numeric" maxlength="4" placeholder="2026" value="{{ val.get('ano_licitacao', '') }}">
+        </div>
+      </div>
+
+      <div class="linha">
+        <div class="campo campo-grande">
+          <label for="orgao_licitante">Órgão licitante</label>
+          <input type="text" id="orgao_licitante" name="orgao_licitante" required maxlength="200" placeholder="Ex.: Prefeitura de Montes Claros" value="{{ val.get('orgao_licitante', '') }}">
+        </div>
+        <div class="campo">
+          <label for="telefone">Telefone</label>
+          <input type="text" id="telefone" name="telefone" inputmode="tel" maxlength="30" value="{{ val.get('telefone', '') }}">
+        </div>
+        <div class="campo">
+          <label for="email">E-mail</label>
+          <input type="text" id="email" name="email" inputmode="email" maxlength="120"
+                 pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Informe um e-mail válido, como nome@orgao.gov.br"
+                 value="{{ val.get('email', '') }}">
+        </div>
+      </div>
+
+      <div class="linha">
+        <div class="campo">
+          <label for="endereco">Endereço</label>
+          <input type="text" id="endereco" name="endereco" maxlength="250" value="{{ val.get('endereco', '') }}">
+        </div>
+      </div>
+
+      <div class="linha">
+        <div class="campo">
+          <label for="municipio">Município</label>
+          <input type="text" id="municipio" name="municipio" maxlength="100" value="{{ val.get('municipio', '') }}">
+        </div>
+        <div class="campo">
+          <label for="estado">Estado</label>
+          <select id="estado" name="estado">
+            <option value="">Selecione o estado</option>
+            {% for nome, uf in estados_brasil.items() %}
+            <option value="{{ nome }}" data-uf="{{ uf }}" {{ 'selected' if val.get('estado') == nome }}>{{ nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="campo">
+          <label for="uf">UF</label>
+          <input type="text" id="uf" readonly tabindex="-1" placeholder="—" style="max-width:90px;">
+        </div>
+      </div>
+    </div>
+
+    <!-- OBJETO -->
+    <div class="secao">
+      <h2>Objeto</h2>
+      <div class="linha">
+        <div class="campo">
+          <label for="objeto">Objeto da licitação</label>
+          <select id="objeto" name="objeto" required>
+            <option value="">Selecione o objeto</option>
+            {% for codigo, nome in objetos_licitacao.items() %}
+            <option value="{{ codigo }}" {{ 'selected' if val.get('objeto') == codigo }}>{{ nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE INICIAL - ACOMPANHAMENTO -->
+    <div class="secao">
+      <h2>Fase Inicial – Acompanhamento</h2>
+
+      <div class="linha">
+        <div class="campo">
+          <label for="data_licitacao">Data da licitação</label>
+          <input type="date" id="data_licitacao" name="data_licitacao" value="{{ val.get('data_licitacao', '') }}">
+        </div>
+        <div class="campo">
+          <label for="horario_licitacao">Horário da licitação</label>
+          <input type="time" id="horario_licitacao" name="horario_licitacao" value="{{ val.get('horario_licitacao', '') }}">
+        </div>
+        <div class="campo">
+          <label for="plataforma">Plataforma</label>
+          <select id="plataforma" name="plataforma">
+            <option value="">Selecione a plataforma</option>
+            {% for endereco in plataformas_licitacao %}
+            <option value="{{ endereco }}" {{ 'selected' if val.get('plataforma') == endereco }}>{{ endereco }}</option>
+            {% endfor %}
+            <option value="outros" {{ 'selected' if val.get('plataforma') == 'outros' }}>Outros</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="tipo_disputa">Tipo de disputa</label>
+          <select id="tipo_disputa" name="tipo_disputa">
+            <option value="">Selecione o tipo de disputa</option>
+            {% for codigo, nome in tipos_disputa.items() %}
+            <option value="{{ codigo }}" {{ 'selected' if val.get('tipo_disputa') == codigo }}>{{ nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="linha" id="bloco-plataforma-outra" style="display:none;">
+        <div class="campo">
+          <label for="plataforma_outra">Qual plataforma?</label>
+          <input type="text" id="plataforma_outra" name="plataforma_outra" maxlength="100" placeholder="Informe o nome ou o endereço da plataforma" value="{{ val.get('plataforma_outra', '') }}">
+        </div>
+      </div>
+
+      <!-- Próxima data: em destaque -->
+      <div style="background:#e8f5ec; border:1px solid #cfe8d7; border-radius:8px; padding:12px 14px; margin:6px 0 14px;">
+        <div class="linha" style="max-width:560px; margin-bottom:0;">
+          <div class="campo">
+            <label for="proxima_data_acompanhamento">Próxima data de acompanhamento</label>
+            <input type="date" id="proxima_data_acompanhamento" name="proxima_data_acompanhamento" value="{{ val.get('proxima_data_acompanhamento', '') }}">
+          </div>
+          <div class="campo">
+            <label for="proximo_horario_acompanhamento">Horário</label>
+            <input type="time" id="proximo_horario_acompanhamento" name="proximo_horario_acompanhamento" value="{{ val.get('proximo_horario_acompanhamento', '') }}">
+          </div>
+        </div>
+      </div>
+
+      <div class="linha" style="max-width:560px;">
+        <div class="campo">
+          <label for="ultima_data_acompanhamento">Última data de acompanhamento</label>
+          <input type="date" id="ultima_data_acompanhamento" name="ultima_data_acompanhamento" value="{{ val.get('ultima_data_acompanhamento', '') }}">
+        </div>
+        <div class="campo">
+          <label for="ultimo_horario_acompanhamento">Horário</label>
+          <input type="time" id="ultimo_horario_acompanhamento" name="ultimo_horario_acompanhamento" value="{{ val.get('ultimo_horario_acompanhamento', '') }}">
+        </div>
+      </div>
+
+      <div class="linha" style="max-width:560px;">
+        <div class="campo">
+          <label for="penultima_data_acompanhamento">Penúltima data de acompanhamento</label>
+          <input type="date" id="penultima_data_acompanhamento" name="penultima_data_acompanhamento" value="{{ val.get('penultima_data_acompanhamento', '') }}">
+        </div>
+        <div class="campo">
+          <label for="penultimo_horario_acompanhamento">Horário</label>
+          <input type="time" id="penultimo_horario_acompanhamento" name="penultimo_horario_acompanhamento" value="{{ val.get('penultimo_horario_acompanhamento', '') }}">
+        </div>
+      </div>
+    </div>
+
+    <!-- ESCLARECIMENTO - IMPUGNAÇÃO - RECURSOS - CONTRARRAZÃO -->
+    <div class="secao">
+      <h2>Esclarecimento – Impugnação – Recursos – Contrarrazão</h2>
+      {{ item_sim_nao('esclarecimento', 'Esclarecimento', false, val, resultados_licitacao) }}
+      {{ item_sim_nao('impugnacao', 'Impugnação', true, val, resultados_licitacao) }}
+      {{ item_sim_nao('recursos', 'Recursos', true, val, resultados_licitacao) }}
+      {{ item_sim_nao('contrarrazao', 'Contrarrazão', true, val, resultados_licitacao) }}
+    </div>
+
+    <!-- RESUMO DO PROCESSO -->
+    <div class="secao">
+      <h2>Resumo do Processo e Informação sobre Obrigatoriedade</h2>
+      <div class="campo">
+        <textarea id="resumo_processo" name="resumo_processo" rows="8" maxlength="5000">{{ val.get('resumo_processo', '') }}</textarea>
+      </div>
+    </div>
+
+    <!-- CUSTO OBRIGATÓRIO -->
+    <div class="secao">
+      <h2>Custo Obrigatório</h2>
+      {{ item_quantidade('pilhas_por_aasi', 'Pilhas (cartelas)', val) }}
+      {{ item_quantidade('desumidificador_por_aasi', 'Desumidificador', val) }}
+      {{ item_quantidade('receptor_por_aasi', 'Receptor', val) }}
+      <div style="display:flex; align-items:center; flex-wrap:wrap; gap:10px 14px; margin-bottom:18px; min-height:40px;">
+        <span class="rotulo-secao" style="margin:0; min-width:170px;">Massa Dreve</span>
+        <input type="text" id="massa_dreve" name="massa_dreve" maxlength="100" style="width:260px;" value="{{ val.get('massa_dreve', '') }}">
+      </div>
+      {{ item_sim_nao('molde', 'Molde', false, val, resultados_licitacao) }}
+      {{ item_sim_nao('adaptacao_aberta', 'Adaptação aberta', false, val, resultados_licitacao) }}
+      {{ item_sim_nao('apoio_local', 'Apoio local', false, val, resultados_licitacao) }}
+    </div>
+
+    <!-- GARANTIA DA LICITAÇÃO -->
+    <div class="secao">
+      <div style="display:flex; align-items:flex-end; flex-wrap:wrap; gap:10px 32px;">
+        <div style="display:flex; align-items:center; gap:18px; min-height:40px;">
+          <span class="rotulo-secao" style="margin:0;">Garantia da Licitação</span>
+          <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+            <input type="radio" name="garantia_licitacao" value="sim" style="width:auto;" {{ 'checked' if val.get('garantia_licitacao') == 'sim' }}> Sim
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+            <input type="radio" name="garantia_licitacao" value="nao" style="width:auto;" {{ 'checked' if val.get('garantia_licitacao') == 'nao' }}> Não
+          </label>
+        </div>
+        <div class="campo" style="flex:1; min-width:260px; max-width:480px; margin:0;">
+          <label for="garantia_qual">Qual?</label>
+          <input type="text" id="garantia_qual" name="garantia_qual" maxlength="200" value="{{ val.get('garantia_qual', '') }}">
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-salvar">Cadastrar processo licitatório</button>
+  </form>
+
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+  (function () {
+    // A UF é preenchida sozinha a partir do estado escolhido.
+    const estado = document.getElementById('estado');
+    const uf = document.getElementById('uf');
+    function atualizarUF() {
+      const opcao = estado.options[estado.selectedIndex];
+      uf.value = opcao && opcao.dataset.uf ? opcao.dataset.uf : '';
+    }
+    estado.addEventListener('change', atualizarUF);
+    atualizarUF();
+
+    // Plataforma "Outros": abre o campo para digitar o nome da plataforma.
+    const plataforma = document.getElementById('plataforma');
+    const blocoOutra = document.getElementById('bloco-plataforma-outra');
+    const campoOutra = document.getElementById('plataforma_outra');
+    function atualizarPlataforma() {
+      const outros = plataforma.value === 'outros';
+      blocoOutra.style.display = outros ? '' : 'none';
+      campoOutra.required = outros;
+      if (!outros) campoOutra.value = '';
+    }
+    plataforma.addEventListener('change', atualizarPlataforma);
+    atualizarPlataforma();
+
+    // O resultado só pode ser escolhido quando a resposta é "Sim".
+    ['impugnacao', 'recursos', 'contrarrazao'].forEach(function (nome) {
+      const sim = document.querySelector('input[name="' + nome + '"][value="sim"]');
+      const resultado = document.getElementById(nome + '_resultado');
+      function sincronizar() {
+        resultado.disabled = !sim.checked;
+        if (!sim.checked) resultado.value = '';
+      }
+      document.querySelectorAll('input[name="' + nome + '"]').forEach(function (radio) {
+        radio.addEventListener('change', sincronizar);
+      });
+      sincronizar();
+    });
+
+    // Garantia da licitação: "Qual?" só pode ser preenchido quando a resposta é "Sim".
+    const garantiaSim = document.querySelector('input[name="garantia_licitacao"][value="sim"]');
+    const garantiaQual = document.getElementById('garantia_qual');
+    function atualizarGarantia() {
+      garantiaQual.disabled = !garantiaSim.checked;
+      if (!garantiaSim.checked) garantiaQual.value = '';
+    }
+    document.querySelectorAll('input[name="garantia_licitacao"]').forEach(function (radio) {
+      radio.addEventListener('change', atualizarGarantia);
+    });
+    atualizarGarantia();
+  })();
+</script>
+{% endblock %}

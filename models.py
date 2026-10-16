@@ -462,3 +462,80 @@ class PedidoCivel(db.Model):
     processo_id = db.Column(db.Integer, db.ForeignKey("processos.id"), nullable=False)
 
     descricao = db.Column(db.String(120), nullable=False)
+
+
+class Licitacao(db.Model):
+    """Processo licitatório (pregão, concorrência, dispensa etc.). É uma
+    tabela própria, separada de Processo, porque os dados são outros: órgão
+    licitante, edital, UASG, objeto..."""
+    __tablename__ = "licitacoes"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Tipo de processo: chave de TIPOS_LICITACAO (app.py), ex. "pregao_eletronico"
+    tipo_processo = db.Column(db.String(40), nullable=False)
+    # A empresa participa da licitação? "sim" ou "nao"
+    participacao = db.Column(db.String(3), nullable=False)
+
+    # --- Dados do órgão licitante ---
+    edital = db.Column(db.String(60), nullable=False)
+    processo_administrativo = db.Column(db.String(60))
+    uasg = db.Column(db.String(20))
+    ano_licitacao = db.Column(db.Integer)
+    orgao_licitante = db.Column(db.String(200), nullable=False)
+    telefone = db.Column(db.String(30))
+    email = db.Column(db.String(120))
+    endereco = db.Column(db.String(250))
+    municipio = db.Column(db.String(100))
+    estado = db.Column(db.String(40))
+    uf = db.Column(db.String(2))
+
+    # Objeto: chave de OBJETOS_LICITACAO (app.py), ex. "aparelho_auditivo"
+    objeto = db.Column(db.String(40), nullable=False)
+
+    # --- Fase inicial - acompanhamento ---
+    data_licitacao = db.Column(db.Date)
+    horario_licitacao = db.Column(db.String(5))  # "HH:MM"
+    # Plataforma: endereço da lista PLATAFORMAS_LICITACAO (app.py) ou "outros"
+    plataforma = db.Column(db.String(100))
+    plataforma_outra = db.Column(db.String(100))  # nome digitado quando plataforma = "outros"
+    # Tipo de disputa: chave de TIPOS_DISPUTA (app.py), ex. "aberto_e_fechado"
+    tipo_disputa = db.Column(db.String(30))
+
+    proxima_data_acompanhamento = db.Column(db.Date)
+    proximo_horario_acompanhamento = db.Column(db.String(5))
+    ultima_data_acompanhamento = db.Column(db.Date)
+    ultimo_horario_acompanhamento = db.Column(db.String(5))
+    penultima_data_acompanhamento = db.Column(db.Date)
+    penultimo_horario_acompanhamento = db.Column(db.String(5))
+
+    # --- Esclarecimento / impugnação / recursos / contrarrazão ---
+    # "sim" ou "nao" (vazio = não informado). O resultado é uma chave de
+    # RESULTADOS_LICITACAO (app.py) e só vale quando a resposta é "sim".
+    esclarecimento = db.Column(db.String(3))
+    impugnacao = db.Column(db.String(3))
+    impugnacao_resultado = db.Column(db.String(25))
+    recursos = db.Column(db.String(3))
+    recursos_resultado = db.Column(db.String(25))
+    contrarrazao = db.Column(db.String(3))
+    contrarrazao_resultado = db.Column(db.String(25))
+
+    # Resumo do processo e informação sobre obrigatoriedade
+    resumo_processo = db.Column(db.Text)
+
+    # --- Custo obrigatório ---
+    # Quantidades "para cada AASI" (aparelho de amplificação sonora individual)
+    pilhas_por_aasi = db.Column(db.Integer)  # pilhas (cartelas)
+    desumidificador_por_aasi = db.Column(db.Integer)
+    receptor_por_aasi = db.Column(db.Integer)
+    massa_dreve = db.Column(db.String(100))
+    # "sim" ou "nao" (vazio = não informado)
+    molde = db.Column(db.String(3))
+    adaptacao_aberta = db.Column(db.String(3))
+    apoio_local = db.Column(db.String(3))
+
+    # --- Garantia da licitação ---
+    garantia_licitacao = db.Column(db.String(3))  # "sim" ou "nao"
+    garantia_qual = db.Column(db.String(200))  # qual garantia, quando "sim"
+
+    data_cadastro = db.Column(db.DateTime, default=db.func.now())
