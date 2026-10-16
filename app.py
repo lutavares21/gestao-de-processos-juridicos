@@ -504,10 +504,11 @@ def preencher_partes_e_advogados(processo, form, incluir_partes=True):
     trabalhistas usam 'reclamante'/'reclamada'; os demais (cível) usam
     'autor'/'reu'.
 
-    incluir_partes=False é usado na edição: o reclamante/autor e a
-    reclamada/réu não podem ser alterados depois do cadastro, então as
-    partes existentes do processo são preservadas e o conteúdo enviado
-    pelo formulário para autor_nome/reu_nome é ignorado."""
+    incluir_partes=False é usado na edição: aqui as partes existentes do
+    processo são preservadas e o conteúdo enviado pelo formulário para
+    autor_nome/reu_nome é ignorado. Quem pode alterar autor/réu
+    (reclamante/reclamada) na edição é só o administrador, por
+    atualizar_partes_do_processo()."""
     if incluir_partes:
         if processo.origem_cadastro == "trabalhista":
             tipo_polo_ativo, tipo_polo_passivo = "reclamante", "reclamada"
@@ -547,6 +548,25 @@ def preencher_partes_e_advogados(processo, form, incluir_partes=True):
         for cr in crs_marcados + crs_digitados:
             if cr.strip():
                 processo.rateio_crs.append(RateioCR(centro_resultado=cr.strip()))
+
+
+def atualizar_partes_do_processo(processo, form):
+    """Substitui autor/réu (ou reclamante/reclamada) pelos nomes enviados no
+    formulário de edição. Só deve ser chamada para administrador (a rota
+    confere). Se um dos lados vier sem nenhum nome, esse lado é mantido como
+    estava, para nunca deixar o processo sem parte por engano."""
+    if processo.origem_cadastro == "trabalhista":
+        tipo_polo_ativo, tipo_polo_passivo = "reclamante", "reclamada"
+    else:
+        tipo_polo_ativo, tipo_polo_passivo = "autor", "reu"
+
+    for tipo, campo in ((tipo_polo_ativo, "autor_nome"), (tipo_polo_passivo, "reu_nome")):
+        nomes = [nome.strip() for nome in form.getlist(campo) if nome.strip()]
+        if not nomes:
+            continue
+        processo.partes = [parte for parte in processo.partes if parte.tipo != tipo]
+        for nome in nomes:
+            processo.partes.append(Parte(tipo=tipo, nome=nome))
 
 
 @app.context_processor
@@ -1811,11 +1831,17 @@ def processo_editar(processo_id):
     preencher_campos_processo(processo, form)
     processo.numero_processo = numero_processo_original  # não pode ser alterado
 
+    # Autor/réu (reclamante/reclamada): só o administrador pode alterar.
+    partes_antes = sorted((parte.tipo, parte.nome) for parte in processo.partes)
+    if current_user.eh_administrador:
+        atualizar_partes_do_processo(processo, form)
+    partes_alteradas = partes_antes != sorted((parte.tipo, parte.nome) for parte in processo.partes)
+
     # Substitui advogados, movimentos e rateio pelo que veio no formulário -
     # mais simples e seguro do que tentar casar item a item quais foram
     # editados/removidos/adicionados. As partes (reclamante/autor e
-    # reclamada/réu) NÃO são substituídas: não podem ser alteradas depois
-    # do cadastro, então ficam como já estavam.
+    # reclamada/réu) não entram nessa troca: só o administrador as altera,
+    # por atualizar_partes_do_processo() logo acima.
     processo.advogados = []
     processo.movimentos = []
     processo.rateio_crs = []
@@ -1845,7 +1871,10 @@ def processo_editar(processo_id):
                 processo.pedidos_civeis.append(PedidoCivel(descricao=descricao.strip()))
 
     try:
-        registrar_atividade("processo_editado", f"Editou o processo {numero_processo_original}")
+        descricao = f"Editou o processo {numero_processo_original}"
+        if partes_alteradas:
+            descricao += " (partes alteradas)"
+        registrar_atividade("processo_editado", descricao)
         db.session.commit()
     except IntegrityError:
         db.session.rollback()

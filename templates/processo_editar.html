@@ -102,7 +102,7 @@
             </div>
             <div class="linha">
               <div class="campo">
-                <label>{{ rotulo_ativo }} <span class="aviso-limite">(não pode ser alterado)</span></label>
+                <label>{{ rotulo_ativo }} <span class="aviso-limite">{% if current_user.eh_administrador %}(altere em Partes envolvidas){% else %}(não pode ser alterado){% endif %}</span></label>
                 <input type="text" value="{{ nomes_ativo_texto }}" disabled>
               </div>
             </div>
@@ -182,8 +182,23 @@
           <div class="secao">
             <h2>Partes envolvidas</h2>
 
+            {% if current_user.eh_administrador %}
+            <label class="rotulo-secao">{{ rotulo_ativo }} <span class="aviso-limite">(somente administrador)</span></label>
+            <div id="lista_partes_ativo" class="grupo-dinamico">
+              {% for parte in (nomes_ativo or [none]) %}
+              <div class="linha-repetida">
+                <div class="campo campo-grande">
+                  <input type="text" name="autor_nome" placeholder="Nome" value="{{ parte.nome if parte else '' }}">
+                </div>
+                <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+              </div>
+              {% endfor %}
+            </div>
+            <button type="button" class="btn btn-adicionar" onclick="adicionarParteAtiva()" style="margin-bottom:18px;">+ Adicionar {{ 'reclamante' if eh_trabalhista else 'autor' }}</button>
+            {% else %}
             <label class="rotulo-secao">{{ rotulo_ativo }} <span class="aviso-limite">(não pode ser alterado)</span></label>
             <input type="text" value="{{ nomes_ativo_texto }}" disabled style="margin-bottom:18px;">
+            {% endif %}
 
             <div>
               <label class="rotulo-secao">{{ rotulo_adv_ativo }} <span class="aviso-limite">(até 5)</span></label>
@@ -205,8 +220,17 @@
 
             <hr style="border:none;border-top:3px solid var(--texto-suave);margin:22px 0;">
 
+            {% if current_user.eh_administrador %}
+            <label class="rotulo-secao">{{ rotulo_passivo }} <span class="aviso-limite">(somente administrador)</span></label>
+            <div style="margin-bottom:18px;">
+              {% for parte in (nomes_passivo or [none]) %}
+              <input type="text" name="reu_nome" placeholder="Nome" value="{{ parte.nome if parte else '' }}" style="margin-bottom:8px;">
+              {% endfor %}
+            </div>
+            {% else %}
             <label class="rotulo-secao">{{ rotulo_passivo }} <span class="aviso-limite">(não pode ser alterado)</span></label>
             <input type="text" value="{{ nomes_passivo_texto }}" disabled style="margin-bottom:18px;">
+            {% endif %}
 
             <div>
               <label class="rotulo-secao">{{ rotulo_adv_passivo }} <span class="aviso-limite">(até 5)</span></label>
@@ -716,6 +740,26 @@
       container.appendChild(modelo);
     }
 
+    // Administrador: adiciona mais uma linha de autor/reclamante
+    function adicionarParteAtiva() {
+      const container = document.getElementById('lista_partes_ativo');
+      const linha = document.createElement('div');
+      linha.className = 'linha-repetida';
+      linha.innerHTML = '<div class="campo campo-grande"><input type="text" name="autor_nome" placeholder="Nome"></div>' +
+        '<button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>';
+      container.appendChild(linha);
+    }
+
+    // Administrador: cada lado precisa ter ao menos um nome preenchido.
+    // (Operador comum não tem esses campos na tela.)
+    function partesPreenchidas() {
+      return ['autor_nome', 'reu_nome'].every(function (nome) {
+        const campos = document.querySelectorAll('input[name="' + nome + '"]');
+        if (campos.length === 0) return true;
+        return Array.prototype.some.call(campos, function (c) { return c.value.trim() !== ''; });
+      });
+    }
+
     // Adiciona uma linha de movimento (data + tipo)
     function adicionarMovimento() {
       const container = document.getElementById('lista_movimentos');
@@ -725,6 +769,10 @@
 
     // Confirmação obrigatória antes de salvar as alterações do processo
     function confirmarEdicao() {
+      if (!partesPreenchidas()) {
+        alert('Preencha o nome de ao menos uma parte em cada lado (autor/reclamante e réu/reclamada).');
+        return false;
+      }
       return confirm('ATENÇÃO: ESTA AÇÃO NÃO PODERÁ SER DESFEITA.\n\nTEM CERTEZA QUE DESEJA SALVAR AS ALTERAÇÕES NESTE PROCESSO?');
     }
 
