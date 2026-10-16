@@ -138,21 +138,20 @@
       </div>
     </div>
 
-    <!-- DADOS DO ÓRGÃO LICITANTE (com a participação à direita do título) -->
-    <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px 24px; margin:22px 0 8px;">
-      <h2 style="margin:0; border:none; padding:0; font-family:var(--fonte-titulo); font-size:17px; font-weight:600; color:var(--tinta);">Dados do Órgão Licitante</h2>
-      <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
-        <span class="rotulo-secao" style="margin:0;">Participação</span>
-        <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
-          <input type="radio" name="participacao" value="sim" required style="width:auto;" {{ 'checked' if val.get('participacao') == 'sim' }}> SIM
-        </label>
-        <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
-          <input type="radio" name="participacao" value="nao" required style="width:auto;" {{ 'checked' if val.get('participacao') == 'nao' }}> NÃO
-        </label>
-      </div>
+    <!-- PARTICIPAÇÃO (em cima da caixa de Dados do Órgão Licitante) -->
+    <div style="display:flex; align-items:center; justify-content:flex-end; gap:18px; flex-wrap:wrap; margin:22px 0 10px;">
+      <span class="rotulo-secao" style="margin:0;">Participação</span>
+      <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+        <input type="radio" name="participacao" value="sim" required style="width:auto;" {{ 'checked' if val.get('participacao') == 'sim' }}> SIM
+      </label>
+      <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+        <input type="radio" name="participacao" value="nao" required style="width:auto;" {{ 'checked' if val.get('participacao') == 'nao' }}> NÃO
+      </label>
     </div>
 
+    <!-- DADOS DO ÓRGÃO LICITANTE -->
     <div class="secao">
+      <h2>Dados do Órgão Licitante</h2>
       <div class="linha">
         <div class="campo">
           <label for="edital">Edital nº</label>
