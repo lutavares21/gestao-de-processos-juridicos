@@ -1,8 +1,8 @@
 {% extends "base_painel.html" %}
 
-{% block titulo %}Novo Processo Licitatório - Gestão de Processos{% endblock %}
-{% block cabecalho_titulo %}Novo Processo Licitatório{% endblock %}
-{% block cabecalho_subtitulo %}Cadastro de processo licitatório{% endblock %}
+{% block titulo %}Cadastro de Processo Licitatório - Gestão de Processos{% endblock %}
+{% block cabecalho_titulo %}Cadastro de Processo Licitatório{% endblock %}
+{% block cabecalho_subtitulo %}Preencha os dados do processo licitatório{% endblock %}
 
 {% block conteudo %}
 {% set val = valores if valores else {} %}
@@ -140,7 +140,7 @@
 
     <!-- DADOS DO ÓRGÃO LICITANTE (com a participação à direita do título) -->
     <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px 24px; margin:22px 0 8px;">
-      <h2 style="margin:0; border:none; padding:0;">Dados do Órgão Licitante</h2>
+      <h2 style="margin:0; border:none; padding:0; font-family:var(--fonte-titulo); font-size:17px; font-weight:600; color:var(--tinta);">Dados do Órgão Licitante</h2>
       <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
         <span class="rotulo-secao" style="margin:0;">Participação</span>
         <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
