@@ -38,6 +38,76 @@
       </div>
 {% endmacro %}
 
+{% macro linha_aditivo(linha) %}
+      <div class="linha-aditivo">
+        <span class="rotulo-aditivo"><span class="num-aditivo">1</span>º Aditivo Contratual</span>
+        <div class="campo">
+          <label>Data</label>
+          <input type="date" name="aditivo_data" value="{{ linha.get('aditivo_data', '') }}">
+        </div>
+        <div class="campo">
+          <label>Final</label>
+          <input type="date" name="aditivo_final" value="{{ linha.get('aditivo_final', '') }}">
+        </div>
+        <button type="button" class="btn btn-remover" data-remover title="Remover este aditivo">&#10005;</button>
+      </div>
+{% endmacro %}
+{% macro linha_item(linha, empresas, participacoes) %}
+        <tr>
+          <td><input type="text" name="item_item" maxlength="30" value="{{ linha.get('item_item', '') }}"></td>
+          <td><input type="text" name="item_quantidade" inputmode="numeric" maxlength="6" pattern="[0-9]{1,6}" title="Número inteiro" value="{{ linha.get('item_quantidade', '') }}"></td>
+          <td><input type="text" name="item_marca" maxlength="100" value="{{ linha.get('item_marca', '') }}"></td>
+          <td><input type="text" name="item_modelo" maxlength="100" value="{{ linha.get('item_modelo', '') }}"></td>
+          <td><input type="text" name="item_codigo" maxlength="60" value="{{ linha.get('item_codigo', '') }}"></td>
+          <td><input type="number" name="item_unitario_inicial" step="0.01" min="0" placeholder="0,00" value="{{ linha.get('item_unitario_inicial', '') }}"></td>
+          <td><input type="number" name="item_ultimo_lance" step="0.01" min="0" placeholder="0,00" value="{{ linha.get('item_ultimo_lance', '') }}"></td>
+          <td><input type="number" name="item_valor_vencedor" step="0.01" min="0" placeholder="0,00" value="{{ linha.get('item_valor_vencedor', '') }}"></td>
+          <td>
+            <select name="item_empresa_vencedora">
+              <option value="">Selecione</option>
+              {% for codigo, nome in empresas.items() %}
+              <option value="{{ codigo }}" {{ 'selected' if linha.get('item_empresa_vencedora') == codigo }}>{{ nome }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td><input type="text" name="item_marca_vencedora" maxlength="100" value="{{ linha.get('item_marca_vencedora', '') }}"></td>
+          <td><input type="text" name="item_modelo_vencedor" maxlength="100" value="{{ linha.get('item_modelo_vencedor', '') }}"></td>
+          <td>
+            <select name="item_participacao">
+              <option value="">Selecione</option>
+              {% for codigo, nome in participacoes.items() %}
+              <option value="{{ codigo }}" {{ 'selected' if linha.get('item_participacao') == codigo }}>{{ nome }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td><button type="button" class="btn btn-remover" data-remover title="Remover esta linha">&#10005;</button></td>
+        </tr>
+{% endmacro %}
+{% macro linha_resumo(linha, empresas, produtos) %}
+        <tr>
+          <td><input type="text" name="resumo_quantidade" inputmode="numeric" maxlength="6" pattern="[0-9]{1,6}" title="Número inteiro" value="{{ linha.get('resumo_quantidade', '') }}"></td>
+          <td>
+            <select name="resumo_produto">
+              <option value="">Selecione</option>
+              {% for codigo, nome in produtos.items() %}
+              <option value="{{ codigo }}" {{ 'selected' if linha.get('resumo_produto') == codigo }}>{{ nome }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td><input type="number" name="resumo_ticket_medio" step="0.01" min="0" placeholder="0,00" value="{{ linha.get('resumo_ticket_medio', '') }}"></td>
+          <td><input type="text" class="resumo-total" readonly tabindex="-1" placeholder="—"></td>
+          <td>
+            <select name="resumo_empresa_vencedora">
+              <option value="">Selecione</option>
+              {% for codigo, nome in empresas.items() %}
+              <option value="{{ codigo }}" {{ 'selected' if linha.get('resumo_empresa_vencedora') == codigo }}>{{ nome }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td><button type="button" class="btn btn-remover" data-remover title="Remover esta linha">&#10005;</button></td>
+        </tr>
+{% endmacro %}
+
   {% if sucesso %}
   <div class="flash" style="background:#e8f5ec; border:1px solid #b7dcc2; color:#1e5e35;">
     Processo licitatório cadastrado com sucesso.
@@ -292,6 +362,209 @@
       </div>
     </div>
 
+    <!-- DADOS DA CONTRATAÇÃO -->
+    <div class="secao">
+      <h2>Dados da Contratação</h2>
+
+      <div class="linha">
+        <div class="campo">
+          <label for="data_homologacao">Data homologação</label>
+          <input type="date" id="data_homologacao" name="data_homologacao" value="{{ val.get('data_homologacao', '') }}">
+        </div>
+        <div class="campo">
+          <label for="data_adjudicacao">Data adjudicação</label>
+          <input type="date" id="data_adjudicacao" name="data_adjudicacao" value="{{ val.get('data_adjudicacao', '') }}">
+        </div>
+        <div class="campo">
+          <label for="valor_total_contrato">Valor total contrato (R$)</label>
+          <input type="number" id="valor_total_contrato" name="valor_total_contrato" step="0.01" min="0" placeholder="0,00" value="{{ val.get('valor_total_contrato', '') }}">
+        </div>
+      </div>
+
+      <div class="linha">
+        <div class="campo">
+          <label for="numero_contrato">Número do contrato</label>
+          <input type="text" id="numero_contrato" name="numero_contrato" maxlength="60" value="{{ val.get('numero_contrato', '') }}">
+        </div>
+        <div class="campo">
+          <label for="numero_ata">Número da ata</label>
+          <input type="text" id="numero_ata" name="numero_ata" maxlength="60" value="{{ val.get('numero_ata', '') }}">
+        </div>
+        <div class="campo">
+          <label for="contrato_numero_processo">Número processo</label>
+          <input type="text" id="contrato_numero_processo" name="contrato_numero_processo" maxlength="60" value="{{ val.get('contrato_numero_processo', '') }}">
+        </div>
+      </div>
+
+      <div class="linha">
+        <div class="campo">
+          <label for="data_assinatura_contrato">Data assinatura contrato</label>
+          <input type="date" id="data_assinatura_contrato" name="data_assinatura_contrato" value="{{ val.get('data_assinatura_contrato', '') }}">
+        </div>
+        <div class="campo campo-destaque">
+          <label for="vigencia_inicial">Vigência contrato (inicial)</label>
+          <input type="date" id="vigencia_inicial" name="vigencia_inicial" value="{{ val.get('vigencia_inicial', '') }}">
+        </div>
+        <div class="campo campo-destaque">
+          <label for="vigencia_final">Vigência contrato (final)</label>
+          <input type="date" id="vigencia_final" name="vigencia_final" value="{{ val.get('vigencia_final', '') }}">
+        </div>
+        <div class="campo">
+          <label for="prazo_contratual">Prazo contratual</label>
+          <input type="text" id="prazo_contratual" name="prazo_contratual" maxlength="60" placeholder="Ex.: 12 meses" value="{{ val.get('prazo_contratual', '') }}">
+        </div>
+      </div>
+
+      <span class="rotulo-secao" style="margin-top:8px;">Aditivos contratuais</span>
+      <p class="dica-secao">Clique em "Adicionar aditivo" para incluir quantos aditivos forem necessários.</p>
+      <div id="lista-aditivos">
+        {% for linha in aditivos %}{{ linha_aditivo(linha) }}{% endfor %}
+      </div>
+      <button type="button" class="btn btn-adicionar" id="btn-add-aditivo">+ Adicionar aditivo</button>
+      <template id="tpl-aditivo">{{ linha_aditivo({}) }}</template>
+    </div>
+
+    <!-- DADOS DE FATURAMENTO -->
+    <div class="secao">
+      <h2>Dados Faturamento</h2>
+      <div class="linha">
+        <div class="campo campo-pequeno">
+          <label for="id_cliente">ID Cliente</label>
+          <input type="text" id="id_cliente" name="id_cliente" maxlength="40" value="{{ val.get('id_cliente', '') }}">
+        </div>
+        <div class="campo campo-grande">
+          <label for="cliente">Cliente</label>
+          <input type="text" id="cliente" name="cliente" maxlength="200" value="{{ val.get('cliente', '') }}">
+        </div>
+        <div class="campo">
+          <label for="cnpj">CNPJ</label>
+          <input type="text" id="cnpj" name="cnpj" inputmode="numeric" maxlength="18" placeholder="00.000.000/0000-00" value="{{ val.get('cnpj', '') }}">
+        </div>
+      </div>
+      <div class="linha">
+        <div class="campo">
+          <label for="endereco_faturamento">Endereço faturamento</label>
+          <input type="text" id="endereco_faturamento" name="endereco_faturamento" maxlength="250" value="{{ val.get('endereco_faturamento', '') }}">
+        </div>
+      </div>
+      <div class="linha">
+        <div class="campo">
+          <label for="endereco_entrega">Endereço entrega</label>
+          <input type="text" id="endereco_entrega" name="endereco_entrega" maxlength="250" value="{{ val.get('endereco_entrega', '') }}">
+        </div>
+      </div>
+    </div>
+
+    <!-- RESPONSÁVEIS -->
+    <div class="secao">
+      <h2>Responsáveis</h2>
+      <div class="linha">
+        <div class="campo campo-grande">
+          <label for="resp_fono_nome">Responsável setor de fono</label>
+          <input type="text" id="resp_fono_nome" name="resp_fono_nome" maxlength="120" value="{{ val.get('resp_fono_nome', '') }}">
+        </div>
+        <div class="campo">
+          <label for="resp_fono_telefone">Telefone contato</label>
+          <input type="text" id="resp_fono_telefone" name="resp_fono_telefone" inputmode="tel" maxlength="30" value="{{ val.get('resp_fono_telefone', '') }}">
+        </div>
+        <div class="campo">
+          <label for="resp_fono_email">E-mail contato</label>
+          <input type="text" id="resp_fono_email" name="resp_fono_email" inputmode="email" maxlength="120"
+                 pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Informe um e-mail válido, como nome@orgao.gov.br"
+                 value="{{ val.get('resp_fono_email', '') }}">
+        </div>
+      </div>
+      <div class="linha">
+        <div class="campo campo-grande">
+          <label for="resp_orgao_nome">Responsável pelo órgão</label>
+          <input type="text" id="resp_orgao_nome" name="resp_orgao_nome" maxlength="120" value="{{ val.get('resp_orgao_nome', '') }}">
+        </div>
+        <div class="campo">
+          <label for="resp_orgao_telefone">Telefone contato</label>
+          <input type="text" id="resp_orgao_telefone" name="resp_orgao_telefone" inputmode="tel" maxlength="30" value="{{ val.get('resp_orgao_telefone', '') }}">
+        </div>
+        <div class="campo">
+          <label for="resp_orgao_email">E-mail contato</label>
+          <input type="text" id="resp_orgao_email" name="resp_orgao_email" inputmode="email" maxlength="120"
+                 pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Informe um e-mail válido, como nome@orgao.gov.br"
+                 value="{{ val.get('resp_orgao_email', '') }}">
+        </div>
+      </div>
+      <div class="linha">
+        <div class="campo campo-grande">
+          <label for="resp_envio_nome">Responsável pelo envio do pedido</label>
+          <input type="text" id="resp_envio_nome" name="resp_envio_nome" maxlength="120" value="{{ val.get('resp_envio_nome', '') }}">
+        </div>
+        <div class="campo">
+          <label for="resp_envio_telefone">Telefone contato</label>
+          <input type="text" id="resp_envio_telefone" name="resp_envio_telefone" inputmode="tel" maxlength="30" value="{{ val.get('resp_envio_telefone', '') }}">
+        </div>
+        <div class="campo">
+          <label for="resp_envio_email">E-mail contato</label>
+          <input type="text" id="resp_envio_email" name="resp_envio_email" inputmode="email" maxlength="120"
+                 pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Informe um e-mail válido, como nome@orgao.gov.br"
+                 value="{{ val.get('resp_envio_email', '') }}">
+        </div>
+      </div>
+    </div>
+
+    <!-- PLANILHA PROCESSO LICITATÓRIO -->
+    <div class="secao">
+      <h2>Planilha Processo Licitatório</h2>
+      <p class="dica-secao">Role a tabela para o lado para ver todas as colunas. Use "Adicionar item" para novas linhas.</p>
+      <div class="tabela-wrap" style="margin-bottom:12px;">
+        <table class="tabela-processos tabela-planilha">
+          <thead>
+            <tr>
+              <th class="col-p">Itens</th>
+              <th class="col-p">Quant.</th>
+              <th class="col-m">Marca</th>
+              <th class="col-m">Modelo</th>
+              <th class="col-m">Código produto</th>
+              <th class="col-m">Unitário inicial</th>
+              <th class="col-m">Último lance Atomed</th>
+              <th class="col-m">Valor vencedor</th>
+              <th class="col-gg">Empresa vencedora</th>
+              <th class="col-m">Marca vencedora</th>
+              <th class="col-m">Modelo vencedor</th>
+              <th class="col-g">Ampla participação / Exclusivo ME/EPP</th>
+              <th class="col-acao"></th>
+            </tr>
+          </thead>
+          <tbody id="corpo-itens">
+            {% for linha in itens %}{{ linha_item(linha, empresas_vencedoras, participacao_item) }}{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-adicionar" id="btn-add-item">+ Adicionar item</button>
+      <template id="tpl-item">{{ linha_item({}, empresas_vencedoras, participacao_item) }}</template>
+    </div>
+
+    <!-- PLANILHA RESUMO RESULTADO -->
+    <div class="secao">
+      <h2>Planilha Resumo Resultado Processo Licitatório</h2>
+      <p class="dica-secao">O valor total é calculado sozinho (quantidade × ticket médio).</p>
+      <div class="tabela-wrap" style="margin-bottom:12px;">
+        <table class="tabela-processos tabela-planilha" style="min-width:900px;">
+          <thead>
+            <tr>
+              <th class="col-p">Quantidade</th>
+              <th class="col-g">Produto</th>
+              <th class="col-m">Ticket médio</th>
+              <th class="col-m">Valor total</th>
+              <th class="col-gg">Empresa vencedora</th>
+              <th class="col-acao"></th>
+            </tr>
+          </thead>
+          <tbody id="corpo-resumos">
+            {% for linha in resumos %}{{ linha_resumo(linha, empresas_vencedoras, produtos_resumo) }}{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-adicionar" id="btn-add-resumo">+ Adicionar linha</button>
+      <template id="tpl-resumo">{{ linha_resumo({}, empresas_vencedoras, produtos_resumo) }}</template>
+    </div>
+
     <button type="submit" class="btn btn-salvar">Cadastrar processo licitatório</button>
   </form>
 
@@ -348,6 +621,77 @@
       radio.addEventListener('change', atualizarGarantia);
     });
     atualizarGarantia();
+
+    // ---- Linhas dinâmicas: aditivos e planilhas ----------------------------
+    // Cada lista tem um modelo (<template>), um botão de adicionar e botões
+    // de remover por linha. Sempre sobra pelo menos uma linha em branco.
+    function listaDinamica(idContainer, idModelo, idBotao, aoMudar) {
+      const container = document.getElementById(idContainer);
+      const modelo = document.getElementById(idModelo);
+      const botao = document.getElementById(idBotao);
+
+      function linhas() {
+        return Array.from(container.children).filter(function (el) {
+          return el.nodeType === 1;
+        });
+      }
+      function adicionar() {
+        container.appendChild(modelo.content.firstElementChild.cloneNode(true));
+        if (aoMudar) aoMudar();
+      }
+      botao.addEventListener('click', adicionar);
+      container.addEventListener('click', function (ev) {
+        const alvo = ev.target.closest('[data-remover]');
+        if (!alvo) return;
+        const linha = alvo.closest('tr, .linha-aditivo');
+        if (linha) linha.remove();
+        if (linhas().length === 0) adicionar();
+        else if (aoMudar) aoMudar();
+      });
+      if (linhas().length === 0) adicionar();
+      else if (aoMudar) aoMudar();
+      return container;
+    }
+
+    // Aditivos: o número ("1º", "2º"...) acompanha a posição da linha.
+    listaDinamica('lista-aditivos', 'tpl-aditivo', 'btn-add-aditivo', function () {
+      document.querySelectorAll('#lista-aditivos .num-aditivo').forEach(function (el, i) {
+        el.textContent = i + 1;
+      });
+    });
+
+    // Planilha do processo.
+    listaDinamica('corpo-itens', 'tpl-item', 'btn-add-item');
+
+    // Planilha resumo: valor total = quantidade x ticket médio.
+    function calcularTotais() {
+      document.querySelectorAll('#corpo-resumos tr').forEach(function (linha) {
+        const qtd = parseInt(linha.querySelector('[name="resumo_quantidade"]').value, 10);
+        const ticket = parseFloat(linha.querySelector('[name="resumo_ticket_medio"]').value);
+        const campoTotal = linha.querySelector('.resumo-total');
+        if (isNaN(qtd) || isNaN(ticket)) {
+          campoTotal.value = '';
+        } else {
+          campoTotal.value = (qtd * ticket).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+      });
+    }
+    const corpoResumos = listaDinamica('corpo-resumos', 'tpl-resumo', 'btn-add-resumo', calcularTotais);
+    corpoResumos.addEventListener('input', calcularTotais);
+
+    // CNPJ: coloca a máscara 00.000.000/0000-00 enquanto a pessoa digita.
+    const cnpj = document.getElementById('cnpj');
+    function mascararCNPJ() {
+      const d = cnpj.value.replace(/\D/g, '').slice(0, 14);
+      let t = d;
+      if (d.length > 12) t = d.slice(0, 2) + '.' + d.slice(2, 5) + '.' + d.slice(5, 8) + '/' + d.slice(8, 12) + '-' + d.slice(12);
+      else if (d.length > 8) t = d.slice(0, 2) + '.' + d.slice(2, 5) + '.' + d.slice(5, 8) + '/' + d.slice(8);
+      else if (d.length > 5) t = d.slice(0, 2) + '.' + d.slice(2, 5) + '.' + d.slice(5);
+      else if (d.length > 2) t = d.slice(0, 2) + '.' + d.slice(2);
+      cnpj.value = t;
+    }
+    cnpj.addEventListener('input', mascararCNPJ);
+    mascararCNPJ();
   })();
 </script>
 {% endblock %}

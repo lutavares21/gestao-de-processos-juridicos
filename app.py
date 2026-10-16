@@ -21,7 +21,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from models import (
     db, Processo, Parte, Advogado, Movimento, PedidoTrabalhista, RateioCR,
     PedidoCivel, TituloRecuperacao, AcordoRecebimento, Operador, RegistroAtividade,
-    Licitacao,
+    Licitacao, LicitacaoAditivo, LicitacaoItem, LicitacaoResumo,
 )
 
 app = Flask(__name__)
@@ -95,6 +95,33 @@ with app.app_context():
         "apoio_local": "VARCHAR(3)",
         "garantia_licitacao": "VARCHAR(3)",
         "garantia_qual": "VARCHAR(200)",
+        # Dados da contratação
+        "data_homologacao": "DATE",
+        "data_adjudicacao": "DATE",
+        "valor_total_contrato": "NUMERIC(14, 2)",
+        "numero_contrato": "VARCHAR(60)",
+        "numero_ata": "VARCHAR(60)",
+        "contrato_numero_processo": "VARCHAR(60)",
+        "data_assinatura_contrato": "DATE",
+        "vigencia_inicial": "DATE",
+        "vigencia_final": "DATE",
+        "prazo_contratual": "VARCHAR(60)",
+        # Dados de faturamento
+        "id_cliente": "VARCHAR(40)",
+        "cliente": "VARCHAR(200)",
+        "cnpj": "VARCHAR(18)",
+        "endereco_faturamento": "VARCHAR(250)",
+        "endereco_entrega": "VARCHAR(250)",
+        # Responsáveis
+        "resp_fono_nome": "VARCHAR(120)",
+        "resp_fono_telefone": "VARCHAR(30)",
+        "resp_fono_email": "VARCHAR(120)",
+        "resp_orgao_nome": "VARCHAR(120)",
+        "resp_orgao_telefone": "VARCHAR(30)",
+        "resp_orgao_email": "VARCHAR(120)",
+        "resp_envio_nome": "VARCHAR(120)",
+        "resp_envio_telefone": "VARCHAR(30)",
+        "resp_envio_email": "VARCHAR(120)",
     }
     for nome_coluna, tipo_coluna in novas_colunas_licitacoes.items():
         if nome_coluna not in colunas_licitacoes:
@@ -206,6 +233,39 @@ RESULTADOS_LICITACAO = {
     "deferido": "Deferido",
     "parcialmente_deferido": "Parcialmente Deferido",
     "indeferido": "Indeferido",
+}
+
+# Empresas que podem aparecer como vencedoras nas planilhas do cadastro
+# licitatório (chave -> texto da lista de rolagem). Para incluir uma empresa
+# nova, é só acrescentar uma linha aqui.
+EMPRESAS_VENCEDORAS = {
+    "atomed": "Atomed",
+    "lf_aparelhos": "LF Aparelhos (Jales - SP)",
+    "ws_audiology": "WS Audiology (São Paulo - SP)",
+    "starkey": "Starkey (Campinas - SP)",
+    "cr_monteiro": "CR Monteiro (Campinas - SP)",
+    "ouca_melhor": "Ouça Melhor (Brasília - DF)",
+    "ea_de_lima": "E.A. de Lima (Salvador - BA)",
+    "gn_resound": "GN ReSound (São Paulo - SP)",
+    "hearinggo": "HearingGo Comércio (Hortolândia - SP)",
+    "vitasons": "Vitasons (Porto Alegre - RS)",
+    "med_el": "MED-EL (São Paulo - SP)",
+    "politec": "Politec (Barueri - SP)",
+    "advanced_bionics": "Advanced Bionics (Olímpia - SP)",
+}
+
+# Coluna "Ampla Participação ou Exclusivo ME/EPP" da planilha do processo.
+PARTICIPACAO_ITEM = {
+    "ampla_participacao": "Ampla Participação",
+    "exclusivo_me_epp": "Exclusivo ME/EPP",
+}
+
+# Produtos da planilha de resumo do resultado.
+PRODUTOS_RESUMO = {
+    "aasi": "AASI",
+    "fm": "FM",
+    "protese_ancorada_osso": "Prótese Ancorada Osso",
+    "acessorios": "Acessórios",
 }
 
 # Horário no formato HH:MM (00:00 a 23:59).
@@ -1483,6 +1543,11 @@ def cadastro_trabalhista():
 # CADASTRO - PROCESSO LICITATÓRIO
 # ---------------------------------------------------------------------------
 def render_cadastro_licitatorio(**contexto):
+    # Linhas das tabelas dinâmicas (aditivos e planilhas). No GET vêm vazias;
+    # quando há erro de validação, voltam com o que a pessoa já digitou.
+    contexto.setdefault("aditivos", [])
+    contexto.setdefault("itens", [])
+    contexto.setdefault("resumos", [])
     return render_template(
         "cadastro_licitatorio.html",
         tipos_licitacao=TIPOS_LICITACAO,
@@ -1491,8 +1556,46 @@ def render_cadastro_licitatorio(**contexto):
         plataformas_licitacao=PLATAFORMAS_LICITACAO,
         tipos_disputa=TIPOS_DISPUTA,
         resultados_licitacao=RESULTADOS_LICITACAO,
+        empresas_vencedoras=EMPRESAS_VENCEDORAS,
+        participacao_item=PARTICIPACAO_ITEM,
+        produtos_resumo=PRODUTOS_RESUMO,
         **contexto,
     )
+
+
+CAMPOS_ADITIVO = ("aditivo_data", "aditivo_final")
+CAMPOS_ITEM = (
+    "item_item", "item_quantidade", "item_marca", "item_modelo", "item_codigo",
+    "item_unitario_inicial", "item_ultimo_lance", "item_valor_vencedor",
+    "item_empresa_vencedora", "item_marca_vencedora", "item_modelo_vencedor",
+    "item_participacao",
+)
+CAMPOS_RESUMO = (
+    "resumo_quantidade", "resumo_produto", "resumo_ticket_medio",
+    "resumo_empresa_vencedora",
+)
+
+
+def linhas_do_formulario(form, campos):
+    """Junta os campos repetidos do formulário (várias linhas de uma mesma
+    tabela) em uma lista de dicionários, uma por linha. Linhas totalmente
+    vazias são descartadas. Cada linha sempre envia todos os campos, então
+    as listas têm o mesmo tamanho."""
+    listas = [form.getlist(c) for c in campos]
+    linhas = []
+    for valores in zip(*listas):
+        linha = {c: (v or "").strip() for c, v in zip(campos, valores)}
+        if any(linha.values()):
+            linhas.append(linha)
+    return linhas
+
+
+def somente_digitos(valor):
+    return re.sub(r"\D", "", valor or "")
+
+
+def formatar_cnpj(digitos):
+    return f"{digitos[:2]}.{digitos[2:5]}.{digitos[5:8]}/{digitos[8:12]}-{digitos[12:]}"
 
 
 @app.route("/cadastro/licitatorio", methods=["GET", "POST"])
@@ -1617,8 +1720,133 @@ def cadastro_licitatorio():
     # --- Garantia da licitação: "Qual?" só vale quando a resposta é "sim" ---
     garantia_qual = campo("garantia_qual") if respostas["garantia_licitacao"][0] == "sim" else ""
 
+    # --- Funções auxiliares para as novas seções ---
+    def converter_data(valor, rotulo):
+        if not valor:
+            return None
+        try:
+            return texto_para_data(valor)
+        except ValueError:
+            erros.append(f"Informe uma data válida em {rotulo}.")
+            return None
+
+    def decimal_valido(valor, rotulo):
+        """Valor em reais (aceita ponto ou vírgula). Vazio vira None."""
+        valor = (valor or "").strip()
+        if not valor:
+            return None
+        try:
+            numero = round(float(valor.replace(",", ".")), 2)
+        except ValueError:
+            erros.append(f"Informe um valor válido em {rotulo}.")
+            return None
+        if not (0 <= numero < 1e12):  # também barra NaN e infinito
+            erros.append(f"Informe um valor válido em {rotulo}.")
+            return None
+        return numero
+
+    def inteiro_valido(valor, rotulo):
+        valor = (valor or "").strip()
+        if not valor:
+            return None
+        if not re.fullmatch(r"[0-9]{1,6}", valor):
+            erros.append(f"Informe uma quantidade válida em {rotulo} (número inteiro).")
+            return None
+        return int(valor)
+
+    # --- Dados da contratação ---
+    data_homologacao = data_valida("data_homologacao", "Data de homologação")
+    data_adjudicacao = data_valida("data_adjudicacao", "Data de adjudicação")
+    data_assinatura = data_valida("data_assinatura_contrato", "Data de assinatura do contrato")
+    vigencia_inicial = data_valida("vigencia_inicial", "Vigência do contrato (inicial)")
+    vigencia_final = data_valida("vigencia_final", "Vigência do contrato (final)")
+    if vigencia_inicial and vigencia_final and vigencia_final < vigencia_inicial:
+        erros.append("A vigência final do contrato não pode ser anterior à vigência inicial.")
+    valor_total_contrato = decimal_valido(campo("valor_total_contrato"), "Valor total do contrato")
+
+    linhas_aditivos = linhas_do_formulario(form, CAMPOS_ADITIVO)
+    aditivos = []
+    for i, linha in enumerate(linhas_aditivos, start=1):
+        rotulo = f"{i}º aditivo contratual"
+        data_ini = converter_data(linha["aditivo_data"], rotulo)
+        data_fim = converter_data(linha["aditivo_final"], f"{rotulo} (final)")
+        if data_ini and data_fim and data_fim < data_ini:
+            erros.append(f"No {rotulo}, a data final não pode ser anterior à data inicial.")
+        aditivos.append(LicitacaoAditivo(ordem=i, data_aditivo=data_ini, data_final=data_fim))
+
+    # --- Dados de faturamento ---
+    cnpj = None
+    if campo("cnpj"):
+        digitos = somente_digitos(campo("cnpj"))
+        if len(digitos) == 14:
+            cnpj = formatar_cnpj(digitos)
+        else:
+            erros.append("Informe um CNPJ válido com 14 dígitos.")
+
+    # --- Responsáveis (e-mail validado como no restante do formulário) ---
+    for prefixo, rotulo in (("resp_fono", "Responsável Setor de Fono"),
+                            ("resp_orgao", "Responsável pelo órgão"),
+                            ("resp_envio", "Responsável pelo envio do pedido")):
+        email_resp = campo(prefixo + "_email")
+        if email_resp and not EMAIL_REGEX.match(email_resp):
+            erros.append(f"Informe um e-mail válido em {rotulo}.")
+
+    # --- Planilha Processo Licitatório ---
+    linhas_itens = linhas_do_formulario(form, CAMPOS_ITEM)
+    itens = []
+    for i, linha in enumerate(linhas_itens, start=1):
+        rotulo = f"linha {i} da Planilha Processo Licitatório"
+        empresa = linha["item_empresa_vencedora"]
+        if empresa and empresa not in EMPRESAS_VENCEDORAS:
+            erros.append(f"Selecione uma empresa vencedora válida na {rotulo}.")
+            empresa = ""
+        participacao_item = linha["item_participacao"]
+        if participacao_item and participacao_item not in PARTICIPACAO_ITEM:
+            erros.append(f"Selecione Ampla Participação ou Exclusivo ME/EPP na {rotulo}.")
+            participacao_item = ""
+        itens.append(LicitacaoItem(
+            ordem=i,
+            item=linha["item_item"][:30] or None,
+            quantidade=inteiro_valido(linha["item_quantidade"], f"Quant. da {rotulo}"),
+            marca=linha["item_marca"][:100] or None,
+            modelo=linha["item_modelo"][:100] or None,
+            codigo_produto=linha["item_codigo"][:60] or None,
+            unitario_inicial=decimal_valido(linha["item_unitario_inicial"], f"Unitário inicial da {rotulo}"),
+            ultimo_lance_atomed=decimal_valido(linha["item_ultimo_lance"], f"Último lance Atomed da {rotulo}"),
+            valor_vencedor=decimal_valido(linha["item_valor_vencedor"], f"Valor vencedor da {rotulo}"),
+            empresa_vencedora=empresa or None,
+            marca_vencedora=linha["item_marca_vencedora"][:100] or None,
+            modelo_vencedor=linha["item_modelo_vencedor"][:100] or None,
+            tipo_participacao=participacao_item or None,
+        ))
+
+    # --- Planilha Resumo Resultado Processo Licitatório ---
+    linhas_resumos = linhas_do_formulario(form, CAMPOS_RESUMO)
+    resumos = []
+    for i, linha in enumerate(linhas_resumos, start=1):
+        rotulo = f"linha {i} da Planilha Resumo Resultado"
+        produto = linha["resumo_produto"]
+        if produto and produto not in PRODUTOS_RESUMO:
+            erros.append(f"Selecione um produto válido na {rotulo}.")
+            produto = ""
+        empresa = linha["resumo_empresa_vencedora"]
+        if empresa and empresa not in EMPRESAS_VENCEDORAS:
+            erros.append(f"Selecione uma empresa vencedora válida na {rotulo}.")
+            empresa = ""
+        qtd = inteiro_valido(linha["resumo_quantidade"], f"Quantidade da {rotulo}")
+        ticket = decimal_valido(linha["resumo_ticket_medio"], f"Ticket médio da {rotulo}")
+        # O valor total é sempre recalculado aqui (quantidade x ticket médio).
+        total = round(qtd * ticket, 2) if qtd is not None and ticket is not None else None
+        resumos.append(LicitacaoResumo(
+            ordem=i, quantidade=qtd, produto=produto or None,
+            ticket_medio=ticket, valor_total=total, empresa_vencedora=empresa or None,
+        ))
+
     if erros:
-        return render_cadastro_licitatorio(erros=erros, valores=form)
+        return render_cadastro_licitatorio(
+            erros=erros, valores=form,
+            aditivos=linhas_aditivos, itens=linhas_itens, resumos=linhas_resumos,
+        )
 
     licitacao = Licitacao(
         tipo_processo=campo("tipo_processo"),
@@ -1663,6 +1891,33 @@ def cadastro_licitatorio():
         apoio_local=respostas["apoio_local"][0],
         garantia_licitacao=respostas["garantia_licitacao"][0],
         garantia_qual=garantia_qual[:200] or None,
+        data_homologacao=data_homologacao,
+        data_adjudicacao=data_adjudicacao,
+        valor_total_contrato=valor_total_contrato,
+        numero_contrato=campo("numero_contrato")[:60] or None,
+        numero_ata=campo("numero_ata")[:60] or None,
+        contrato_numero_processo=campo("contrato_numero_processo")[:60] or None,
+        data_assinatura_contrato=data_assinatura,
+        vigencia_inicial=vigencia_inicial,
+        vigencia_final=vigencia_final,
+        prazo_contratual=campo("prazo_contratual")[:60] or None,
+        id_cliente=campo("id_cliente")[:40] or None,
+        cliente=campo("cliente")[:200] or None,
+        cnpj=cnpj,
+        endereco_faturamento=campo("endereco_faturamento")[:250] or None,
+        endereco_entrega=campo("endereco_entrega")[:250] or None,
+        resp_fono_nome=campo("resp_fono_nome")[:120] or None,
+        resp_fono_telefone=campo("resp_fono_telefone")[:30] or None,
+        resp_fono_email=campo("resp_fono_email")[:120] or None,
+        resp_orgao_nome=campo("resp_orgao_nome")[:120] or None,
+        resp_orgao_telefone=campo("resp_orgao_telefone")[:30] or None,
+        resp_orgao_email=campo("resp_orgao_email")[:120] or None,
+        resp_envio_nome=campo("resp_envio_nome")[:120] or None,
+        resp_envio_telefone=campo("resp_envio_telefone")[:30] or None,
+        resp_envio_email=campo("resp_envio_email")[:120] or None,
+        aditivos=aditivos,
+        itens=itens,
+        resumos=resumos,
     )
     db.session.add(licitacao)
     registrar_atividade(

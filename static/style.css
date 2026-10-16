@@ -2010,3 +2010,59 @@ canvas{ max-width: 100%; }
   padding: 2px 8px;
   border-radius: 10px;
 }
+
+
+/* --- Cadastro licitatório: aditivos contratuais e planilhas ---------------- */
+.campo-destaque input {
+  background: #fff8c5;
+  border-color: #e3d36a;
+}
+
+.linha-aditivo {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-bottom: 10px;
+}
+
+.linha-aditivo .rotulo-aditivo {
+  min-width: 200px;
+  padding-bottom: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.linha-aditivo .campo {
+  flex: 0 1 180px;
+  margin-bottom: 0;
+}
+
+.tabela-planilha {
+  min-width: 1600px;
+}
+
+.tabela-planilha td {
+  padding: 6px 8px;
+  vertical-align: middle;
+}
+
+.tabela-planilha td input,
+.tabela-planilha td select {
+  width: 100%;
+}
+
+.tabela-planilha .col-p { min-width: 80px; }
+.tabela-planilha .col-m { min-width: 120px; }
+.tabela-planilha .col-g { min-width: 170px; }
+.tabela-planilha .col-gg { min-width: 210px; }
+.tabela-planilha .col-acao { width: 52px; }
+
+.dica-secao {
+  margin: -8px 0 14px;
+  font-size: 13px;
+  color: var(--texto-suave);
+}

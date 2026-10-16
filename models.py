@@ -538,4 +538,99 @@ class Licitacao(db.Model):
     garantia_licitacao = db.Column(db.String(3))  # "sim" ou "nao"
     garantia_qual = db.Column(db.String(200))  # qual garantia, quando "sim"
 
+    # --- Dados da contratação ---
+    data_homologacao = db.Column(db.Date)
+    data_adjudicacao = db.Column(db.Date)
+    valor_total_contrato = db.Column(db.Numeric(14, 2))
+    numero_contrato = db.Column(db.String(60))
+    numero_ata = db.Column(db.String(60))
+    contrato_numero_processo = db.Column(db.String(60))
+    data_assinatura_contrato = db.Column(db.Date)
+    vigencia_inicial = db.Column(db.Date)
+    vigencia_final = db.Column(db.Date)
+    prazo_contratual = db.Column(db.String(60))  # texto livre, ex.: "12 meses"
+
+    # --- Dados de faturamento ---
+    id_cliente = db.Column(db.String(40))
+    cliente = db.Column(db.String(200))
+    cnpj = db.Column(db.String(18))  # "00.000.000/0000-00"
+    endereco_faturamento = db.Column(db.String(250))
+    endereco_entrega = db.Column(db.String(250))
+
+    # --- Responsáveis (nome, telefone e e-mail de cada um) ---
+    resp_fono_nome = db.Column(db.String(120))
+    resp_fono_telefone = db.Column(db.String(30))
+    resp_fono_email = db.Column(db.String(120))
+    resp_orgao_nome = db.Column(db.String(120))
+    resp_orgao_telefone = db.Column(db.String(30))
+    resp_orgao_email = db.Column(db.String(120))
+    resp_envio_nome = db.Column(db.String(120))
+    resp_envio_telefone = db.Column(db.String(30))
+    resp_envio_email = db.Column(db.String(120))
+
     data_cadastro = db.Column(db.DateTime, default=db.func.now())
+
+    aditivos = db.relationship(
+        "LicitacaoAditivo", backref="licitacao", cascade="all, delete-orphan",
+        order_by="LicitacaoAditivo.ordem",
+    )
+    itens = db.relationship(
+        "LicitacaoItem", backref="licitacao", cascade="all, delete-orphan",
+        order_by="LicitacaoItem.ordem",
+    )
+    resumos = db.relationship(
+        "LicitacaoResumo", backref="licitacao", cascade="all, delete-orphan",
+        order_by="LicitacaoResumo.ordem",
+    )
+
+
+class LicitacaoAditivo(db.Model):
+    """Aditivo contratual de uma licitação (1º, 2º, 3º...). Pode haver
+    quantos forem necessários; a posição vem de "ordem"."""
+    __tablename__ = "licitacao_aditivos"
+
+    id = db.Column(db.Integer, primary_key=True)
+    licitacao_id = db.Column(db.Integer, db.ForeignKey("licitacoes.id"), nullable=False)
+    ordem = db.Column(db.Integer, nullable=False, default=1)
+
+    data_aditivo = db.Column(db.Date)
+    data_final = db.Column(db.Date)
+
+
+class LicitacaoItem(db.Model):
+    """Linha da "Planilha Processo Licitatório": um item do edital com o
+    que foi ofertado e o que o vencedor ofertou."""
+    __tablename__ = "licitacao_itens"
+
+    id = db.Column(db.Integer, primary_key=True)
+    licitacao_id = db.Column(db.Integer, db.ForeignKey("licitacoes.id"), nullable=False)
+    ordem = db.Column(db.Integer, nullable=False, default=1)
+
+    item = db.Column(db.String(30))
+    quantidade = db.Column(db.Integer)
+    marca = db.Column(db.String(100))
+    modelo = db.Column(db.String(100))
+    codigo_produto = db.Column(db.String(60))
+    unitario_inicial = db.Column(db.Numeric(14, 2))
+    ultimo_lance_atomed = db.Column(db.Numeric(14, 2))
+    valor_vencedor = db.Column(db.Numeric(14, 2))
+    empresa_vencedora = db.Column(db.String(60))  # chave de EMPRESAS_VENCEDORAS (app.py)
+    marca_vencedora = db.Column(db.String(100))
+    modelo_vencedor = db.Column(db.String(100))
+    # "ampla_participacao" ou "exclusivo_me_epp" (PARTICIPACAO_ITEM em app.py)
+    tipo_participacao = db.Column(db.String(25))
+
+
+class LicitacaoResumo(db.Model):
+    """Linha da "Planilha Resumo Resultado Processo Licitatório"."""
+    __tablename__ = "licitacao_resumos"
+
+    id = db.Column(db.Integer, primary_key=True)
+    licitacao_id = db.Column(db.Integer, db.ForeignKey("licitacoes.id"), nullable=False)
+    ordem = db.Column(db.Integer, nullable=False, default=1)
+
+    quantidade = db.Column(db.Integer)
+    produto = db.Column(db.String(30))  # chave de PRODUTOS_RESUMO (app.py)
+    ticket_medio = db.Column(db.Numeric(14, 2))
+    valor_total = db.Column(db.Numeric(14, 2))  # quantidade x ticket médio
+    empresa_vencedora = db.Column(db.String(60))
