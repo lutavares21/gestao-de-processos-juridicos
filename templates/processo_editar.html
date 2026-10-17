@@ -394,8 +394,8 @@
                     <option value="deferido">Deferido</option>
                     <option value="em_analise" selected>Em análise</option>
                     <option value="indeferido">Indeferido</option>
-                    <option value="extinto_com_res">Extinto com Resolução</option>
-                    <option value="extinto_sem_res">Extinto sem Resolução</option>
+                    <option value="extinto_com_res">Extinto com resolução</option>
+                    <option value="extinto_sem_res">Extinto sem resolução</option>
                   </select>
                 </div>
                 <div class="campo" style="flex:0 0 auto;align-self:flex-end;margin-bottom:14px;">
@@ -421,8 +421,8 @@
                       <option value="em_analise" {{ 'selected' if (ped.status or 'em_analise') == 'em_analise' else '' }}>Em análise</option>
                       <option value="deferido" {{ 'selected' if ped.status == 'deferido' else '' }}>Deferido</option>
                       <option value="indeferido" {{ 'selected' if ped.status == 'indeferido' else '' }}>Indeferido</option>
-                      <option value="extinto_com_res" {{ 'selected' if ped.status == 'extinto_com_res' else '' }}>Extinto com Resolução</option>
-                      <option value="extinto_sem_res" {{ 'selected' if ped.status == 'extinto_sem_res' else '' }}>Extinto sem Resolução</option>
+                      <option value="extinto_com_res" {{ 'selected' if ped.status == 'extinto_com_res' else '' }}>Extinto com resolução</option>
+                      <option value="extinto_sem_res" {{ 'selected' if ped.status == 'extinto_sem_res' else '' }}>Extinto sem resolução</option>
                     </select>
                   </div>
                   <button type="button" class="btn btn-remover" onclick="this.parentElement.remove(); calcularTotalPedidos()">Remover</button>
@@ -608,8 +608,8 @@
           <option value="em_analise">Em análise</option>
           <option value="deferido">Deferido</option>
           <option value="indeferido">Indeferido</option>
-          <option value="extinto_com_res">Extinto com Resolução</option>
-          <option value="extinto_sem_res">Extinto sem Resolução</option>
+          <option value="extinto_com_res">Extinto com resolução</option>
+          <option value="extinto_sem_res">Extinto sem resolução</option>
         </select>
       </div>
       <button type="button" class="btn btn-remover" onclick="this.parentElement.remove(); calcularTotalPedidos()">Remover</button>
