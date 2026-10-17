@@ -366,7 +366,9 @@
                   <option value="Férias vencidas + 1/3">Férias vencidas + 1/3</option>
                   <option value="FGTS (8%) não depositado">FGTS (8%) não depositado</option>
                   <option value="Honorários">Honorários</option>
+                  <option value="Honorários Advocatícios">Honorários Advocatícios</option>
                   <option value="Horas extras">Horas extras</option>
+                  <option value="Indenização - Estabilidade">Indenização - Estabilidade</option>
                   <option value="Indenização por Assédio Moral">Indenização por Assédio Moral</option>
                   <option value="Indenização por danos morais">Indenização por danos morais</option>
                   <option value="Intervalo Interjornada">Intervalo Interjornada</option>
@@ -379,6 +381,7 @@
                   <option value="Recolhimento FGTS - Multa de 40%">Recolhimento FGTS - Multa de 40%</option>
                   <option value="Reconhecimento de vínculo empregatício">Reconhecimento de vínculo empregatício</option>
                   <option value="Retificação/anotação da CTPS">Retificação/anotação da CTPS</option>
+                  <option value="RSR - Repouso Semanal Remunerado">RSR - Repouso Semanal Remunerado</option>
                   <option value="Saldo de salário">Saldo de salário</option>
                   <option value="Seguro-desemprego">Seguro-desemprego</option>
                 </select>
@@ -393,6 +396,8 @@
                   <option value="deferido">Deferido</option>
                   <option value="em_analise" selected>Em análise</option>
                   <option value="indeferido">Indeferido</option>
+                  <option value="extinto_com_res">Extinto C/ Resolução</option>
+                  <option value="extinto_sem_res">Extinto S/ Resolução</option>
                 </select>
               </div>
               <div class="campo" style="flex:0 0 auto;align-self:flex-end;margin-bottom:14px;">
@@ -613,7 +618,7 @@
     }
 
     // Textos e classes de cor do selo de status de cada pedido
-    const ROTULOS_STATUS_PEDIDO = { em_analise: 'Em análise', deferido: 'Deferido', indeferido: 'Indeferido' };
+    const ROTULOS_STATUS_PEDIDO = { em_analise: 'Em análise', deferido: 'Deferido', indeferido: 'Indeferido', extinto_com_res: 'Extinto C/ Resolução', extinto_sem_res: 'Extinto S/ Resolução' };
 
     // Adiciona uma linha de pedido/verba trabalhista, usando o que está selecionado no topo
     function adicionarVerba() {

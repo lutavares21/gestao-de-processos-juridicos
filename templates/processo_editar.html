@@ -379,7 +379,7 @@
                   <label for="select_verba">Pedido / verba</label>
                   <select id="select_verba">
                     <option value="">Selecione</option>
-                    {% for verba in ['13º salário proporcional','Adicional de insalubridade','Adicional de periculosidade','Adicional noturno','Aviso-prévio','Comissões','Diferenças salariais','Equiparação salarial','Férias em Dobro + 1/3','Férias proporcionais + 1/3','Férias vencidas + 1/3','FGTS (8%) não depositado','Honorários','Horas extras','Indenização por Assédio Moral','Indenização por danos morais','Intervalo Interjornada','Intervalo intrajornada','Multa do art. 467 da CLT','Multa do art. 477 da CLT','Outros','Prêmios','Recolhimento do FGTS 8%','Recolhimento FGTS - Multa de 40%','Reconhecimento de vínculo empregatício','Retificação/anotação da CTPS','Saldo de salário','Seguro-desemprego'] %}
+                    {% for verba in ['13º salário proporcional','Adicional de insalubridade','Adicional de periculosidade','Adicional noturno','Aviso-prévio','Comissões','Diferenças salariais','Equiparação salarial','Férias em Dobro + 1/3','Férias proporcionais + 1/3','Férias vencidas + 1/3','FGTS (8%) não depositado','Honorários','Honorários Advocatícios','Horas extras','Indenização - Estabilidade','Indenização por Assédio Moral','Indenização por danos morais','Intervalo Interjornada','Intervalo intrajornada','Multa do art. 467 da CLT','Multa do art. 477 da CLT','Outros','Prêmios','Recolhimento do FGTS 8%','Recolhimento FGTS - Multa de 40%','Reconhecimento de vínculo empregatício','Retificação/anotação da CTPS','RSR - Repouso Semanal Remunerado','Saldo de salário','Seguro-desemprego'] %}
                     <option value="{{ verba }}">{{ verba }}</option>
                     {% endfor %}
                   </select>
@@ -394,6 +394,8 @@
                     <option value="deferido">Deferido</option>
                     <option value="em_analise" selected>Em análise</option>
                     <option value="indeferido">Indeferido</option>
+                    <option value="extinto_com_res">Extinto C/ Resolução</option>
+                    <option value="extinto_sem_res">Extinto S/ Resolução</option>
                   </select>
                 </div>
                 <div class="campo" style="flex:0 0 auto;align-self:flex-end;margin-bottom:14px;">
@@ -419,6 +421,8 @@
                       <option value="em_analise" {{ 'selected' if (ped.status or 'em_analise') == 'em_analise' else '' }}>Em análise</option>
                       <option value="deferido" {{ 'selected' if ped.status == 'deferido' else '' }}>Deferido</option>
                       <option value="indeferido" {{ 'selected' if ped.status == 'indeferido' else '' }}>Indeferido</option>
+                      <option value="extinto_com_res" {{ 'selected' if ped.status == 'extinto_com_res' else '' }}>Extinto C/ Resolução</option>
+                      <option value="extinto_sem_res" {{ 'selected' if ped.status == 'extinto_sem_res' else '' }}>Extinto S/ Resolução</option>
                     </select>
                   </div>
                   <button type="button" class="btn btn-remover" onclick="this.parentElement.remove(); calcularTotalPedidos()">Remover</button>
@@ -604,6 +608,8 @@
           <option value="em_analise">Em análise</option>
           <option value="deferido">Deferido</option>
           <option value="indeferido">Indeferido</option>
+          <option value="extinto_com_res">Extinto C/ Resolução</option>
+          <option value="extinto_sem_res">Extinto S/ Resolução</option>
         </select>
       </div>
       <button type="button" class="btn btn-remover" onclick="this.parentElement.remove(); calcularTotalPedidos()">Remover</button>
