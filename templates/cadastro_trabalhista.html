@@ -390,14 +390,14 @@
                 <label for="valor_verba_display">Valor (R$)</label>
                 <input type="text" inputmode="numeric" id="valor_verba_display" placeholder="R$ 0,00" oninput="formatarDinheiro(this)">
               </div>
-              <div class="campo campo-pequeno">
+              <div class="campo campo-pequeno campo-situacao">
                 <label for="situacao_verba">Situação</label>
                 <select id="situacao_verba">
                   <option value="deferido">Deferido</option>
                   <option value="em_analise" selected>Em análise</option>
                   <option value="indeferido">Indeferido</option>
-                  <option value="extinto_com_res">Extinto C/ Resolução</option>
-                  <option value="extinto_sem_res">Extinto S/ Resolução</option>
+                  <option value="extinto_com_res">Extinto com Resolução</option>
+                  <option value="extinto_sem_res">Extinto sem Resolução</option>
                 </select>
               </div>
               <div class="campo" style="flex:0 0 auto;align-self:flex-end;margin-bottom:14px;">
@@ -549,7 +549,7 @@
         <input type="text" class="valor-verba-linha" readonly>
         <input type="hidden" name="pedido_valor">
       </div>
-      <div class="campo campo-pequeno" style="align-self:center;">
+      <div class="campo campo-pequeno campo-situacao" style="align-self:center;">
         <span class="selo-pedido"></span>
         <input type="hidden" name="pedido_status">
       </div>
@@ -618,7 +618,7 @@
     }
 
     // Textos e classes de cor do selo de status de cada pedido
-    const ROTULOS_STATUS_PEDIDO = { em_analise: 'Em análise', deferido: 'Deferido', indeferido: 'Indeferido', extinto_com_res: 'Extinto C/ Resolução', extinto_sem_res: 'Extinto S/ Resolução' };
+    const ROTULOS_STATUS_PEDIDO = { em_analise: 'Em análise', deferido: 'Deferido', indeferido: 'Indeferido', extinto_com_res: 'Extinto com Resolução', extinto_sem_res: 'Extinto sem Resolução' };
 
     // Adiciona uma linha de pedido/verba trabalhista, usando o que está selecionado no topo
     function adicionarVerba() {

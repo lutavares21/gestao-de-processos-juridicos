@@ -2068,9 +2068,12 @@ canvas{ max-width: 100%; }
 }
 
 
-/* Situação "Extinto C/ Resolução" e "Extinto S/ Resolução" dos pedidos trabalhistas (cinza neutro:
+/* Situação "Extinto com Resolução" e "Extinto sem Resolução" dos pedidos trabalhistas (cinza neutro:
    o pedido foi encerrado, não é deferido nem indeferido) */
 .selo-pedido.extinto_com_res,
 .selo-pedido.extinto_sem_res { background: #ebe9e2; color: var(--texto-suave); }
 select.selo-pedido-select.extinto_com_res,
 select.selo-pedido-select.extinto_sem_res { background: #fff; color: var(--texto-suave); }
+
+/* Caixa da Situação dos pedidos trabalhistas: mais larga para caber "Extinto sem Resolução" */
+.campo-situacao { flex: 1 1 230px; }
