@@ -222,11 +222,17 @@
 
             {% if current_user.eh_administrador %}
             <label class="rotulo-secao">{{ rotulo_passivo }} <span class="aviso-limite">(somente administrador)</span></label>
-            <div style="margin-bottom:18px;">
+            <div id="lista_partes_passivo" class="grupo-dinamico">
               {% for parte in (nomes_passivo or [none]) %}
-              <input type="text" name="reu_nome" placeholder="Nome" value="{{ parte.nome if parte else '' }}" style="margin-bottom:8px;">
+              <div class="linha-repetida">
+                <div class="campo campo-grande">
+                  <input type="text" name="reu_nome" placeholder="Nome" value="{{ parte.nome if parte else '' }}">
+                </div>
+                <button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>
+              </div>
               {% endfor %}
             </div>
+            <button type="button" class="btn btn-adicionar" onclick="adicionarPartePassiva()" style="margin-bottom:18px;">+ Adicionar {{ 'reclamada' if eh_trabalhista else 'réu' }}</button>
             {% else %}
             <label class="rotulo-secao">{{ rotulo_passivo }} <span class="aviso-limite">(não pode ser alterado)</span></label>
             <input type="text" value="{{ nomes_passivo_texto }}" disabled style="margin-bottom:18px;">
@@ -756,12 +762,23 @@
       container.appendChild(linha);
     }
 
+    // Administrador: adiciona mais uma linha de réu/reclamada
+    function adicionarPartePassiva() {
+      const container = document.getElementById('lista_partes_passivo');
+      const linha = document.createElement('div');
+      linha.className = 'linha-repetida';
+      linha.innerHTML = '<div class="campo campo-grande"><input type="text" name="reu_nome" placeholder="Nome"></div>' +
+        '<button type="button" class="btn btn-remover" onclick="this.parentElement.remove()">Remover</button>';
+      container.appendChild(linha);
+    }
+
     // Administrador: cada lado precisa ter ao menos um nome preenchido.
     // (Operador comum não tem esses campos na tela.)
     function partesPreenchidas() {
-      return ['autor_nome', 'reu_nome'].every(function (nome) {
-        const campos = document.querySelectorAll('input[name="' + nome + '"]');
-        if (campos.length === 0) return true;
+      return ['lista_partes_ativo', 'lista_partes_passivo'].every(function (id) {
+        const lista = document.getElementById(id);
+        if (!lista) return true;  // operador comum: a lista nem aparece na tela
+        const campos = lista.querySelectorAll('input[type="text"]');
         return Array.prototype.some.call(campos, function (c) { return c.value.trim() !== ''; });
       });
     }
