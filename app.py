@@ -3279,7 +3279,6 @@ def panorama_juridico():
     pedidos_trab_query = (
         pedidos_trab_query.group_by(PedidoTrabalhista.verba)
         .order_by(func.count(PedidoTrabalhista.id).desc())
-        .limit(8)
         .all()
     )
     dados["pedidos_recorrentes_trabalhista"] = [
@@ -3308,7 +3307,6 @@ def panorama_juridico():
     pedidos_civel_query = (
         pedidos_civel_query.group_by(PedidoCivel.descricao)
         .order_by(func.count(PedidoCivel.id).desc())
-        .limit(8)
         .all()
     )
     dados["pedidos_recorrentes_civel"] = [
