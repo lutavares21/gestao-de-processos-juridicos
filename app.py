@@ -2962,6 +2962,14 @@ def montar_panorama_recuperacao(data_inicio=None, data_fim=None):
     return dados
 
 
+def chave_alfabetica(texto):
+    """Chave de ordenação alfabética em português: ignora maiúsculas/minúsculas
+    e acentos (assim "Árvore" fica junto do "A" e não depois do "Z")."""
+    sem_acento = unicodedata.normalize("NFD", texto or "")
+    sem_acento = "".join(c for c in sem_acento if unicodedata.category(c) != "Mn")
+    return sem_acento.casefold()
+
+
 @app.route("/panorama-juridico")
 @login_required
 def panorama_juridico():
@@ -3292,6 +3300,7 @@ def panorama_juridico():
         }
         for verba, total, deferidos, indeferidos, em_analise in pedidos_trab_query
     ]
+    dados["pedidos_recorrentes_trabalhista"].sort(key=lambda p: chave_alfabetica(p["item"]))
 
     pedidos_civel_query = (
         db.session.query(
@@ -3318,6 +3327,7 @@ def panorama_juridico():
         }
         for descricao, total, desfavoraveis in pedidos_civel_query
     ]
+    dados["pedidos_recorrentes_civel"].sort(key=lambda p: chave_alfabetica(p["item"]))
 
     return render_template(
         "panorama_juridico.html", dados=dados, tipo_selecionado=tipo_selecionado,
