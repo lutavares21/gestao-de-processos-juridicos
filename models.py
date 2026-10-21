@@ -154,7 +154,7 @@ class Processo(db.Model):
     sentenca = db.Column(db.String(20))
     # 'procedente', 'procedente_parcial', 'improcedente'
     status = db.Column(db.String(20), default="ativo")
-    # 'ativo', 'arquivado', 'suspenso'
+    # 'ativo', 'ativo_sem_exposicao', 'arquivado', 'suspenso'
     risco = db.Column(db.String(20))
     # 'possivel', 'provavel', 'remoto'
     grau_instancia = db.Column(db.String(30))

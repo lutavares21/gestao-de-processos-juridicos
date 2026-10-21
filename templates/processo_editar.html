@@ -334,7 +334,7 @@
               <div class="campo">
                 <label for="status">Status</label>
                 <select id="status" name="status">
-                  {% for valor, texto in [('arquivado','Arquivado'), ('ativo','Ativo'), ('suspenso','Suspenso')] %}
+                  {% for valor, texto in [('arquivado','Arquivado'), ('ativo','Ativo'), ('ativo_sem_exposicao','Ativo - Sem exposição'), ('suspenso','Suspenso')] %}
                   <option value="{{ valor }}" {{ 'selected' if (p.status or 'ativo') == valor else '' }}>{{ texto }}</option>
                   {% endfor %}
                 </select>
