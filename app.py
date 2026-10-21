@@ -3054,12 +3054,14 @@ def panorama_juridico():
         "civel": {
             "total": contar(origem_cadastro="civel"),
             "ativo": contar(origem_cadastro="civel", status="ativo"),
+            "ativo_sem_exposicao": contar(origem_cadastro="civel", status="ativo_sem_exposicao"),
             "arquivado": contar(origem_cadastro="civel", status="arquivado"),
             "suspenso": contar(origem_cadastro="civel", status="suspenso"),
         },
         "trabalhista": {
             "total": contar(origem_cadastro="trabalhista"),
             "ativo": contar(origem_cadastro="trabalhista", status="ativo"),
+            "ativo_sem_exposicao": contar(origem_cadastro="trabalhista", status="ativo_sem_exposicao"),
             "arquivado": contar(origem_cadastro="trabalhista", status="arquivado"),
             "suspenso": contar(origem_cadastro="trabalhista", status="suspenso"),
         },

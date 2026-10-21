@@ -159,8 +159,8 @@
           </div>
           <div class="dash-kpi">
             <div class="dash-kpi-label">Ativos</div>
-            <div class="dash-kpi-valor">{{ dados.civel.ativo + dados.trabalhista.ativo }}</div>
-            <div class="dash-kpi-nota">Em tramitação</div>
+            <div class="dash-kpi-valor">{{ dados.civel.ativo + dados.trabalhista.ativo + dados.civel.ativo_sem_exposicao + dados.trabalhista.ativo_sem_exposicao }}</div>
+            <div class="dash-kpi-nota">Em tramitação · {{ dados.civel.ativo_sem_exposicao + dados.trabalhista.ativo_sem_exposicao }} sem exposição</div>
           </div>
           <div class="dash-kpi">
             <div class="dash-kpi-label">Arquivados</div>
@@ -499,17 +499,17 @@
     new Chart(document.getElementById('graficoStatus'), {
       type: 'bar',
       data: {
-        labels: ['Ativo', 'Arquivado', 'Suspenso'],
+        labels: ['Ativo', 'Ativo - Sem exposição', 'Arquivado', 'Suspenso'],
         datasets: [
           {
             label: 'Cível',
-            data: [dadosDashboard.civel.ativo, dadosDashboard.civel.arquivado, dadosDashboard.civel.suspenso],
+            data: [dadosDashboard.civel.ativo, dadosDashboard.civel.ativo_sem_exposicao, dadosDashboard.civel.arquivado, dadosDashboard.civel.suspenso],
             backgroundColor: paletaNavy,
             borderRadius: 6,
           },
           {
             label: 'Trabalhista',
-            data: [dadosDashboard.trabalhista.ativo, dadosDashboard.trabalhista.arquivado, dadosDashboard.trabalhista.suspenso],
+            data: [dadosDashboard.trabalhista.ativo, dadosDashboard.trabalhista.ativo_sem_exposicao, dadosDashboard.trabalhista.arquivado, dadosDashboard.trabalhista.suspenso],
             backgroundColor: paletaGold,
             borderRadius: 6,
           },
