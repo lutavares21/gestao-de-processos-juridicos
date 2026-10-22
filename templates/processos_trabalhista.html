@@ -83,6 +83,7 @@
                   <option value="">Todos</option>
                   <option value="arquivado" {% if filtros.get('status') == 'arquivado' %}selected{% endif %}>Arquivado</option>
                   <option value="ativo" {% if filtros.get('status') == 'ativo' %}selected{% endif %}>Ativo</option>
+                  <option value="ativo_sem_exposicao" {% if filtros.get('status') == 'ativo_sem_exposicao' %}selected{% endif %}>Ativo - Sem exposição</option>
                   <option value="suspenso" {% if filtros.get('status') == 'suspenso' %}selected{% endif %}>Suspenso</option>
                 </select>
               </div>
@@ -204,7 +205,7 @@
                 <td>{{ p.numero_processo }}</td>
                 <td>{{ p.partes|selectattr('tipo', 'equalto', 'reclamante')|map(attribute='nome')|join(', ') or '—' }}</td>
                 <td>{{ p.partes|selectattr('tipo', 'equalto', 'reclamada')|map(attribute='nome')|join(', ') or '—' }}</td>
-                <td><span class="selo-status {{ p.status }}">{{ p.status|title }}</span></td>
+                <td><span class="selo-status {{ p.status }}">{% if p.status == 'ativo_sem_exposicao' %}Ativo - Sem exposição{% else %}{{ p.status|title }}{% endif %}</span></td>
                 <td>
                   {% if p.risco %}<span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>{% else %}—{% endif %}
                 </td>

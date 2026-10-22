@@ -581,6 +581,7 @@ input[readonly] {
 .selo-status.ativo { background: #e3f0e6; color: var(--risco-remoto); }
 .selo-status.arquivado { background: #e5e3dd; color: #625d51; }
 .selo-status.suspenso { background: #f6dede; color: var(--risco-provavel); }
+.selo-status.ativo_sem_exposicao { background: #ece4f5; color: #6b3fa0; }
 
 .selo-risco {
   display: inline-block;
