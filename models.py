@@ -133,6 +133,10 @@ class Processo(db.Model):
     # --- Datas e audiências ---
     data_distribuicao = db.Column(db.Date, nullable=False)
     valor_causa = db.Column(db.Numeric(14, 2))
+    # Valor da provisão (trabalhista): começa igual ao valor da causa, mas o
+    # operador pode alterar. É o que o Panorama usa como "exposição em aberto";
+    # quando vazio (processos antigos e cíveis), vale o valor da causa.
+    valor_provisao = db.Column(db.Numeric(14, 2))
     # Os nomes das colunas no banco continuam os antigos (data_audiencia_1 etc.),
     # então NÃO precisa migrar o banco: só o nome usado no código mudou.
     proxima_audiencia = db.Column("data_audiencia_1", db.Date)

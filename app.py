@@ -62,6 +62,14 @@ with app.app_context():
         ))
         db.session.commit()
 
+    # Coluna "valor_provisao" dos processos (acrescentada depois que a tabela
+    # já existia). Processos antigos ficam com ela vazia e, nesse caso, o
+    # Panorama continua usando o valor da causa.
+    colunas_processos = {c["name"] for c in sa_inspect(db.engine).get_columns("processos")}
+    if "valor_provisao" not in colunas_processos:
+        db.session.execute(sa_text("ALTER TABLE processos ADD COLUMN valor_provisao NUMERIC(14, 2)"))
+        db.session.commit()
+
     # Colunas da tabela "licitacoes" acrescentadas depois que a tabela já
     # existia (create_all não altera tabelas existentes). Cada parte nova do
     # cadastro licitatório entra aqui.
@@ -621,6 +629,10 @@ def preencher_campos_processo(processo, form):
     processo.tipo_acao = form.get("tipo_acao")
     processo.data_distribuicao = texto_para_data(form.get("data_distribuicao"))
     processo.valor_causa = texto_para_numero(form.get("valor_causa"))
+    # Só o formulário trabalhista tem o campo; nos demais ele não vem e o
+    # valor guardado não deve ser apagado.
+    if "valor_provisao" in form:
+        processo.valor_provisao = texto_para_numero(form.get("valor_provisao"))
     # Aceita os nomes novos dos campos do formulário e, por enquanto, também
     # os antigos (data_audiencia_1 etc.), para o cadastro não quebrar enquanto
     # os templates não forem atualizados.
@@ -2970,6 +2982,254 @@ def chave_alfabetica(texto):
     return sem_acento.casefold()
 
 
+# ======================================================================
+# PANORAMA - LICITATÓRIO
+# ======================================================================
+# Chave (de EMPRESAS_VENCEDORAS) da nossa própria empresa. Um item da planilha
+# do processo licitatório em que ela aparece como vencedora conta como item
+# ganho; qualquer outra empresa conta como concorrente que venceu.
+EMPRESA_PROPRIA_LICITACAO = "atomed"
+
+MESES_ABREVIADOS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
+
+
+def filtrar_periodo_licitacao(query, data_inicio, data_fim):
+    """Filtro de período do Panorama Licitatório: pela data da licitação.
+    Com o filtro ativo, licitações sem data ficam de fora."""
+    if data_inicio:
+        query = query.filter(Licitacao.data_licitacao >= data_inicio)
+    if data_fim:
+        query = query.filter(Licitacao.data_licitacao <= data_fim)
+    return query
+
+
+def montar_panorama_licitatorio(data_inicio=None, data_fim=None):
+    """Monta o dicionário de dados do Panorama Jurídico - Licitatório.
+    Tudo que sai daqui vai para o template via tojson, então só números,
+    textos, listas e dicionários simples (nada de Decimal ou date)."""
+    hoje = date.today()
+    licitacoes = (
+        filtrar_periodo_licitacao(Licitacao.query, data_inicio, data_fim)
+        .options(
+            selectinload(Licitacao.itens),
+            selectinload(Licitacao.resumos),
+            selectinload(Licitacao.aditivos),
+        )
+        .all()
+    )
+
+    def num(valor):
+        return float(valor or 0)
+
+    def data_br(d):
+        return d.strftime("%d/%m/%Y") if d else ""
+
+    def ranking(contagem, limite=None):
+        """{nome: qtd} -> [{nome, qtd}] do maior para o menor (empate: ordem alfabética)."""
+        itens = sorted(contagem.items(), key=lambda kv: (-kv[1], chave_alfabetica(kv[0])))
+        if limite:
+            itens = itens[:limite]
+        return [{"nome": nome, "qtd": qtd} for nome, qtd in itens]
+
+    # ---- Situação de cada licitação ---------------------------------------
+    # Não participamos | sem resultado (nenhum item com vencedor informado) |
+    # vencida (todos os itens com vencedor são nossos) | parcial (ganhamos só
+    # alguns) | perdida (nenhum item nosso).
+    def situacao(lic):
+        if lic.participacao != "sim":
+            return "nao_participou"
+        vencedores = [i.empresa_vencedora for i in lic.itens if i.empresa_vencedora]
+        if not vencedores:
+            return "sem_resultado"
+        ganhos = sum(1 for v in vencedores if v == EMPRESA_PROPRIA_LICITACAO)
+        if ganhos == 0:
+            return "perdida"
+        return "vencida" if ganhos == len(vencedores) else "parcial"
+
+    situacoes = {lic.id: situacao(lic) for lic in licitacoes}
+    contagem_sit = {k: 0 for k in ("vencida", "parcial", "perdida", "sem_resultado", "nao_participou")}
+    for s in situacoes.values():
+        contagem_sit[s] += 1
+    com_resultado = contagem_sit["vencida"] + contagem_sit["parcial"] + contagem_sit["perdida"]
+    taxa_exito = (
+        round((contagem_sit["vencida"] + contagem_sit["parcial"]) / com_resultado * 100, 1)
+        if com_resultado else None
+    )
+
+    dados = {
+        "total": len(licitacoes),
+        "participou": sum(1 for l in licitacoes if l.participacao == "sim"),
+        "nao_participou": contagem_sit["nao_participou"],
+        "situacao": contagem_sit,
+        "taxa_exito": taxa_exito,
+    }
+
+    # ---- Itens (planilha do processo) ---------------------------------------
+    itens_disputados = itens_ganhos = 0
+    diferencas = []  # % que o nosso último lance ficou acima do vencedor, nos itens perdidos
+    concorrentes = {}  # empresa -> [itens vencidos, valor]
+    for lic in licitacoes:
+        if lic.participacao != "sim":
+            continue
+        for item in lic.itens:
+            if not item.empresa_vencedora:
+                continue
+            itens_disputados += 1
+            if item.empresa_vencedora == EMPRESA_PROPRIA_LICITACAO:
+                itens_ganhos += 1
+                continue
+            nome = EMPRESAS_VENCEDORAS.get(item.empresa_vencedora, item.empresa_vencedora)
+            acumulado = concorrentes.setdefault(nome, [0, 0.0])
+            acumulado[0] += 1
+            acumulado[1] += num(item.valor_vencedor) * (item.quantidade or 1)
+            if num(item.valor_vencedor) > 0 and num(item.ultimo_lance_atomed) > 0:
+                diferencas.append(
+                    (num(item.ultimo_lance_atomed) - num(item.valor_vencedor)) / num(item.valor_vencedor) * 100
+                )
+    dados["itens"] = {
+        "disputados": itens_disputados,
+        "ganhos": itens_ganhos,
+        "perdidos": itens_disputados - itens_ganhos,
+        "taxa": round(itens_ganhos / itens_disputados * 100, 1) if itens_disputados else None,
+        "diferenca_media": round(sum(diferencas) / len(diferencas), 1) if diferencas else None,
+        "com_lance": len(diferencas),
+    }
+    dados["concorrentes"] = [
+        {"nome": nome, "qtd": qtd, "valor": round(valor, 2)}
+        for nome, (qtd, valor) in sorted(
+            concorrentes.items(), key=lambda kv: (-kv[1][0], -kv[1][1], chave_alfabetica(kv[0]))
+        )[:8]
+    ]
+
+    # ---- Contratos ----------------------------------------------------------
+    def vigencia_efetiva(lic):
+        """Fim da vigência: o maior entre a vigência final e a data final dos aditivos."""
+        datas = [d for d in [lic.vigencia_final] + [a.data_final for a in lic.aditivos] if d]
+        return max(datas) if datas else None
+
+    valores = [num(l.valor_total_contrato) for l in licitacoes if num(l.valor_total_contrato) > 0]
+    valor_contratado = sum(valores)
+    vigentes = a_vencer = encerrados = 0
+    atencao = []
+    for lic in licitacoes:
+        fim = vigencia_efetiva(lic)
+        if not fim:
+            continue
+        if fim < hoje:
+            encerrados += 1
+            continue
+        vigentes += 1
+        dias = (fim - hoje).days
+        if dias <= 90:
+            a_vencer += 1
+            atencao.append({
+                "ordem": fim.isoformat(), "edital": lic.edital, "orgao": lic.orgao_licitante,
+                "vigencia": data_br(fim), "dias": dias, "valor": num(lic.valor_total_contrato),
+            })
+    atencao.sort(key=lambda a: a["ordem"])
+    dados["financeiro"] = {
+        "valor_contratado": valor_contratado,
+        "contratos_com_valor": len(valores),
+        "ticket_medio": valor_contratado / len(valores) if valores else 0,
+    }
+    dados["contratos"] = {"vigentes": vigentes, "a_vencer_90": a_vencer, "encerrados": encerrados}
+    dados["atencao_diretoria"] = atencao[:5]
+
+    # ---- Próximas licitações em que vamos participar ---------------------------
+    proximas = sorted(
+        (l for l in licitacoes if l.participacao == "sim" and l.data_licitacao and l.data_licitacao >= hoje),
+        key=lambda l: (l.data_licitacao, l.horario_licitacao or ""),
+    )
+    dados["proximas"] = [
+        {
+            "data": data_br(l.data_licitacao), "horario": l.horario_licitacao or "",
+            "edital": l.edital, "orgao": l.orgao_licitante,
+            "plataforma": (l.plataforma_outra if l.plataforma == "outros" else l.plataforma) or "",
+        }
+        for l in proximas[:6]
+    ]
+
+    # ---- Distribuições --------------------------------------------------------
+    def contar_por(funcao):
+        contagem = {}
+        for lic in licitacoes:
+            nome = funcao(lic) or "Não informado"
+            contagem[nome] = contagem.get(nome, 0) + 1
+        return ranking(contagem)
+
+    dados["por_tipo"] = contar_por(lambda l: TIPOS_LICITACAO.get(l.tipo_processo, l.tipo_processo))
+    dados["por_objeto"] = contar_por(lambda l: OBJETOS_LICITACAO.get(l.objeto, l.objeto))
+    dados["por_uf"] = contar_por(lambda l: l.uf)[:10]
+    dados["por_plataforma"] = contar_por(
+        lambda l: (l.plataforma_outra or "Outras") if l.plataforma == "outros" else l.plataforma
+    )[:8]
+
+    # ---- Esclarecimento, impugnação, recursos e contrarrazão ------------------
+    def bloco(campo):
+        resultado = {"total": 0, "deferido": 0, "parcialmente_deferido": 0, "indeferido": 0, "sem_resultado": 0}
+        for lic in licitacoes:
+            if getattr(lic, campo) != "sim":
+                continue
+            resultado["total"] += 1
+            chave = getattr(lic, campo + "_resultado") or "sem_resultado"
+            resultado[chave if chave in resultado else "sem_resultado"] += 1
+        return resultado
+
+    dados["juridico"] = {
+        "esclarecimento": sum(1 for l in licitacoes if l.esclarecimento == "sim"),
+        "impugnacao": bloco("impugnacao"),
+        "recursos": bloco("recursos"),
+        "contrarrazao": bloco("contrarrazao"),
+    }
+
+    # ---- Órgãos licitantes ----------------------------------------------------
+    orgaos = {}
+    for lic in licitacoes:
+        acumulado = orgaos.setdefault(lic.orgao_licitante, {"qtd": 0, "ganhas": 0, "valor": 0.0})
+        acumulado["qtd"] += 1
+        if situacoes[lic.id] in ("vencida", "parcial"):
+            acumulado["ganhas"] += 1
+        acumulado["valor"] += num(lic.valor_total_contrato)
+    dados["orgaos"] = [
+        {"nome": nome, "qtd": v["qtd"], "ganhas": v["ganhas"], "valor": round(v["valor"], 2)}
+        for nome, v in sorted(orgaos.items(), key=lambda kv: (-kv[1]["qtd"], -kv[1]["valor"], chave_alfabetica(kv[0])))[:10]
+    ]
+
+    # ---- Valor por produto (planilha de resumo do resultado) --------------------
+    produtos = {}
+    for lic in licitacoes:
+        for resumo in lic.resumos:
+            nome = PRODUTOS_RESUMO.get(resumo.produto, resumo.produto or "Não informado")
+            valor = num(resumo.valor_total) or num(resumo.quantidade) * num(resumo.ticket_medio)
+            produtos[nome] = produtos.get(nome, 0.0) + valor
+    dados["produtos"] = [
+        {"nome": nome, "valor": round(valor, 2)}
+        for nome, valor in sorted(produtos.items(), key=lambda kv: (-kv[1], chave_alfabetica(kv[0])))
+    ]
+
+    # ---- Evolução mensal (últimos 12 meses, pela data da licitação) ---------------
+    meses = []
+    ano, mes = hoje.year, hoje.month
+    for _ in range(12):
+        meses.append((ano, mes))
+        mes -= 1
+        if mes == 0:
+            ano, mes = ano - 1, 12
+    meses.reverse()
+    evolucao = []
+    for ano, mes in meses:
+        do_mes = [l for l in licitacoes if l.data_licitacao and (l.data_licitacao.year, l.data_licitacao.month) == (ano, mes)]
+        evolucao.append({
+            "label": f"{MESES_ABREVIADOS[mes - 1]}/{str(ano)[2:]}",
+            "qtd": len(do_mes),
+            "participadas": sum(1 for l in do_mes if l.participacao == "sim"),
+            "ganhas": sum(1 for l in do_mes if situacoes[l.id] in ("vencida", "parcial")),
+        })
+    dados["evolucao_mensal"] = evolucao
+
+    return dados
+
+
 @app.route("/panorama-juridico")
 @login_required
 def panorama_juridico():
@@ -2983,7 +3243,7 @@ def panorama_juridico():
     # "civel_trabalhista" é o único tipo que junta mais de uma origem de
     # cadastro (Cível + Trabalhista) - não existe um "todos" genérico que
     # some literalmente todos os tipos de processo do sistema.
-    tipos_processo_validos = {"civel", "trabalhista", "civel_trabalhista", "civel_recuperacao"}
+    tipos_processo_validos = {"civel", "trabalhista", "civel_trabalhista", "civel_recuperacao", "licitatorio"}
     tipo_param = request.args.get("tipo")
     if tipo_param not in tipos_processo_validos:
         return render_template("panorama_juridico.html", mostrar_menu=True)
@@ -2996,6 +3256,14 @@ def panorama_juridico():
         "data_inicio": data_inicio.isoformat() if data_inicio else "",
         "data_fim": data_fim.isoformat() if data_fim else "",
     }
+
+    # Licitatório tem análise própria (licitações, itens, contratos) - ver
+    # montar_panorama_licitatorio().
+    if tipo_selecionado == "licitatorio":
+        return render_template(
+            "panorama_licitatorio.html", dados=montar_panorama_licitatorio(data_inicio, data_fim),
+            tipo_selecionado=tipo_selecionado, mostrar_menu=False, **periodo,
+        )
 
     # Recuperação de Crédito tem análise própria (empresa credora: carteira,
     # recuperado, acordos, inadimplência) - ver montar_panorama_recuperacao().
@@ -3032,6 +3300,15 @@ def panorama_juridico():
         for campo, valor in filtros.items():
             query = query.filter(getattr(Processo, campo) == valor)
         return query.count()
+
+    # Exposição em aberto = VALOR DA PROVISÃO do processo. Quando ele não foi
+    # informado (processos antigos e cíveis, que não têm o campo), vale o
+    # valor da causa. exposicao_do() faz a mesma regra para um processo já
+    # carregado em Python.
+    valor_exposicao = func.coalesce(Processo.valor_provisao, Processo.valor_causa)
+
+    def exposicao_do(processo):
+        return processo.valor_provisao if processo.valor_provisao is not None else processo.valor_causa
 
     def somar(coluna, **filtros):
         """Soma uma coluna numérica (ex: Processo.valor_causa) para os
@@ -3078,7 +3355,7 @@ def panorama_juridico():
     #    Economizado   = soma do campo "economia_gerada".
     #    Ajuste essa régua livremente se a definição da diretoria for outra.
     # ------------------------------------------------------------------
-    provisionado = somar(Processo.valor_causa, status="ativo")
+    provisionado = somar(valor_exposicao, status="ativo")
     valor_pago_total = somar(Processo.valor_final)
     gasto = (
         valor_pago_total
@@ -3104,7 +3381,7 @@ def panorama_juridico():
     dados["risco"] = {
         nivel: {
             "qtd": contar(status="ativo", risco=nivel),
-            "valor": somar(Processo.valor_causa, status="ativo", risco=nivel),
+            "valor": somar(valor_exposicao, status="ativo", risco=nivel),
         }
         for nivel in ["possivel", "provavel", "remoto"]
     }
@@ -3166,7 +3443,7 @@ def panorama_juridico():
 
     # ------------------------------------------------------------------
     # 4b. MATRIZ DE RISCO - Provável/Possível/Remoto x Baixo/Médio/Alto
-    #     impacto, calculado pelo valor da causa (só processos ativos).
+    #     impacto, calculado pelo valor da provisão (só processos ativos).
     #     Faixas: Baixo < R$50k · Médio R$50k-200k · Alto > R$200k
     # ------------------------------------------------------------------
     def faixa_impacto(valor):
@@ -3181,7 +3458,7 @@ def panorama_juridico():
     ativos = query_base().filter_by(status="ativo").all()
     for p in ativos:
         if p.risco in matriz:
-            matriz[p.risco][faixa_impacto(p.valor_causa)] += 1
+            matriz[p.risco][faixa_impacto(exposicao_do(p))] += 1
     dados["matriz_risco"] = matriz
 
     # ------------------------------------------------------------------
@@ -3190,7 +3467,7 @@ def panorama_juridico():
     # ------------------------------------------------------------------
     alertas_processos = (
         query_base().filter_by(status="ativo", risco="provavel")
-        .order_by(Processo.valor_causa.desc())
+        .order_by(valor_exposicao.desc())
         .limit(5)
         .all()
     )
@@ -3205,7 +3482,7 @@ def panorama_juridico():
             motivo = (p.tipo_acao or "").replace("_", " ").title() or "—"
         alertas.append({
             "numero_processo": p.numero_processo,
-            "valor_causa": float(p.valor_causa or 0),
+            "valor_exposicao": float(exposicao_do(p) or 0),
             "motivo": motivo,
         })
     dados["atencao_diretoria"] = alertas
@@ -3216,7 +3493,7 @@ def panorama_juridico():
     top_cr_query = db.session.query(
         Processo.centro_resultado,
         func.count(Processo.id),
-        func.coalesce(func.sum(Processo.valor_causa), 0),
+        func.coalesce(func.sum(valor_exposicao), 0),
     ).filter(
         Processo.status == "ativo",
         Processo.centro_resultado.isnot(None),
@@ -3228,7 +3505,7 @@ def panorama_juridico():
     top_cr = (
         top_cr_query
         .group_by(Processo.centro_resultado)
-        .order_by(func.sum(Processo.valor_causa).desc())
+        .order_by(func.sum(valor_exposicao).desc())
         .limit(6)
         .all()
     )

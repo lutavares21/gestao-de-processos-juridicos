@@ -122,9 +122,20 @@
                 <label for="valor_causa_display">Valor da causa (R$)</label>
                 <input type="text" inputmode="numeric" id="valor_causa_display" placeholder="R$ 0,00"
                        value="{{ p.valor_causa|moeda if p.valor_causa is not none else '' }}"
-                       data-alvo="valor_causa" oninput="formatarDinheiro(this)">
+                       data-alvo="valor_causa" oninput="formatarDinheiro(this); sincronizarProvisao()">
                 <input type="hidden" id="valor_causa" name="valor_causa" value="{{ p.valor_causa if p.valor_causa is not none else '' }}">
               </div>
+              {% if eh_trabalhista %}
+              {# Processo antigo, sem provisão informada: mostra o valor da causa, que é o que o Panorama já usava. #}
+              {% set provisao = p.valor_provisao if p.valor_provisao is not none else p.valor_causa %}
+              <div class="campo">
+                <label for="valor_provisao_display">Valor da provisão (R$)</label>
+                <input type="text" inputmode="numeric" id="valor_provisao_display" placeholder="R$ 0,00"
+                       value="{{ provisao|moeda if provisao is not none else '' }}"
+                       data-alvo="valor_provisao" oninput="provisaoAlteradaPeloUsuario(this)">
+                <input type="hidden" id="valor_provisao" name="valor_provisao" value="{{ provisao if provisao is not none else '' }}">
+              </div>
+              {% endif %}
             </div>
             <div class="linha">
               <div class="campo">
@@ -640,6 +651,33 @@
       const valor = parseInt(digitos, 10) / 100;
       campoTexto.value = 'R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       if (campoOculto) campoOculto.value = valor.toFixed(2);
+    }
+
+    // A provisão só acompanha o valor da causa enquanto os dois forem iguais
+    // (ao abrir a página, se já forem diferentes, ela foi alterada à mão).
+    let provisaoEditadaManualmente = (function () {
+      const causa = document.getElementById('valor_causa');
+      const provisao = document.getElementById('valor_provisao');
+      if (!provisao) return false;
+      return Math.abs((parseFloat(provisao.value) || 0) - (parseFloat(causa.value) || 0)) > 0.004;
+    })();
+
+    // VALOR DA PROVISÃO: enquanto o operador não mexer nele, repete o VALOR DA
+    // CAUSA. Se ele digitar um valor próprio, deixa de acompanhar; se apagar o
+    // campo, volta a repetir o valor da causa.
+    function sincronizarProvisao() {
+      if (provisaoEditadaManualmente) return;
+      const provisaoTexto = document.getElementById('valor_provisao_display');
+      const provisaoOculto = document.getElementById('valor_provisao');
+      if (!provisaoTexto || !provisaoOculto) return;
+      provisaoTexto.value = document.getElementById('valor_causa_display').value;
+      provisaoOculto.value = document.getElementById('valor_causa').value;
+    }
+
+    function provisaoAlteradaPeloUsuario(campoTexto) {
+      formatarDinheiro(campoTexto);
+      provisaoEditadaManualmente = campoTexto.value !== '';
+      if (!provisaoEditadaManualmente) sincronizarProvisao();
     }
 
     // Converte um texto já formatado como dinheiro (ex.: "R$ 1.234,56") em número puro (1234.56)

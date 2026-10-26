@@ -127,6 +127,10 @@
           <div class="linha">
             {{ cv('Data de distribuição', p.data_distribuicao.strftime('%d/%m/%Y') if p.data_distribuicao else '') }}
             {{ cv('Valor da causa (R$)', p.valor_causa|moeda if p.valor_causa is not none else '') }}
+            {% if eh_trabalhista %}
+            {% set provisao = p.valor_provisao if p.valor_provisao is not none else p.valor_causa %}
+            {{ cv('Valor da provisão (R$)', provisao|moeda if provisao is not none else '') }}
+            {% endif %}
           </div>
           <div class="linha">
             {{ cv('Próxima audiência', p.proxima_audiencia.strftime('%d/%m/%Y') if p.proxima_audiencia else '') }}

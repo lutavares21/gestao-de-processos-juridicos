@@ -110,8 +110,14 @@
               <div class="campo">
                 <label for="valor_causa_display">Valor da causa (R$)</label>
                 <input type="text" inputmode="numeric" id="valor_causa_display" placeholder="R$ 0,00"
-                       data-alvo="valor_causa" oninput="formatarDinheiro(this)">
+                       data-alvo="valor_causa" oninput="formatarDinheiro(this); sincronizarProvisao()">
                 <input type="hidden" id="valor_causa" name="valor_causa">
+              </div>
+              <div class="campo">
+                <label for="valor_provisao_display">Valor da provisão (R$)</label>
+                <input type="text" inputmode="numeric" id="valor_provisao_display" placeholder="R$ 0,00"
+                       data-alvo="valor_provisao" oninput="provisaoAlteradaPeloUsuario(this)">
+                <input type="hidden" id="valor_provisao" name="valor_provisao">
               </div>
             </div>
             <div class="linha">
@@ -594,6 +600,26 @@
       const valor = parseInt(digitos, 10) / 100;
       campoTexto.value = 'R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       if (campoOculto) campoOculto.value = valor.toFixed(2);
+    }
+
+    let provisaoEditadaManualmente = false;
+
+    // VALOR DA PROVISÃO: enquanto o operador não mexer nele, repete o VALOR DA
+    // CAUSA. Se ele digitar um valor próprio, deixa de acompanhar; se apagar o
+    // campo, volta a repetir o valor da causa.
+    function sincronizarProvisao() {
+      if (provisaoEditadaManualmente) return;
+      const provisaoTexto = document.getElementById('valor_provisao_display');
+      const provisaoOculto = document.getElementById('valor_provisao');
+      if (!provisaoTexto || !provisaoOculto) return;
+      provisaoTexto.value = document.getElementById('valor_causa_display').value;
+      provisaoOculto.value = document.getElementById('valor_causa').value;
+    }
+
+    function provisaoAlteradaPeloUsuario(campoTexto) {
+      formatarDinheiro(campoTexto);
+      provisaoEditadaManualmente = campoTexto.value !== '';
+      if (!provisaoEditadaManualmente) sincronizarProvisao();
     }
 
     // Converte um texto já formatado como dinheiro (ex.: "R$ 1.234,56") em número puro (1234.56)

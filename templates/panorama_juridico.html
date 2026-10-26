@@ -51,12 +51,12 @@
                   <span class="titulo">Processo Cível + Processo Trabalhista</span>
                 </a>
 
-                <div class="menu-panorama-card off" title="Em breve.">
+                <a class="menu-panorama-card" href="{{ url_for('panorama_juridico', tipo='licitatorio') }}">
                   <span class="menu-panorama-icone">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="1.2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
                   </span>
                   <span class="titulo">Processo Licitatório</span>
-                </div>
+                </a>
 
                 <a class="menu-panorama-card" href="{{ url_for('panorama_juridico', tipo='trabalhista') }}">
                   <span class="menu-panorama-icone">
@@ -114,7 +114,7 @@
               <option value="civel" {% if tipo_selecionado == 'civel' %}selected{% endif %}>Cível</option>
               <option value="civel_recuperacao">Cível - Recuperação de Crédito</option>
               <option value="civel_trabalhista" {% if tipo_selecionado == 'civel_trabalhista' %}selected{% endif %}>Cível + Trabalhista</option>
-              <option value="licitatorio" disabled title="Em breve.">Processo Licitatório</option>
+              <option value="licitatorio">Processo Licitatório</option>
               <option value="trabalhista" {% if tipo_selecionado == 'trabalhista' %}selected{% endif %}>Trabalhista</option>
               <option value="tributario" disabled title="Em breve.">Processo Tributário</option>
             </select>
@@ -140,7 +140,7 @@
           <div class="dash-alerta-linha">
             <span class="num">{{ a.numero_processo }}</span>
             <span class="motivo">{{ a.motivo }}</span>
-            {% set texto_moeda = a.valor_causa|moeda %}
+            {% set texto_moeda = a.valor_exposicao|moeda %}
             <span class="val">
               <span>{{ texto_moeda.split(' ')[0] }}</span>
               <span>{{ texto_moeda.split(' ', 1)[1] }}</span>
@@ -183,7 +183,7 @@
           <div class="dash-kpi destaque-ouro">
             <div class="dash-kpi-label">Exposição em aberto</div>
             <div class="dash-kpi-valor">{{ dados.financeiro.provisionado|moeda }}</div>
-            <div class="dash-kpi-nota">Valor da causa · processos ativos</div>
+            <div class="dash-kpi-nota">Valor da provisão · processos ativos</div>
           </div>
           <div class="dash-kpi destaque-vermelho">
             <div class="dash-kpi-label">Gasto realizado</div>
@@ -296,7 +296,7 @@
                 <col style="width:59%;">
               </colgroup>
               <thead>
-                <tr><th style="text-align:center;">Centro de resultado</th><th style="text-align:center;">Processos ativos</th><th><div style="width:155px; margin-left:auto; text-align:center;">Valor da causa</div></th></tr>
+                <tr><th style="text-align:center;">Centro de resultado</th><th style="text-align:center;">Processos ativos</th><th><div style="width:155px; margin-left:auto; text-align:center;">Valor da provisão</div></th></tr>
               </thead>
               <tbody>
                 {% for item in dados.top_centros_resultado %}
