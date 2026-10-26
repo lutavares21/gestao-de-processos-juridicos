@@ -194,9 +194,10 @@
                 <th>Risco</th>
                 <th>Grau/Instância</th>
                 <th>Resultado</th>
-                <th>Tempo de tramitação</th>
-                <th>Valor da causa</th>
-                <th>Ações</th>
+                <th style="text-align:left;">Tempo de tramitação</th>
+                <th style="text-align:left;">Valor da causa</th>
+                <th style="text-align:left;">Provisão</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -211,16 +212,29 @@
                 </td>
                 <td>{{ graus_instancia.get(p.grau_instancia, '—') }}</td>
                 <td>{{ p.resultado|title if p.resultado else '—' }}</td>
-                <td>{{ p.dias_ativos if p.dias_ativos is not none else '—' }}{{ ' dias' if p.dias_ativos is not none else '' }}</td>
-                <td>
+                <td style="text-align:left; white-space:nowrap;">{{ p.dias_ativos if p.dias_ativos is not none else '—' }}{{ ' dias' if p.dias_ativos is not none else '' }}</td>
+                <td style="text-align:left; white-space:nowrap;">
                   {% if p.valor_causa is not none %}
                   {% set texto_moeda = p.valor_causa|moeda %}
-                  <div style="display:flex; justify-content:space-between;">
+                  <div style="display:flex; justify-content:space-between; width:120px;">
                     <span>{{ texto_moeda.split(' ')[0] }}</span>
                     <span>{{ texto_moeda.split(' ', 1)[1] }}</span>
                   </div>
                   {% else %}
-                  <div style="text-align:right;">—</div>
+                  —
+                  {% endif %}
+                </td>
+                <td style="text-align:left; white-space:nowrap;">
+                  {# Provisão ainda não informada (processo antigo): vale o valor da causa, como no Panorama. #}
+                  {% set provisao = p.valor_provisao if p.valor_provisao is not none else p.valor_causa %}
+                  {% if provisao is not none %}
+                  {% set texto_moeda = provisao|moeda %}
+                  <div style="display:flex; justify-content:space-between; width:120px;">
+                    <span>{{ texto_moeda.split(' ')[0] }}</span>
+                    <span>{{ texto_moeda.split(' ', 1)[1] }}</span>
+                  </div>
+                  {% else %}
+                  —
                   {% endif %}
                 </td>
                 <td>
