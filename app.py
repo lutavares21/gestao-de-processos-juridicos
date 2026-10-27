@@ -68,6 +68,12 @@ with app.app_context():
     colunas_processos = {c["name"] for c in sa_inspect(db.engine).get_columns("processos")}
     if "valor_provisao" not in colunas_processos:
         db.session.execute(sa_text("ALTER TABLE processos ADD COLUMN valor_provisao NUMERIC(14, 2)"))
+        # Processos trabalhistas já cadastrados: a provisão começa igual ao
+        # valor da causa (feito uma vez só, junto com a criação da coluna).
+        db.session.execute(sa_text(
+            "UPDATE processos SET valor_provisao = valor_causa "
+            "WHERE origem_cadastro = 'trabalhista' AND valor_causa IS NOT NULL"
+        ))
         db.session.commit()
 
     # Colunas da tabela "licitacoes" acrescentadas depois que a tabela já
@@ -3371,7 +3377,7 @@ def panorama_juridico():
         "provisionado": provisionado,
         "gasto": gasto,
         "economizado": economizado,
-        "valor_causa_total": somar(Processo.valor_causa),
+        "valor_provisao_total": somar(valor_exposicao),
         "valor_pago_total": valor_pago_total,
     }
 
