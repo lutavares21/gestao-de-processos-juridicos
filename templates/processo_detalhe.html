@@ -46,7 +46,7 @@
   ('601','Marketing B2B'), ('700','México'), ('402','Neurelec'), ('254','Oticon Governo'),
   ('400','Oticon Medical'), ('301','Philips'), ('281','Produtos e Regulatórios'), ('249','Programa Parceria'),
   ('251','RH/Depto.Pessoal'), ('258','Sonic'), ('502','Sonic Distribuidores'), ('236','Suprimentos'),
-  ('213','Telex Licença'), ('261','TI - Informática')
+  ('213','Telex Licença'), ('261','TI - Informática'), ('244','Varejo')
 ] %}
 {% set nomes_crs = dict(crs_lista) %}
 {% set rotulos_tipo_acao = {
@@ -129,7 +129,7 @@
             {{ cv('Valor da causa (R$)', p.valor_causa|moeda if p.valor_causa is not none else '') }}
             {% if eh_trabalhista %}
             {% set provisao = p.valor_provisao if p.valor_provisao is not none else p.valor_causa %}
-            {{ cv('Valor da provisão (R$)', provisao|moeda if provisao is not none else '') }}
+            {{ cv('Valor da provisão estimada (R$)', provisao|moeda if provisao is not none else '') }}
             {% endif %}
           </div>
           <div class="linha">

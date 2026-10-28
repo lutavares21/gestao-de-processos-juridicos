@@ -146,7 +146,7 @@
                     ('601','Marketing B2B'), ('700','México'), ('402','Neurelec'), ('254','Oticon Governo'),
                     ('400','Oticon Medical'), ('301','Philips'), ('281','Produtos e Regulatórios'), ('249','Programa Parceria'),
                     ('251','RH/Depto.Pessoal'), ('258','Sonic'), ('502','Sonic Distribuidores'), ('236','Suprimentos'),
-                    ('213','Telex Licença'), ('261','TI - Informática')
+                    ('213','Telex Licença'), ('261','TI - Informática'), ('244','Varejo')
                   ] %}
                   <option value="{{ codigo }}" {% if filtros.get('centro_resultado') == codigo %}selected{% endif %}>{{ codigo }} - {{ nome }}</option>
                   {% endfor %}
@@ -196,7 +196,7 @@
                 <th>Resultado</th>
                 <th style="text-align:left;">Tempo de tramitação</th>
                 <th style="text-align:left;">Valor da causa</th>
-                <th style="text-align:left;">Provisão</th>
+                <th style="text-align:left;">Provisão estimada</th>
                 <th></th>
               </tr>
             </thead>

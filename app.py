@@ -2541,6 +2541,7 @@ CENTROS_RESULTADO = {
     "236": "236 - Suprimentos",
     "213": "213 - Telex Licença",
     "261": "261 - TI - Informática",
+    "244": "244 - Varejo",
 }
 
 TIPOS_ACAO_RECUPERACAO = {

@@ -22,7 +22,7 @@
   ('601','Marketing B2B'), ('700','México'), ('402','Neurelec'), ('254','Oticon Governo'),
   ('400','Oticon Medical'), ('301','Philips'), ('281','Produtos e Regulatórios'), ('249','Programa Parceria'),
   ('251','RH/Depto.Pessoal'), ('258','Sonic'), ('502','Sonic Distribuidores'), ('236','Suprimentos'),
-  ('213','Telex Licença'), ('261','TI - Informática')
+  ('213','Telex Licença'), ('261','TI - Informática'), ('244','Varejo')
 ] %}
 {% set codigos_cr_conhecidos = crs_lista|map(attribute=0)|list %}
 {% set rateio_codigos = p.rateio_crs|map(attribute='centro_resultado')|list %}
@@ -129,7 +129,7 @@
               {# Processo antigo, sem provisão informada: mostra o valor da causa, que é o que o Panorama já usava. #}
               {% set provisao = p.valor_provisao if p.valor_provisao is not none else p.valor_causa %}
               <div class="campo">
-                <label for="valor_provisao_display">Valor da provisão (R$)</label>
+                <label for="valor_provisao_display">Valor da provisão estimada (R$)</label>
                 <input type="text" inputmode="numeric" id="valor_provisao_display" placeholder="R$ 0,00"
                        value="{{ provisao|moeda if provisao is not none else '' }}"
                        data-alvo="valor_provisao" oninput="provisaoAlteradaPeloUsuario(this)">

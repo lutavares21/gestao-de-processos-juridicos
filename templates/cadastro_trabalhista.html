@@ -114,7 +114,7 @@
                 <input type="hidden" id="valor_causa" name="valor_causa">
               </div>
               <div class="campo">
-                <label for="valor_provisao_display">Valor da provisão (R$)</label>
+                <label for="valor_provisao_display">Valor da provisão estimada (R$)</label>
                 <input type="text" inputmode="numeric" id="valor_provisao_display" placeholder="R$ 0,00"
                        data-alvo="valor_provisao" oninput="provisaoAlteradaPeloUsuario(this)">
                 <input type="hidden" id="valor_provisao" name="valor_provisao">
@@ -230,6 +230,7 @@
                   <option value="236">236 - Suprimentos</option>
                   <option value="213">213 - Telex Licença</option>
                   <option value="261">261 - TI - Informática</option>
+                  <option value="244">244 - Varejo</option>
                   <option value="rateio">Rateio</option>
                 </select>
               </div>
@@ -282,6 +283,7 @@
                 <label><input type="checkbox" name="rateio_cr" value="236"> 236 - Suprimentos</label>
                 <label><input type="checkbox" name="rateio_cr" value="213"> 213 - Telex Licença</label>
                 <label><input type="checkbox" name="rateio_cr" value="261"> 261 - TI - Informática</label>
+                <label><input type="checkbox" name="rateio_cr" value="244"> 244 - Varejo</label>
               </div>
 
               <div id="lista_rateio_manual"></div>
