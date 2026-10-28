@@ -81,6 +81,8 @@ with app.app_context():
     # cadastro licitatório entra aqui.
     colunas_licitacoes = {c["name"] for c in sa_inspect(db.engine).get_columns("licitacoes")}
     novas_colunas_licitacoes = {
+        "telefone_2": "VARCHAR(30)",
+        "justificativa_nao_participacao": "VARCHAR(30)",
         "data_licitacao": "DATE",
         "horario_licitacao": "VARCHAR(5)",
         "plataforma": "VARCHAR(100)",
@@ -140,6 +142,11 @@ with app.app_context():
     for nome_coluna, tipo_coluna in novas_colunas_licitacoes.items():
         if nome_coluna not in colunas_licitacoes:
             db.session.execute(sa_text(f"ALTER TABLE licitacoes ADD COLUMN {nome_coluna} {tipo_coluna}"))
+
+    # Coluna "produto" da Planilha Processo Licitatório (tabela licitacao_itens).
+    colunas_itens = {c["name"] for c in sa_inspect(db.engine).get_columns("licitacao_itens")}
+    if "produto" not in colunas_itens:
+        db.session.execute(sa_text("ALTER TABLE licitacao_itens ADD COLUMN produto VARCHAR(100)"))
     db.session.commit()
 
 login_manager = LoginManager()
@@ -269,6 +276,13 @@ EMPRESAS_VENCEDORAS = {
 }
 
 # Coluna "Ampla Participação ou Exclusivo ME/EPP" da planilha do processo.
+# Justificativas de não participação (as opções reais virão da cliente).
+JUSTIFICATIVAS_NAO_PARTICIPACAO = {
+    "opcao_1": "Opção 1",
+    "opcao_2": "Opção 2",
+    "opcao_3": "Opção 3",
+}
+
 PARTICIPACAO_ITEM = {
     "ampla_participacao": "Ampla Participação",
     "exclusivo_me_epp": "Exclusivo ME/EPP",
@@ -1576,6 +1590,7 @@ def render_cadastro_licitatorio(**contexto):
         resultados_licitacao=RESULTADOS_LICITACAO,
         empresas_vencedoras=EMPRESAS_VENCEDORAS,
         participacao_item=PARTICIPACAO_ITEM,
+        justificativas_nao_participacao=JUSTIFICATIVAS_NAO_PARTICIPACAO,
         produtos_resumo=PRODUTOS_RESUMO,
         **contexto,
     )
@@ -1583,7 +1598,7 @@ def render_cadastro_licitatorio(**contexto):
 
 CAMPOS_ADITIVO = ("aditivo_data", "aditivo_final")
 CAMPOS_ITEM = (
-    "item_item", "item_quantidade", "item_marca", "item_modelo", "item_codigo",
+    "item_item", "item_quantidade", "item_produto", "item_marca", "item_modelo", "item_codigo",
     "item_unitario_inicial", "item_ultimo_lance", "item_valor_vencedor",
     "item_empresa_vencedora", "item_marca_vencedora", "item_modelo_vencedor",
     "item_participacao",
@@ -1632,6 +1647,12 @@ def cadastro_licitatorio():
         erros.append("Selecione o tipo de processo.")
     if campo("participacao") not in ("sim", "nao"):
         erros.append("Informe se haverá participação (Sim ou Não).")
+    justificativa = campo("justificativa_nao_participacao")
+    if campo("participacao") == "nao":
+        if justificativa not in JUSTIFICATIVAS_NAO_PARTICIPACAO:
+            erros.append("Selecione a justificativa da não participação.")
+    else:
+        justificativa = ""  # só vale quando a resposta é Não
     if not campo("edital"):
         erros.append("Informe o número do edital.")
     if not campo("orgao_licitante"):
@@ -1826,6 +1847,7 @@ def cadastro_licitatorio():
             ordem=i,
             item=linha["item_item"][:30] or None,
             quantidade=inteiro_valido(linha["item_quantidade"], f"Quant. da {rotulo}"),
+            produto=linha["item_produto"][:100] or None,
             marca=linha["item_marca"][:100] or None,
             modelo=linha["item_modelo"][:100] or None,
             codigo_produto=linha["item_codigo"][:60] or None,
@@ -1869,12 +1891,14 @@ def cadastro_licitatorio():
     licitacao = Licitacao(
         tipo_processo=campo("tipo_processo"),
         participacao=campo("participacao"),
+        justificativa_nao_participacao=justificativa or None,
         edital=campo("edital"),
         processo_administrativo=campo("processo_administrativo") or None,
         uasg=campo("uasg") or None,
         ano_licitacao=ano,
         orgao_licitante=campo("orgao_licitante"),
         telefone=campo("telefone") or None,
+        telefone_2=campo("telefone_2") or None,
         email=email or None,
         endereco=campo("endereco") or None,
         municipio=campo("municipio") or None,

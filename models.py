@@ -480,6 +480,8 @@ class Licitacao(db.Model):
     tipo_processo = db.Column(db.String(40), nullable=False)
     # A empresa participa da licitação? "sim" ou "nao"
     participacao = db.Column(db.String(3), nullable=False)
+    # Quando participacao == "nao": chave de JUSTIFICATIVAS_NAO_PARTICIPACAO (app.py)
+    justificativa_nao_participacao = db.Column(db.String(30))
 
     # --- Dados do órgão licitante ---
     edital = db.Column(db.String(60), nullable=False)
@@ -488,6 +490,7 @@ class Licitacao(db.Model):
     ano_licitacao = db.Column(db.Integer)
     orgao_licitante = db.Column(db.String(200), nullable=False)
     telefone = db.Column(db.String(30))
+    telefone_2 = db.Column(db.String(30))
     email = db.Column(db.String(120))
     endereco = db.Column(db.String(250))
     municipio = db.Column(db.String(100))
@@ -612,6 +615,7 @@ class LicitacaoItem(db.Model):
 
     item = db.Column(db.String(30))
     quantidade = db.Column(db.Integer)
+    produto = db.Column(db.String(100))
     marca = db.Column(db.String(100))
     modelo = db.Column(db.String(100))
     codigo_produto = db.Column(db.String(60))

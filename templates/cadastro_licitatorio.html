@@ -56,6 +56,7 @@
         <tr>
           <td><input type="text" name="item_item" maxlength="30" value="{{ linha.get('item_item', '') }}"></td>
           <td><input type="text" name="item_quantidade" inputmode="numeric" maxlength="6" pattern="[0-9]{1,6}" title="Número inteiro" value="{{ linha.get('item_quantidade', '') }}"></td>
+          <td><input type="text" name="item_produto" maxlength="100" value="{{ linha.get('item_produto', '') }}"></td>
           <td><input type="text" name="item_marca" maxlength="100" value="{{ linha.get('item_marca', '') }}"></td>
           <td><input type="text" name="item_modelo" maxlength="100" value="{{ linha.get('item_modelo', '') }}"></td>
           <td><input type="text" name="item_codigo" maxlength="60" value="{{ linha.get('item_codigo', '') }}"></td>
@@ -94,8 +95,8 @@
               {% endfor %}
             </select>
           </td>
-          <td><input type="number" name="resumo_ticket_medio" step="0.01" min="0" placeholder="0,00" value="{{ linha.get('resumo_ticket_medio', '') }}"></td>
           <td><input type="text" class="resumo-total" readonly tabindex="-1" placeholder="—"></td>
+          <td><input type="number" name="resumo_ticket_medio" step="0.01" min="0" placeholder="0,00" value="{{ linha.get('resumo_ticket_medio', '') }}"></td>
           <td>
             <select name="resumo_empresa_vencedora">
               <option value="">Selecione</option>
@@ -135,18 +136,41 @@
             {% endfor %}
           </select>
         </div>
+        <div class="campo">
+          <label for="ano_licitacao">Ano da licitação</label>
+          <input type="text" id="ano_licitacao" name="ano_licitacao" inputmode="numeric" maxlength="4" placeholder="2026" value="{{ val.get('ano_licitacao', '') }}">
+        </div>
       </div>
     </div>
 
-    <!-- PARTICIPAÇÃO (em cima da caixa de Dados do Órgão Licitante) -->
-    <div style="display:flex; align-items:center; justify-content:flex-end; gap:18px; flex-wrap:wrap; margin:22px 0 10px;">
-      <span class="rotulo-secao" style="margin:0;">Participação</span>
-      <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
-        <input type="radio" name="participacao" value="sim" required style="width:auto;" {{ 'checked' if val.get('participacao') == 'sim' }}> SIM
-      </label>
-      <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
-        <input type="radio" name="participacao" value="nao" required style="width:auto;" {{ 'checked' if val.get('participacao') == 'nao' }}> NÃO
-      </label>
+    <!-- PARTICIPAÇÃO -->
+    <div class="secao">
+      <h2>Participação</h2>
+      <div class="linha">
+        <div class="campo">
+          <label>Haverá participação?</label>
+          <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap; min-height:42px;">
+            <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+              <input type="radio" name="participacao" value="sim" required style="width:auto;" {{ 'checked' if val.get('participacao') == 'sim' }}> SIM
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+              <input type="radio" name="participacao" value="nao" required style="width:auto;" {{ 'checked' if val.get('participacao') == 'nao' }}> NÃO
+            </label>
+          </div>
+        </div>
+      </div>
+      <!-- Só aparece quando a resposta é NÃO -->
+      <div class="linha" id="bloco-justificativa-nao-participacao" style="display:none;">
+        <div class="campo">
+          <label for="justificativa_nao_participacao">Justificativa da não participação</label>
+          <select id="justificativa_nao_participacao" name="justificativa_nao_participacao">
+            <option value="">Selecione a justificativa</option>
+            {% for codigo, nome in justificativas_nao_participacao.items() %}
+            <option value="{{ codigo }}" {{ 'selected' if val.get('justificativa_nao_participacao') == codigo }}>{{ nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
     </div>
 
     <!-- DADOS DO ÓRGÃO LICITANTE -->
@@ -165,26 +189,26 @@
           <label for="uasg">UASG</label>
           <input type="text" id="uasg" name="uasg" maxlength="20" value="{{ val.get('uasg', '') }}">
         </div>
-        <div class="campo">
-          <label for="ano_licitacao">Ano da licitação</label>
-          <input type="text" id="ano_licitacao" name="ano_licitacao" inputmode="numeric" maxlength="4" placeholder="2026" value="{{ val.get('ano_licitacao', '') }}">
+        <div class="campo campo-grande">
+          <label for="orgao_licitante">Órgão licitante</label>
+          <input type="text" id="orgao_licitante" name="orgao_licitante" required maxlength="200" placeholder="Ex.: Prefeitura de Montes Claros" value="{{ val.get('orgao_licitante', '') }}">
         </div>
       </div>
 
       <div class="linha">
         <div class="campo campo-grande">
-          <label for="orgao_licitante">Órgão licitante</label>
-          <input type="text" id="orgao_licitante" name="orgao_licitante" required maxlength="200" placeholder="Ex.: Prefeitura de Montes Claros" value="{{ val.get('orgao_licitante', '') }}">
+          <label for="email">E-mail</label>
+          <input type="text" id="email" name="email" inputmode="email" maxlength="120"
+                 pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Informe um e-mail válido, como nome@orgao.gov.br"
+                 value="{{ val.get('email', '') }}">
         </div>
         <div class="campo">
           <label for="telefone">Telefone</label>
           <input type="text" id="telefone" name="telefone" inputmode="tel" maxlength="30" value="{{ val.get('telefone', '') }}">
         </div>
         <div class="campo">
-          <label for="email">E-mail</label>
-          <input type="text" id="email" name="email" inputmode="email" maxlength="120"
-                 pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Informe um e-mail válido, como nome@orgao.gov.br"
-                 value="{{ val.get('email', '') }}">
+          <label for="telefone_2">Telefone 2</label>
+          <input type="text" id="telefone_2" name="telefone_2" inputmode="tel" maxlength="30" value="{{ val.get('telefone_2', '') }}">
         </div>
       </div>
 
@@ -273,9 +297,22 @@
         </div>
       </div>
 
+      <!-- Datas de acompanhamento: as três linhas usam a mesma grade (data | horário),
+           então as caixas ficam alinhadas entre si. A faixa verde da próxima data
+           avança 14px para a esquerda para compensar o próprio recuo. -->
+      <style>
+        .linha-acomp { display:grid; grid-template-columns:minmax(0, 340px) minmax(0, 200px); gap:16px; align-items:end; margin-bottom:14px; }
+        .linha-acomp .campo { min-width:0; margin:0; }
+        .linha-acomp label { white-space:nowrap; }
+        @media (max-width: 640px) {
+          .linha-acomp { grid-template-columns:1fr 1fr; }
+          .linha-acomp label { white-space:normal; }
+        }
+      </style>
+
       <!-- Próxima data: em destaque -->
-      <div style="background:#e8f5ec; border:1px solid #cfe8d7; border-radius:8px; padding:12px 14px; margin:6px 0 14px;">
-        <div class="linha" style="max-width:560px; margin-bottom:0;">
+      <div style="background:#e8f5ec; border:1px solid #cfe8d7; border-radius:8px; padding:12px 14px; margin:6px -14px 14px;">
+        <div class="linha-acomp" style="margin-bottom:0;">
           <div class="campo">
             <label for="proxima_data_acompanhamento">Próxima data de acompanhamento</label>
             <input type="date" id="proxima_data_acompanhamento" name="proxima_data_acompanhamento" value="{{ val.get('proxima_data_acompanhamento', '') }}">
@@ -287,7 +324,7 @@
         </div>
       </div>
 
-      <div class="linha" style="max-width:560px;">
+      <div class="linha-acomp">
         <div class="campo">
           <label for="ultima_data_acompanhamento">Última data de acompanhamento</label>
           <input type="date" id="ultima_data_acompanhamento" name="ultima_data_acompanhamento" value="{{ val.get('ultima_data_acompanhamento', '') }}">
@@ -298,7 +335,7 @@
         </div>
       </div>
 
-      <div class="linha" style="max-width:560px;">
+      <div class="linha-acomp">
         <div class="campo">
           <label for="penultima_data_acompanhamento">Penúltima data de acompanhamento</label>
           <input type="date" id="penultima_data_acompanhamento" name="penultima_data_acompanhamento" value="{{ val.get('penultima_data_acompanhamento', '') }}">
@@ -335,7 +372,7 @@
       {{ item_quantidade('receptor_por_aasi', 'Receptor', val) }}
       <div style="display:flex; align-items:center; flex-wrap:wrap; gap:10px 14px; margin-bottom:18px; min-height:40px;">
         <span class="rotulo-secao" style="margin:0; min-width:170px;">Massa Dreve</span>
-        <input type="text" id="massa_dreve" name="massa_dreve" maxlength="100" style="width:260px;" value="{{ val.get('massa_dreve', '') }}">
+        <input type="text" id="massa_dreve" name="massa_dreve" maxlength="100" style="width:90px;" value="{{ val.get('massa_dreve', '') }}">
       </div>
       {{ item_sim_nao('molde', 'Molde', false, val, resultados_licitacao) }}
       {{ item_sim_nao('adaptacao_aberta', 'Adaptação aberta', false, val, resultados_licitacao) }}
@@ -517,6 +554,7 @@
             <tr>
               <th class="col-p">Itens</th>
               <th class="col-p">Quant.</th>
+              <th class="col-m">Produto</th>
               <th class="col-m">Marca</th>
               <th class="col-m">Modelo</th>
               <th class="col-m">Código produto</th>
@@ -549,8 +587,8 @@
             <tr>
               <th class="col-p">Quantidade</th>
               <th class="col-g">Produto</th>
-              <th class="col-m">Ticket médio</th>
               <th class="col-m">Valor total</th>
+              <th class="col-m">Ticket médio</th>
               <th class="col-gg">Empresa vencedora</th>
               <th class="col-acao"></th>
             </tr>
@@ -581,6 +619,19 @@
     }
     estado.addEventListener('change', atualizarUF);
     atualizarUF();
+
+    // Participação "Não": abre a justificativa (obrigatória) e a limpa se voltar para "Sim".
+    const blocoJustificativa = document.getElementById('bloco-justificativa-nao-participacao');
+    const campoJustificativa = document.getElementById('justificativa_nao_participacao');
+    const radiosParticipacao = document.querySelectorAll('input[name="participacao"]');
+    function atualizarParticipacao() {
+      const nao = document.querySelector('input[name="participacao"][value="nao"]').checked;
+      blocoJustificativa.style.display = nao ? '' : 'none';
+      campoJustificativa.required = nao;
+      if (!nao) campoJustificativa.value = '';
+    }
+    radiosParticipacao.forEach(function (r) { r.addEventListener('change', atualizarParticipacao); });
+    atualizarParticipacao();
 
     // Plataforma "Outros": abre o campo para digitar o nome da plataforma.
     const plataforma = document.getElementById('plataforma');
