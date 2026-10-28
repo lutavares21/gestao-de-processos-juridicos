@@ -330,7 +330,7 @@
           <div class="dash-painel">
             <div class="dash-secao-titulo">Pedidos mais recorrentes - Trabalhista</div>
             {% if dados.pedidos_recorrentes_trabalhista %}
-            <table class="dash-tabela">
+            <table class="dash-tabela{{ ' pedidos-recolhidos' if dados.pedidos_recorrentes_trabalhista|length > dados.limite_top_pedidos else '' }}" id="tabelaPedidosTrabalhista">
               <colgroup>
                 <col style="width:38%;">
                 <col style="width:14%;">
@@ -349,7 +349,7 @@
               </thead>
               <tbody>
                 {% for item in dados.pedidos_recorrentes_trabalhista %}
-                <tr>
+                <tr{% if not item.top %} class="pedido-extra"{% endif %}>
                   <td>{{ item.item }}</td>
                   <td style="text-align:center;">{{ item.total }}</td>
                   <td style="text-align:center; {% if item.pct_deferido >= 50 %}color:var(--dash-vermelho); font-weight:700;{% endif %}">{{ item.pct_deferido }}%</td>
@@ -359,6 +359,12 @@
                 {% endfor %}
               </tbody>
             </table>
+            {% if dados.pedidos_recorrentes_trabalhista|length > dados.limite_top_pedidos %}
+            <div style="text-align:center; margin-top:10px;">
+              <button type="button" class="btn-filtrar btn-ver-todos" data-alvo="tabelaPedidosTrabalhista"
+                      data-total="{{ dados.pedidos_recorrentes_trabalhista|length }}" data-limite="{{ dados.limite_top_pedidos }}">Ver todos ({{ dados.pedidos_recorrentes_trabalhista|length }})</button>
+            </div>
+            {% endif %}
             <div class="dash-vazio" style="text-align:left; padding-top:10px; color:#000;">% deferido = pedido julgado a favor do reclamante.</div>
             <div class="dash-legenda-item" style="margin-top:4px; color:#000;"><span class="dash-legenda-cor" style="background:var(--dash-vermelho)"></span>Percentual destacado indica índice de deferimento igual ou superior a 50%.</div>
             {% else %}
@@ -371,7 +377,7 @@
           <div class="dash-painel">
             <div class="dash-secao-titulo">Pedidos mais recorrentes - Cível</div>
             {% if dados.pedidos_recorrentes_civel %}
-            <table class="dash-tabela">
+            <table class="dash-tabela{{ ' pedidos-recolhidos' if dados.pedidos_recorrentes_civel|length > dados.limite_top_pedidos else '' }}" id="tabelaPedidosCivel">
               <colgroup>
                 <col style="width:56%;">
                 <col style="width:18%;">
@@ -386,7 +392,7 @@
               </thead>
               <tbody>
                 {% for item in dados.pedidos_recorrentes_civel %}
-                <tr>
+                <tr{% if not item.top %} class="pedido-extra"{% endif %}>
                   <td>{{ item.item }}</td>
                   <td style="text-align:center;">{{ item.total }}</td>
                   <td style="text-align:center; {% if item.pct_desfavoravel >= 50 %}color:var(--dash-vermelho); font-weight:700;{% endif %}">{{ item.pct_desfavoravel }}%</td>
@@ -394,6 +400,12 @@
                 {% endfor %}
               </tbody>
             </table>
+            {% if dados.pedidos_recorrentes_civel|length > dados.limite_top_pedidos %}
+            <div style="text-align:center; margin-top:10px;">
+              <button type="button" class="btn-filtrar btn-ver-todos" data-alvo="tabelaPedidosCivel"
+                      data-total="{{ dados.pedidos_recorrentes_civel|length }}" data-limite="{{ dados.limite_top_pedidos }}">Ver todos ({{ dados.pedidos_recorrentes_civel|length }})</button>
+            </div>
+            {% endif %}
             <div class="dash-vazio" style="text-align:left; padding-top:10px;">% desfavorável = processos com esse pedido cuja sentença foi procedente ou parcialmente procedente.</div>
             <div class="dash-legenda-item" style="margin-top:4px;"><span class="dash-legenda-cor" style="background:var(--dash-vermelho)"></span>Percentual destacado indica índice de sentença desfavorável igual ou superior a 50%.</div>
             {% else %}
@@ -403,6 +415,22 @@
           {% endif %}
 
         </div>
+
+        <style>
+          .pedidos-recolhidos .pedido-extra { display: none; }
+        </style>
+        <script>
+          // "Ver todos" / "Mostrar só os principais" nas tabelas de pedidos recorrentes
+          document.querySelectorAll('.btn-ver-todos').forEach(function (botao) {
+            botao.addEventListener('click', function () {
+              var tabela = document.getElementById(botao.dataset.alvo);
+              var recolhida = tabela.classList.toggle('pedidos-recolhidos');
+              botao.textContent = recolhida
+                ? 'Ver todos (' + botao.dataset.total + ')'
+                : 'Mostrar só os ' + botao.dataset.limite + ' principais';
+            });
+          });
+        </script>
 
       
 {% endif %}

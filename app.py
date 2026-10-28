@@ -2997,6 +2997,9 @@ def chave_alfabetica(texto):
 # ganho; qualquer outra empresa conta como concorrente que venceu.
 EMPRESA_PROPRIA_LICITACAO = "atomed"
 
+# Quantos pedidos/verbas aparecem de início em "Pedidos mais recorrentes".
+LIMITE_TOP_PEDIDOS = 12
+
 MESES_ABREVIADOS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 
 
@@ -3614,6 +3617,18 @@ def panorama_juridico():
         for descricao, total, desfavoraveis in pedidos_civel_query
     ]
     dados["pedidos_recorrentes_civel"].sort(key=lambda p: chave_alfabetica(p["item"]))
+
+    # Os painéis mostram só os 12 pedidos mais frequentes; o botão "Ver todos"
+    # (no template) abre a lista completa. Aqui só marcamos quem está no Top 12
+    # (empate de quantidade: ordem alfabética); a ordem de exibição continua
+    # alfabética.
+    dados["limite_top_pedidos"] = LIMITE_TOP_PEDIDOS
+    for chave in ("pedidos_recorrentes_trabalhista", "pedidos_recorrentes_civel"):
+        lista = dados[chave]
+        ranking = sorted(lista, key=lambda p: (-p["total"], chave_alfabetica(p["item"])))
+        top = {id(p) for p in ranking[:LIMITE_TOP_PEDIDOS]}
+        for p in lista:
+            p["top"] = id(p) in top
 
     return render_template(
         "panorama_juridico.html", dados=dados, tipo_selecionado=tipo_selecionado,
