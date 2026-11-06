@@ -611,13 +611,34 @@ def _estilos():
         "borda": Border(left=lado, right=lado, top=lado, bottom=lado),
         "topo_quebra": Alignment(vertical="top", wrap_text=True),
         "centro": Alignment(horizontal="center", vertical="center", wrap_text=True),
+        # Alinhamento por tipo de dado (usado na planilha de vários processos)
+        "alin_texto": Alignment(horizontal="left", vertical="center", wrap_text=True),
+        "alin_longo": Alignment(horizontal="left", vertical="top", wrap_text=True),
+        "alin_data": Alignment(horizontal="center", vertical="center"),
+        "alin_numero": Alignment(horizontal="right", vertical="center"),
+        "zebra": PatternFill("solid", start_color="FAF8F4"),
     }
 
 
-def _grava(celula, valor, formato, est):
-    """Escreve o valor na célula com o formato certo (data, moeda...)."""
+def _grava(celula, valor, formato, est, tabular=True, zebra=False):
+    """Escreve o valor na célula com o formato certo (data, moeda...).
+
+    tabular=True  -> alinha conforme o tipo (data centralizada, valores à direita,
+                     texto à esquerda). tabular=False -> texto no topo, à esquerda
+                     (usado na aba "Campo / Valor" de um processo só).
+    zebra=True    -> aplica o fundo claro das linhas alternadas."""
     celula.border = est["borda"]
-    celula.alignment = est["topo_quebra"]
+    if zebra:
+        celula.fill = est["zebra"]
+    if tabular:
+        celula.alignment = {
+            "data": est["alin_data"],
+            "moeda": est["alin_numero"],
+            "inteiro": est["alin_numero"],
+            "longo": est["alin_longo"],
+        }.get(formato, est["alin_texto"])
+    else:
+        celula.alignment = est["topo_quebra"]
     if valor is None or valor == "":
         celula.value = None
         return
@@ -628,6 +649,34 @@ def _grava(celula, valor, formato, est):
         celula.number_format = FORMATO_MOEDA
     elif formato == "inteiro":
         celula.number_format = "0"
+
+
+def _tamanho_texto(valor, formato):
+    """Quantos caracteres a célula ocupa (para calcular a largura da coluna)."""
+    if valor is None or valor == "":
+        return 0
+    if formato == "data":
+        return 10
+    if formato == "moeda":
+        return len(_texto(valor, formato))
+    texto = str(valor)
+    return max(len(linha) for linha in texto.split("\n"))
+
+
+def _largura_coluna(rotulo, conteudo, minimo=12, maximo=55):
+    """Largura da coluna: cabe o conteúdo e o cabeçalho (em até 2 linhas),
+    com folga para o botão de filtro do Excel, que cobre o fim do título."""
+    cab = len(rotulo)
+    cab_largura = cab + 7 if cab <= 18 else cab // 2 + 10
+    return max(minimo, min(maximo, max(cab_largura, conteudo + 2)))
+
+
+def _linhas_necessarias(texto, largura):
+    """Quantas linhas de texto a célula ocupa com a quebra automática."""
+    total = 0
+    for parte in str(texto).split("\n"):
+        total += max(1, -(-len(parte) // max(1, int(largura) - 1)))
+    return total
 
 
 def _largura(valores, minimo=12, maximo=60):
@@ -683,7 +732,7 @@ def gerar_excel_processo(processo, secoes, centros, escolha=None):
                 c_rotulo = ws.cell(row=linha, column=1, value=rotulo)
                 c_rotulo.font, c_rotulo.fill, c_rotulo.alignment, c_rotulo.border = (
                     est["rotulo_fonte"], est["rotulo_fundo"], est["topo_quebra"], est["borda"])
-                _grava(ws.cell(row=linha, column=2), valor, formato, est)
+                _grava(ws.cell(row=linha, column=2), valor, formato, est, tabular=False)
                 acumula(1, rotulo)
                 acumula(2, valor if formato is None else None)
                 linha += 1
@@ -778,7 +827,8 @@ def gerar_excel_processos(processos, origem, secoes, centros, escolha=None):
             est["cabecalho_fonte"], est["cabecalho_fundo"], est["centro"], est["borda"])
 
     # Linhas
-    larguras = [[rotulo] for (_q, rotulo, _f, _r) in colunas]
+    larguras = [[] for _ in colunas]      # tamanho do conteúdo de cada coluna
+    textos_quebra = {}                    # {linha: [(coluna, texto)]} para a altura
     for n_linha, processo in enumerate(processos, start=3):
         cache = {i: _dados_secao(i, processo, centros, escolha) for i in ids}
         for n_coluna, (_quadro, _rotulo, formato, ref) in enumerate(colunas, start=1):
@@ -791,14 +841,36 @@ def gerar_excel_processos(processos, origem, secoes, centros, escolha=None):
                     valor = next(v for (k, _r, v, _f) in dados["campos"] if k == ref[2])
                 else:
                     valor = _tabela_como_texto(dados["tabelas"][ref[2]])
-            _grava(ws.cell(row=n_linha, column=n_coluna), valor, formato, est)
-            if formato in (None, "longo"):
-                larguras[n_coluna - 1].append(str(valor).split("\n")[0] if valor else None)
+            _grava(ws.cell(row=n_linha, column=n_coluna), valor, formato, est,
+                   zebra=(n_linha % 2 == 1))
+            larguras[n_coluna - 1].append(_tamanho_texto(valor, formato))
+            if formato in (None, "longo") and valor:
+                textos_quebra.setdefault(n_linha, []).append((n_coluna, valor))
 
-    for n_coluna, valores in enumerate(larguras, start=1):
-        ws.column_dimensions[get_column_letter(n_coluna)].width = _largura(valores, minimo=14, maximo=55)
-    ws.row_dimensions[1].height = 22
-    ws.row_dimensions[2].height = 32
+    # Largura de cada coluna
+    largura_final = []
+    for n_coluna, (_quadro, rotulo, _formato, _ref) in enumerate(colunas, start=1):
+        largura = _largura_coluna(rotulo, max(larguras[n_coluna - 1], default=0))
+        largura_final.append(largura)
+        ws.column_dimensions[get_column_letter(n_coluna)].width = largura
+
+    # Altura do cabeçalho (título pode quebrar em até 3 linhas)
+    linhas_cab = max(
+        min(3, -(-int(len(rotulo) * 1.15) // max(1, int(largura_final[i]) - 5)))
+        for i, (_q, rotulo, _f, _r) in enumerate(colunas)
+    )
+    ws.row_dimensions[1].height = 24
+    ws.row_dimensions[2].height = max(32, linhas_cab * 16 + 8)
+
+    # Altura de cada linha: acompanha o texto, com um limite para um campo muito
+    # longo não deixar a planilha enorme (a célula continua com o texto completo).
+    altura_linha, altura_maxima = 20, 105
+    for n_linha in range(3, len(processos) + 3):
+        linhas = max(
+            (_linhas_necessarias(t, largura_final[c - 1]) for c, t in textos_quebra.get(n_linha, [])),
+            default=1,
+        )
+        ws.row_dimensions[n_linha].height = min(altura_maxima, max(altura_linha, linhas * 15 + 5))
     ws.freeze_panes = "B3"
     if processos:
         ws.auto_filter.ref = f"A2:{get_column_letter(len(colunas))}{len(processos) + 2}"
