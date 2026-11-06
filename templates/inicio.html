@@ -10,6 +10,7 @@
 {% set cad_lic = current_user.pode('cadastrar', 'licitatorio') %}
 {% set tem_agenda = current_user.tem_funcao('agenda') %}
 {% set tem_panorama = current_user.tem_funcao('panorama') %}
+{% set tem_exportar = cad_civel or cad_rec or cad_trab or cad_lic %}
   <div class="inicio-split">
 
     <aside class="inicio-painel-logo">
@@ -61,6 +62,7 @@
           <div class="links-bloco">
             <a href="{{ url_for('agenda') if tem_agenda else '#' }}" class="{{ 'desabilitado' if not tem_agenda }}"{{ bloqueio(tem_agenda) }}>Agenda de Audiências</a>
             <a href="{{ url_for('panorama_juridico') if tem_panorama else '#' }}" class="{{ 'desabilitado' if not tem_panorama }}"{{ bloqueio(tem_panorama) }}>Panorama Jurídico</a>
+            <a href="{{ url_for('exportar_processos') if tem_exportar else '#' }}" class="{{ 'desabilitado' if not tem_exportar }}"{{ bloqueio(tem_exportar) }}>Exportar Processos</a>
 
         {% if current_user.eh_administrador %}
         <a href="{{ url_for('operadores') }}">Gestão de Operadores</a>

@@ -220,11 +220,11 @@
       </div>
 
       <div class="linha">
-        <div class="campo">
+        <div class="campo campo-grande">
           <label for="municipio">Município</label>
           <input type="text" id="municipio" name="municipio" maxlength="100" value="{{ val.get('municipio', '') }}">
         </div>
-        <div class="campo">
+        <div class="campo" style="flex:2 1 220px;">
           <label for="estado">Estado</label>
           <select id="estado" name="estado">
             <option value="">Selecione o estado</option>
@@ -233,9 +233,9 @@
             {% endfor %}
           </select>
         </div>
-        <div class="campo">
+        <div class="campo" style="flex:0 0 90px;">
           <label for="uf">UF</label>
-          <input type="text" id="uf" readonly tabindex="-1" placeholder="—" style="max-width:90px;">
+          <input type="text" id="uf" readonly tabindex="-1" placeholder="—">
         </div>
       </div>
     </div>

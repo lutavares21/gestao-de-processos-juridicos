@@ -1,0 +1,146 @@
+{% extends "base_painel.html" %}
+
+{% block titulo %}Exportar processos{% endblock %}
+{% block cabecalho %}
+      <div class="cabecalho">
+        <h1>Exportar processos</h1>
+        <div class="subtitulo">Gere uma planilha Excel escolhendo o tipo, os processos e os quadros</div>
+      </div>
+{% endblock %}
+
+{% block conteudo %}
+        {% if erro %}
+        <div class="flash flash-erro">{{ erro }}</div>
+        {% endif %}
+
+        <form method="POST" action="{{ action }}" autocomplete="off" id="formExportar">
+
+          <!-- 1. TIPO DE PROCESSO -->
+          <div class="secao">
+            <h2>1. Tipo de processo</h2>
+            <div class="linha">
+              <div class="campo">
+                <label for="tipo">Qual tipo de processo você quer exportar?</label>
+                <select id="tipo" name="tipo"
+                        onchange="window.location = '{{ action }}' + (this.value ? '?tipo=' + encodeURIComponent(this.value) : '');">
+                  <option value="">Selecione o tipo</option>
+                  {% for chave, nome in tipos %}
+                  <option value="{{ chave }}" {{ 'selected' if chave == tipo }}>{{ nome }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {% if tipo %}
+          <!-- 2. PROCESSOS -->
+          <div class="secao">
+            <h2>2. Processos</h2>
+            {% if linhas %}
+            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:18px; margin-bottom:12px;">
+              <label style="display:flex; align-items:center; gap:8px; font-weight:600; margin:0; cursor:pointer;">
+                <input type="checkbox" id="selecionarTodos" style="width:auto;"> Selecionar todos
+              </label>
+              <input type="text" id="buscaLinhas" placeholder="Buscar por número, parte, status..." style="max-width:340px;">
+              <span id="contador" class="texto-vazio"></span>
+            </div>
+            <div style="max-height:420px; overflow:auto; border:1px solid var(--borda);">
+              <table class="tabela-processos" style="margin:0;">
+                <thead>
+                  <tr>
+                    <th style="width:42px;"></th>
+                    {% for titulo_coluna in cabecalhos %}<th>{{ titulo_coluna }}</th>{% endfor %}
+                  </tr>
+                </thead>
+                <tbody id="corpoLinhas">
+                  {% for l in linhas %}
+                  <tr data-busca="{{ l.busca }}">
+                    <td><input type="checkbox" name="registros" value="{{ l.id }}" style="width:auto;"
+                               {{ 'checked' if l.id in selecionados }}></td>
+                    <td>{{ l.c1 }}</td>
+                    <td>{{ l.c2 }}</td>
+                    <td>{{ l.c3 }}</td>
+                    <td>{{ l.c4 }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <p class="texto-vazio" style="margin:8px 0 0;">
+              "Selecionar todos" marca apenas os processos que estão aparecendo na lista (use a busca para filtrar).
+            </p>
+            {% else %}
+            <p class="texto-vazio">Nenhum processo cadastrado deste tipo.</p>
+            {% endif %}
+          </div>
+
+          <!-- 3. QUADROS -->
+          <div class="secao">
+            <h2>3. Quadros a exportar</h2>
+            <p style="margin:0 0 14px;">
+              Marque o que você quer no arquivo. Com um processo só, cada quadro vira uma aba;
+              com vários, vira uma planilha com uma linha por processo e as colunas agrupadas por quadro
+              (a primeira coluna, {{ 'Edital' if tipo == 'licitatorio' else 'Número do processo' }}, sempre vai junto).
+            </p>
+            <div style="margin-bottom:14px; display:flex; gap:18px;">
+              <a href="#" onclick="marcarQuadros(true); return false;">Marcar todos</a>
+              <a href="#" onclick="marcarQuadros(false); return false;">Desmarcar todos</a>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:14px 28px;">
+              {% for id_secao, titulo_secao, descricao, _aba in secoes %}
+              <label style="display:flex; align-items:flex-start; gap:10px; font-weight:400; margin:0; cursor:pointer;">
+                <input type="checkbox" name="secoes" value="{{ id_secao }}" style="width:auto; margin-top:4px;"
+                       {{ 'checked' if id_secao in marcadas }}>
+                <span><strong>{{ titulo_secao }}</strong><br><span class="texto-vazio">{{ descricao }}</span></span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-salvar">Exportar para Excel</button>
+          {% endif %}
+        </form>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+  function marcarQuadros(marcar) {
+    document.querySelectorAll('input[name="secoes"]').forEach(function (c) { c.checked = marcar; });
+  }
+
+  (function () {
+    const corpo = document.getElementById('corpoLinhas');
+    if (!corpo) return;
+    const todos = document.getElementById('selecionarTodos');
+    const busca = document.getElementById('buscaLinhas');
+    const contador = document.getElementById('contador');
+    const linhas = Array.from(corpo.querySelectorAll('tr'));
+
+    function visiveis() { return linhas.filter(function (l) { return l.style.display !== 'none'; }); }
+    function checkbox(l) { return l.querySelector('input[name="registros"]'); }
+
+    function atualizar() {
+      const marcados = linhas.filter(function (l) { return checkbox(l).checked; }).length;
+      contador.textContent = marcados + ' de ' + linhas.length + ' selecionado(s)';
+      const vis = visiveis();
+      todos.checked = vis.length > 0 && vis.every(function (l) { return checkbox(l).checked; });
+    }
+
+    todos.addEventListener('change', function () {
+      visiveis().forEach(function (l) { checkbox(l).checked = todos.checked; });
+      atualizar();
+    });
+    busca.addEventListener('input', function () {
+      const termo = busca.value.trim().toLowerCase();
+      linhas.forEach(function (l) {
+        l.style.display = !termo || l.dataset.busca.indexOf(termo) !== -1 ? '' : 'none';
+      });
+      atualizar();
+    });
+    // Enter na busca não deve enviar o formulário
+    busca.addEventListener('keydown', function (e) { if (e.key === 'Enter') e.preventDefault(); });
+    corpo.addEventListener('change', atualizar);
+    atualizar();
+  })();
+</script>
+{% endblock %}

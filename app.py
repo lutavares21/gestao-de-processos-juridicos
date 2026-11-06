@@ -10,7 +10,7 @@ import re
 import unicodedata
 from datetime import datetime, date, timedelta
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_file
 from flask_login import (
     LoginManager, login_user, logout_user, login_required, current_user,
 )
@@ -23,6 +23,7 @@ from models import (
     PedidoCivel, TituloRecuperacao, AcordoRecebimento, Operador, RegistroAtividade,
     Licitacao, LicitacaoAditivo, LicitacaoItem, LicitacaoResumo,
 )
+import exportacao  # montagem dos arquivos Excel (exportacao.py)
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///processos.db"
@@ -2397,6 +2398,154 @@ def processo_detalhe(processo_id):
     if not current_user.pode_acessar(processo.origem_cadastro):
         abort(403)
     return render_template("processo_detalhe.html", p=processo)
+
+
+# ----------------------------------------------------------------------
+# EXPORTAÇÃO PARA EXCEL (menu "Exportar processos")
+# ----------------------------------------------------------------------
+# Passo a passo na mesma tela: 1) tipo de processo, 2) quais processos
+# (todos de uma vez ou um por um), 3) quais quadros de cada processo.
+# A montagem do arquivo está em exportacao.py.
+TIPOS_EXPORTACAO = [
+    ("trabalhista", "Trabalhista"),
+    ("civel", "Cível"),
+    ("civel_recuperacao", "Cível - Recuperação de Crédito"),
+    ("licitatorio", "Processo Licitatório"),
+]
+MIMETYPE_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+MSG_SEM_OPENPYXL = (
+    "A biblioteca openpyxl não está instalada no servidor. "
+    "Rode: pip3.10 install --user openpyxl"
+)
+
+
+def contexto_exportacao_licitacao():
+    """Rótulos do licitatório (chave -> texto) para o Excel."""
+    return {
+        "tipos": TIPOS_LICITACAO, "objetos": OBJETOS_LICITACAO, "disputas": TIPOS_DISPUTA,
+        "resultados": RESULTADOS_LICITACAO, "empresas": EMPRESAS_VENCEDORAS,
+        "participacao_item": PARTICIPACAO_ITEM, "produtos": PRODUTOS_RESUMO,
+        "justificativas": JUSTIFICATIVAS_NAO_PARTICIPACAO,
+    }
+
+
+def enviar_excel(arquivo, nome):
+    return send_file(arquivo, as_attachment=True, download_name=nome, mimetype=MIMETYPE_XLSX)
+
+
+def nome_seguro(texto):
+    return re.sub(r"[^0-9A-Za-z._-]+", "_", texto or "").strip("_") or "processo"
+
+
+def linhas_para_selecao(tipo):
+    """Lista de processos (ou licitações) do tipo, para o passo 2: devolve
+    (cabeçalhos da tabela, linhas). Cada linha: id, quatro colunas de texto
+    e o texto de busca."""
+    if tipo == "licitatorio":
+        registros = Licitacao.query.order_by(Licitacao.data_cadastro.desc()).all()
+        cabecalhos = ["Edital", "Órgão licitante", "Participação", "Data da licitação"]
+        linhas = [(
+            r.id, r.edital, r.orgao_licitante,
+            {"sim": "Sim", "nao": "Não"}.get(r.participacao, ""),
+            r.data_licitacao.strftime("%d/%m/%Y") if r.data_licitacao else "",
+        ) for r in registros]
+    else:
+        registros = (
+            Processo.query.filter_by(origem_cadastro=tipo)
+            .options(selectinload(Processo.partes))
+            .order_by(Processo.data_cadastro.desc()).all()
+        )
+        trabalhista = tipo == "trabalhista"
+        tipo_parte = "reclamante" if trabalhista else "autor"
+        cabecalhos = ["Número do processo", "Reclamante(s)" if trabalhista else "Autor(es)",
+                      "Status", "Data de distribuição"]
+        linhas = [(
+            r.id, r.numero_processo,
+            ", ".join(x.nome for x in r.partes if x.tipo == tipo_parte),
+            exportacao.ROTULOS_STATUS.get(r.status, r.status or ""),
+            r.data_distribuicao.strftime("%d/%m/%Y") if r.data_distribuicao else "",
+        ) for r in registros]
+    return cabecalhos, [
+        {"id": l[0], "c1": l[1], "c2": l[2], "c3": l[3], "c4": l[4],
+         "busca": " ".join(str(x) for x in l[1:]).lower()}
+        for l in linhas
+    ]
+
+
+def registros_completos_para_exportar(tipo, ids):
+    """Carrega os escolhidos já com tudo que a exportação precisa."""
+    if tipo == "licitatorio":
+        return (
+            Licitacao.query.filter(Licitacao.id.in_(ids))
+            .options(selectinload(Licitacao.itens), selectinload(Licitacao.resumos),
+                     selectinload(Licitacao.aditivos))
+            .order_by(Licitacao.data_cadastro.desc()).all()
+        )
+    return (
+        Processo.query.filter(Processo.id.in_(ids), Processo.origem_cadastro == tipo)
+        .options(
+            selectinload(Processo.partes), selectinload(Processo.advogados),
+            selectinload(Processo.movimentos), selectinload(Processo.pedidos_trabalhistas),
+            selectinload(Processo.rateio_crs), selectinload(Processo.pedidos_civeis),
+            selectinload(Processo.titulos_recuperacao), selectinload(Processo.acordos_recebimento),
+        )
+        .order_by(Processo.data_cadastro.desc()).all()
+    )
+
+
+@app.route("/exportar/processos", methods=["GET", "POST"])
+@login_required
+def exportar_processos():
+    # Mesma regra das listagens "Processos Cadastrados": quem pode ver os
+    # processos de um tipo (função "cadastrar") pode exportá-los.
+    permitidos = [(k, n) for k, n in TIPOS_EXPORTACAO if current_user.pode("cadastrar", k)]
+    if not permitidos:
+        abort(403)
+    valores = request.form if request.method == "POST" else request.args
+    tipo = (valores.get("tipo") or "").strip()
+    if tipo and tipo not in dict(permitidos):
+        abort(403)
+
+    secoes, cabecalhos, linhas = [], [], []
+    marcadas, selecionados, erro = [], set(), None
+
+    if tipo:
+        secoes = exportacao.catalogo(tipo)
+        ids_validos = [s[0] for s in secoes]
+        cabecalhos, linhas = linhas_para_selecao(tipo)
+        marcadas = ids_validos[:]
+
+        if request.method == "POST":
+            selecionados = {int(i) for i in request.form.getlist("registros") if i.isdigit()}
+            marcadas = [i for i in request.form.getlist("secoes") if i in ids_validos]
+            if not selecionados:
+                erro = "Selecione pelo menos um processo para exportar."
+            elif not marcadas:
+                erro = "Marque pelo menos um quadro para exportar."
+            else:
+                escolhidos = registros_completos_para_exportar(tipo, selecionados)
+                contexto = contexto_exportacao_licitacao() if tipo == "licitatorio" else CENTROS_RESULTADO
+                try:
+                    if len(escolhidos) == 1:
+                        # Um só: cada quadro vira uma aba, com campo e valor.
+                        unico = escolhidos[0]
+                        arquivo = exportacao.gerar_excel_processo(unico, marcadas, contexto)
+                        nome = nome_seguro(unico.edital if tipo == "licitatorio" else unico.numero_processo)
+                        nome_arquivo = f"{'licitacao' if tipo == 'licitatorio' else 'processo'}_{nome}.xlsx"
+                    else:
+                        # Vários: uma planilha, uma linha por processo.
+                        arquivo = exportacao.gerar_excel_processos(escolhidos, tipo, marcadas, contexto)
+                        nome_arquivo = f"processos_{tipo}_{date.today():%Y%m%d}.xlsx"
+                except ImportError:
+                    erro = MSG_SEM_OPENPYXL
+                else:
+                    return enviar_excel(arquivo, nome_arquivo)
+
+    return render_template(
+        "exportar_processos.html", titulo="Exportar processos", tipos=permitidos, tipo=tipo,
+        secoes=secoes, marcadas=marcadas, cabecalhos=cabecalhos, linhas=linhas,
+        selecionados=selecionados, erro=erro, action=url_for("exportar_processos"),
+    )
 
 
 @app.route("/processo/<int:processo_id>/editar", methods=["GET", "POST"])
