@@ -23,7 +23,7 @@ from models import (
     PedidoCivel, TituloRecuperacao, AcordoRecebimento, Operador, RegistroAtividade,
     Licitacao, LicitacaoAditivo, LicitacaoItem, LicitacaoResumo,
 )
-import exportacao  # montagem dos arquivos Excel (exportacao.py)
+import exportacao  # montagem dos arquivos Excel e PDF (exportacao.py)
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///processos.db"
@@ -2401,10 +2401,11 @@ def processo_detalhe(processo_id):
 
 
 # ----------------------------------------------------------------------
-# EXPORTAÇÃO PARA EXCEL (menu "Exportar processos")
+# EXPORTAÇÃO PARA EXCEL E PDF (menu "Exportar processos")
 # ----------------------------------------------------------------------
 # Passo a passo na mesma tela: 1) tipo de processo, 2) quais processos
-# (todos de uma vez ou um por um), 3) quais quadros de cada processo.
+# (todos de uma vez ou um por um), 3) quais quadros de cada processo e, dentro
+# de cada quadro, quais campos, 4) formato do arquivo (Excel ou PDF).
 # A montagem do arquivo está em exportacao.py.
 TIPOS_EXPORTACAO = [
     ("trabalhista", "Trabalhista"),
@@ -2413,6 +2414,11 @@ TIPOS_EXPORTACAO = [
     ("licitatorio", "Processo Licitatório"),
 ]
 MIMETYPE_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+MIMETYPE_PDF = "application/pdf"
+MSG_SEM_REPORTLAB = (
+    "A biblioteca reportlab não está instalada no servidor. "
+    "Rode: pip3.10 install --user reportlab"
+)
 MSG_SEM_OPENPYXL = (
     "A biblioteca openpyxl não está instalada no servidor. "
     "Rode: pip3.10 install --user openpyxl"
@@ -2431,6 +2437,10 @@ def contexto_exportacao_licitacao():
 
 def enviar_excel(arquivo, nome):
     return send_file(arquivo, as_attachment=True, download_name=nome, mimetype=MIMETYPE_XLSX)
+
+
+def enviar_pdf(arquivo, nome):
+    return send_file(arquivo, as_attachment=True, download_name=nome, mimetype=MIMETYPE_PDF)
 
 
 def nome_seguro(texto):
@@ -2508,43 +2518,74 @@ def exportar_processos():
 
     secoes, cabecalhos, linhas = [], [], []
     marcadas, selecionados, erro = [], set(), None
+    catalogo_campos, campos_marcados = {}, set()
+    formato = "xlsx"
 
     if tipo:
         secoes = exportacao.catalogo(tipo)
         ids_validos = [s[0] for s in secoes]
         cabecalhos, linhas = linhas_para_selecao(tipo)
+        contexto = contexto_exportacao_licitacao() if tipo == "licitatorio" else CENTROS_RESULTADO
+        # Campos e tabelas de cada quadro (para o usuário escolher dentro de cada um)
+        catalogo_campos = exportacao.catalogo_campos(tipo, contexto)
+        todos_os_campos = exportacao.chaves_validas(tipo, contexto)
         marcadas = ids_validos[:]
+        campos_marcados = set(todos_os_campos)
 
         if request.method == "POST":
             selecionados = {int(i) for i in request.form.getlist("registros") if i.isdigit()}
             marcadas = [i for i in request.form.getlist("secoes") if i in ids_validos]
+            campos_marcados = {c for c in request.form.getlist("campos") if c in todos_os_campos}
+            formato = "pdf" if request.form.get("formato") == "pdf" else "xlsx"
+
+            # Escolha de campos por quadro: {quadro: {chaves}}. Um quadro marcado
+            # sem nenhum campo marcado não entra no arquivo.
+            escolha = {}
+            for item in campos_marcados:
+                quadro, chave = item.split(":", 1)
+                escolha.setdefault(quadro, set()).add(chave)
+            marcadas_com_campo = [i for i in marcadas if escolha.get(i)]
+
             if not selecionados:
                 erro = "Selecione pelo menos um processo para exportar."
             elif not marcadas:
                 erro = "Marque pelo menos um quadro para exportar."
+            elif not marcadas_com_campo:
+                erro = "Marque pelo menos um campo dentro dos quadros escolhidos."
             else:
                 escolhidos = registros_completos_para_exportar(tipo, selecionados)
-                contexto = contexto_exportacao_licitacao() if tipo == "licitatorio" else CENTROS_RESULTADO
                 try:
-                    if len(escolhidos) == 1:
+                    if formato == "pdf":
+                        arquivo = exportacao.gerar_pdf(escolhidos, tipo, marcadas_com_campo, contexto, escolha)
+                        if len(escolhidos) == 1:
+                            unico = escolhidos[0]
+                            nome = nome_seguro(unico.edital if tipo == "licitatorio" else unico.numero_processo)
+                            nome_arquivo = f"{'licitacao' if tipo == 'licitatorio' else 'processo'}_{nome}.pdf"
+                        else:
+                            nome_arquivo = f"processos_{tipo}_{date.today():%Y%m%d}.pdf"
+                    elif len(escolhidos) == 1:
                         # Um só: cada quadro vira uma aba, com campo e valor.
                         unico = escolhidos[0]
-                        arquivo = exportacao.gerar_excel_processo(unico, marcadas, contexto)
+                        arquivo = exportacao.gerar_excel_processo(unico, marcadas_com_campo, contexto, escolha)
                         nome = nome_seguro(unico.edital if tipo == "licitatorio" else unico.numero_processo)
                         nome_arquivo = f"{'licitacao' if tipo == 'licitatorio' else 'processo'}_{nome}.xlsx"
                     else:
                         # Vários: uma planilha, uma linha por processo.
-                        arquivo = exportacao.gerar_excel_processos(escolhidos, tipo, marcadas, contexto)
+                        arquivo = exportacao.gerar_excel_processos(
+                            escolhidos, tipo, marcadas_com_campo, contexto, escolha)
                         nome_arquivo = f"processos_{tipo}_{date.today():%Y%m%d}.xlsx"
                 except ImportError:
-                    erro = MSG_SEM_OPENPYXL
+                    erro = MSG_SEM_REPORTLAB if formato == "pdf" else MSG_SEM_OPENPYXL
                 else:
+                    if formato == "pdf":
+                        return enviar_pdf(arquivo, nome_arquivo)
                     return enviar_excel(arquivo, nome_arquivo)
 
     return render_template(
         "exportar_processos.html", titulo="Exportar processos", tipos=permitidos, tipo=tipo,
         secoes=secoes, marcadas=marcadas, cabecalhos=cabecalhos, linhas=linhas,
         selecionados=selecionados, erro=erro, action=url_for("exportar_processos"),
+        catalogo_campos=catalogo_campos, campos_marcados=campos_marcados, formato=formato,
     )
 
 

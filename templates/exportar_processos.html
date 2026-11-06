@@ -4,7 +4,7 @@
 {% block cabecalho %}
       <div class="cabecalho">
         <h1>Exportar processos</h1>
-        <div class="subtitulo">Gere uma planilha Excel escolhendo o tipo, os processos e os quadros</div>
+        <div class="subtitulo">Gere um arquivo Excel ou PDF escolhendo o tipo, os processos, os quadros e os campos de cada quadro</div>
       </div>
 {% endblock %}
 
@@ -74,30 +74,73 @@
             {% endif %}
           </div>
 
-          <!-- 3. QUADROS -->
+          <!-- 3. QUADROS E CAMPOS -->
           <div class="secao">
-            <h2>3. Quadros a exportar</h2>
+            <h2>3. Quadros e campos a exportar</h2>
             <p style="margin:0 0 14px;">
-              Marque o que você quer no arquivo. Com um processo só, cada quadro vira uma aba;
+              Marque os quadros que você quer no arquivo e, dentro de cada um, escolha quais informações entram
+              (clique em "Escolher campos" para abrir a lista). Com um processo só no Excel, cada quadro vira uma aba;
               com vários, vira uma planilha com uma linha por processo e as colunas agrupadas por quadro
-              (a primeira coluna, {{ 'Edital' if tipo == 'licitatorio' else 'Número do processo' }}, sempre vai junto).
+              (a primeira coluna, {{ 'Edital' if tipo == 'licitatorio' else 'Número do processo' }}, sempre vai junto no Excel).
+              No PDF, cada processo ocupa suas próprias páginas.
             </p>
-            <div style="margin-bottom:14px; display:flex; gap:18px;">
+            <div style="margin-bottom:14px; display:flex; gap:18px; flex-wrap:wrap;">
               <a href="#" onclick="marcarQuadros(true); return false;">Marcar todos</a>
               <a href="#" onclick="marcarQuadros(false); return false;">Desmarcar todos</a>
+              <a href="#" onclick="abrirCampos(true); return false;">Abrir todas as listas de campos</a>
+              <a href="#" onclick="abrirCampos(false); return false;">Fechar todas</a>
             </div>
-            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:14px 28px;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:14px 28px; align-items:start;">
               {% for id_secao, titulo_secao, descricao, _aba in secoes %}
-              <label style="display:flex; align-items:flex-start; gap:10px; font-weight:400; margin:0; cursor:pointer;">
-                <input type="checkbox" name="secoes" value="{{ id_secao }}" style="width:auto; margin-top:4px;"
-                       {{ 'checked' if id_secao in marcadas }}>
-                <span><strong>{{ titulo_secao }}</strong><br><span class="texto-vazio">{{ descricao }}</span></span>
-              </label>
+              {% set cat = catalogo_campos[id_secao] %}
+              <div class="quadro-exportar" data-quadro="{{ id_secao }}">
+                <label style="display:flex; align-items:flex-start; gap:10px; font-weight:400; margin:0; cursor:pointer;">
+                  <input type="checkbox" name="secoes" value="{{ id_secao }}" class="marca-quadro" style="width:auto; margin-top:4px;"
+                         {{ 'checked' if id_secao in marcadas }}>
+                  <span><strong>{{ titulo_secao }}</strong><br><span class="texto-vazio">{{ descricao }}</span></span>
+                </label>
+                <details class="lista-campos" style="margin:6px 0 0 26px;">
+                  <summary style="cursor:pointer; font-size:0.9em;">Escolher campos <span class="contagem-campos texto-vazio"></span></summary>
+                  <div style="margin:8px 0 4px; display:flex; gap:14px; font-size:0.9em;">
+                    <a href="#" class="campos-todos">Todos</a>
+                    <a href="#" class="campos-nenhum">Nenhum</a>
+                  </div>
+                  <div style="display:flex; flex-direction:column; gap:6px;">
+                    {% for chave, rotulo in cat['campos'] %}
+                    <label style="display:flex; align-items:flex-start; gap:8px; font-weight:400; margin:0; cursor:pointer;">
+                      <input type="checkbox" name="campos" value="{{ id_secao }}:{{ chave }}" style="width:auto; margin-top:3px;"
+                             {{ 'checked' if (id_secao ~ ':' ~ chave) in campos_marcados }}>
+                      <span>{{ rotulo }}</span>
+                    </label>
+                    {% endfor %}
+                    {% for chave, titulo_tabela in cat['tabelas'] %}
+                    <label style="display:flex; align-items:flex-start; gap:8px; font-weight:400; margin:0; cursor:pointer;">
+                      <input type="checkbox" name="campos" value="{{ id_secao }}:{{ chave }}" style="width:auto; margin-top:3px;"
+                             {{ 'checked' if (id_secao ~ ':' ~ chave) in campos_marcados }}>
+                      <span>Tabela: {{ titulo_tabela }}</span>
+                    </label>
+                    {% endfor %}
+                  </div>
+                </details>
+              </div>
               {% endfor %}
             </div>
           </div>
 
-          <button type="submit" class="btn btn-salvar">Exportar para Excel</button>
+          <!-- 4. FORMATO -->
+          <div class="secao">
+            <h2>4. Formato do arquivo</h2>
+            <div style="display:flex; gap:28px; flex-wrap:wrap;">
+              <label style="display:flex; align-items:center; gap:8px; font-weight:400; margin:0; cursor:pointer;">
+                <input type="radio" name="formato" value="xlsx" style="width:auto;" {{ 'checked' if formato != 'pdf' }}> Excel (.xlsx)
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-weight:400; margin:0; cursor:pointer;">
+                <input type="radio" name="formato" value="pdf" style="width:auto;" {{ 'checked' if formato == 'pdf' }}> PDF (.pdf)
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-salvar">Exportar</button>
           {% endif %}
         </form>
 {% endblock %}
@@ -105,8 +148,56 @@
 {% block scripts_extra %}
 <script>
   function marcarQuadros(marcar) {
-    document.querySelectorAll('input[name="secoes"]').forEach(function (c) { c.checked = marcar; });
+    document.querySelectorAll('.quadro-exportar').forEach(function (q) {
+      q.querySelector('.marca-quadro').checked = marcar;
+      q.querySelectorAll('input[name="campos"]').forEach(function (c) { c.checked = marcar; });
+      atualizarContagem(q);
+    });
   }
+
+  function abrirCampos(abrir) {
+    document.querySelectorAll('.lista-campos').forEach(function (d) { d.open = abrir; });
+  }
+
+  function atualizarContagem(quadro) {
+    const campos = Array.from(quadro.querySelectorAll('input[name="campos"]'));
+    const marcados = campos.filter(function (c) { return c.checked; }).length;
+    quadro.querySelector('.contagem-campos').textContent = '(' + marcados + ' de ' + campos.length + ')';
+  }
+
+  // Quadros e campos andam juntos: marcar o quadro marca todos os campos,
+  // desmarcar o quadro limpa os campos; marcar um campo marca o quadro e
+  // desmarcar o último campo desmarca o quadro.
+  (function () {
+    document.querySelectorAll('.quadro-exportar').forEach(function (quadro) {
+      const marcaQuadro = quadro.querySelector('.marca-quadro');
+      const campos = Array.from(quadro.querySelectorAll('input[name="campos"]'));
+
+      marcaQuadro.addEventListener('change', function () {
+        campos.forEach(function (c) { c.checked = marcaQuadro.checked; });
+        atualizarContagem(quadro);
+      });
+      campos.forEach(function (c) {
+        c.addEventListener('change', function () {
+          marcaQuadro.checked = campos.some(function (x) { return x.checked; });
+          atualizarContagem(quadro);
+        });
+      });
+      quadro.querySelector('.campos-todos').addEventListener('click', function (e) {
+        e.preventDefault();
+        campos.forEach(function (c) { c.checked = true; });
+        marcaQuadro.checked = campos.length > 0;
+        atualizarContagem(quadro);
+      });
+      quadro.querySelector('.campos-nenhum').addEventListener('click', function (e) {
+        e.preventDefault();
+        campos.forEach(function (c) { c.checked = false; });
+        marcaQuadro.checked = false;
+        atualizarContagem(quadro);
+      });
+      atualizarContagem(quadro);
+    });
+  })();
 
   (function () {
     const corpo = document.getElementById('corpoLinhas');

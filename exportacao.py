@@ -1,4 +1,4 @@
-"""Exportação de processos para Excel (.xlsx).
+"""Exportação de processos para Excel (.xlsx) e PDF.
 
 Dois usos:
   * gerar_excel_processo()  - UM processo, com uma aba por quadro escolhido.
@@ -7,6 +7,11 @@ Dois usos:
 
 Os quadros (seções) espelham a página "Visualizar processo". Para incluir ou
 tirar um dado da exportação, basta mexer na função do quadro correspondente.
+
+O usuário também escolhe, dentro de cada quadro, quais campos/tabelas entram
+no arquivo. Essa escolha chega como `escolha`: {id_do_quadro: {chaves}}, onde
+as chaves são as dos campos (ex.: "uf") e "t0", "t1"... para as tabelas do
+quadro. Com `escolha=None`, tudo é exportado.
 
 Este módulo não depende do Flask. O openpyxl só é importado na hora de gerar o
 arquivo, para o sistema continuar subindo mesmo se ele não estiver instalado.
@@ -514,11 +519,73 @@ def catalogo(tipo):
     return SECOES_LICITACAO if tipo == "licitatorio" else SECOES_EXPORTACAO
 
 
-def _dados_secao(id_secao, objeto, contexto):
-    """Dados de um quadro, seja de um processo ou de uma licitação."""
+def _dados_secao(id_secao, objeto, contexto, escolha=None):
+    """Dados de um quadro, seja de um processo ou de uma licitação.
+
+    `escolha` ({quadro: {chaves}}) limita os campos e tabelas devolvidos.
+    """
     if _e_licitacao(objeto):
-        return _CONSTRUTORES_LICITACAO[id_secao](objeto, contexto)
-    return _secao(id_secao, objeto, contexto)
+        dados = _CONSTRUTORES_LICITACAO[id_secao](objeto, contexto)
+    else:
+        dados = _secao(id_secao, objeto, contexto)
+    # Cada tabela ganha uma chave ("t0", "t1"...) para poder ser escolhida
+    for i, tabela in enumerate(dados["tabelas"]):
+        tabela["chave"] = f"t{i}"
+    if escolha is None:
+        return dados
+    permitidas = escolha.get(id_secao, set())
+    return {
+        "campos": [c for c in dados["campos"] if c[0] in permitidas],
+        "tabelas": [t for t in dados["tabelas"] if t["chave"] in permitidas],
+    }
+
+
+class _Nada:
+    """Objeto vazio usado só para descobrir QUAIS campos cada quadro tem
+    (sem precisar de um processo real): qualquer atributo é vazio, e qualquer
+    lista é uma lista vazia."""
+    def __getattr__(self, nome):
+        if nome.startswith("__"):
+            raise AttributeError(nome)
+        return _Nada()
+    def __iter__(self):
+        return iter(())
+    def __bool__(self):
+        return False
+    def __eq__(self, outro):
+        return False
+    def __hash__(self):
+        return 0
+
+
+def catalogo_campos(tipo, contexto):
+    """Campos e tabelas de cada quadro do tipo, para a tela de exportação.
+
+    Devolve {id_do_quadro: {"campos": [(chave, rótulo)], "tabelas": [(chave, título)]}}.
+    Sai das mesmas funções que montam o arquivo, então nunca fica desatualizado.
+    """
+    modelo = _Nada()
+    catalogo_quadros = {}
+    for id_secao in [s[0] for s in catalogo(tipo)]:
+        if tipo == "licitatorio":
+            dados = _CONSTRUTORES_LICITACAO[id_secao](modelo, contexto)
+        else:
+            dados = _CONSTRUTORES[id_secao](modelo, rotulos_do_tipo(tipo), tipo, contexto)
+        catalogo_quadros[id_secao] = {
+            "campos": [(c[0], c[1]) for c in dados["campos"]],
+            "tabelas": [(f"t{i}", t["titulo"]) for i, t in enumerate(dados["tabelas"])],
+        }
+    return catalogo_quadros
+
+
+def chaves_validas(tipo, contexto):
+    """Conjunto de "quadro:chave" aceitos para o tipo (para validar o formulário)."""
+    catalogo_quadros = catalogo_campos(tipo, contexto)
+    return {
+        f"{id_secao}:{chave}"
+        for id_secao, itens in catalogo_quadros.items()
+        for chave, _rotulo in itens["campos"] + itens["tabelas"]
+    }
 
 
 def _titulos(objeto):
@@ -575,7 +642,7 @@ def _arquivo(wb):
     return saida
 
 
-def gerar_excel_processo(processo, secoes, centros):
+def gerar_excel_processo(processo, secoes, centros, escolha=None):
     """Excel de UM processo (ou uma licitação): uma aba por quadro escolhido
     (na ordem da página). Para licitação, `centros` é o dicionário de rótulos
     do licitatório (tipos, objetos, empresas...)."""
@@ -588,7 +655,9 @@ def gerar_excel_processo(processo, secoes, centros):
 
     lista_secoes, titulos_aba = _titulos(processo)
     for id_secao in [s[0] for s in lista_secoes if s[0] in secoes]:
-        dados = _dados_secao(id_secao, processo, centros)
+        dados = _dados_secao(id_secao, processo, centros, escolha)
+        if not dados["campos"] and not dados["tabelas"]:
+            continue  # nada marcado neste quadro
         ws = wb.create_sheet(titulos_aba[id_secao][:31])
         if _e_licitacao(processo):
             ws["A1"] = f"Licitação {processo.edital} - {processo.orgao_licitante}"
@@ -655,7 +724,7 @@ def _tabela_como_texto(tabela):
     )
 
 
-def gerar_excel_processos(processos, origem, secoes, centros):
+def gerar_excel_processos(processos, origem, secoes, centros, escolha=None):
     """Excel de VÁRIOS processos: uma linha por processo. A primeira coluna é
     sempre o número do processo; depois vêm as colunas dos quadros escolhidos,
     com uma faixa dourada em cima indicando o quadro."""
@@ -679,7 +748,7 @@ def gerar_excel_processos(processos, origem, secoes, centros):
     colunas = [("Processo", rotulo_fixo, None, ("fixo", chave_fixa))]
     for id_secao in ids:
         if processos:
-            modelo = _dados_secao(id_secao, processos[0], centros)
+            modelo = _dados_secao(id_secao, processos[0], centros, escolha)
         else:
             modelo = {"campos": [], "tabelas": []}
         for chave, rotulo, _valor, formato in modelo["campos"]:
@@ -711,7 +780,7 @@ def gerar_excel_processos(processos, origem, secoes, centros):
     # Linhas
     larguras = [[rotulo] for (_q, rotulo, _f, _r) in colunas]
     for n_linha, processo in enumerate(processos, start=3):
-        cache = {i: _dados_secao(i, processo, centros) for i in ids}
+        cache = {i: _dados_secao(i, processo, centros, escolha) for i in ids}
         for n_coluna, (_quadro, _rotulo, formato, ref) in enumerate(colunas, start=1):
             if ref[0] == "fixo":
                 valor = processo.edital if licitacao else processo.numero_processo
@@ -735,3 +804,117 @@ def gerar_excel_processos(processos, origem, secoes, centros):
         ws.auto_filter.ref = f"A2:{get_column_letter(len(colunas))}{len(processos) + 2}"
 
     return _arquivo(wb)
+
+
+# ----------------------------------------------------------------------------
+# PDF
+# ----------------------------------------------------------------------------
+def gerar_pdf(registros, origem, secoes, centros, escolha=None):
+    """PDF de um ou VÁRIOS processos (ou licitações): cada processo começa em
+    uma página nova, com os quadros escolhidos na ordem da página e, dentro de
+    cada quadro, só os campos/tabelas marcados.
+
+    O reportlab só é importado aqui, para o sistema continuar subindo mesmo se
+    ele não estiver instalado (mesmo cuidado do openpyxl).
+    """
+    from xml.sax.saxutils import escape
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.units import mm
+    from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+    azul, dourado = colors.HexColor("#16233D"), colors.HexColor("#B7924B")
+    cinza, borda = colors.HexColor("#F2F0EB"), colors.HexColor("#D9D4C7")
+
+    est_titulo = ParagraphStyle("titulo", fontName="Helvetica-Bold", fontSize=15, leading=19, textColor=azul)
+    est_faixa = ParagraphStyle("faixa", fontName="Helvetica-Bold", fontSize=10.5, leading=14,
+                               textColor=colors.white, backColor=dourado, borderPadding=(3, 5, 3, 5),
+                               spaceAfter=8, keepWithNext=1)
+    est_subtitulo = ParagraphStyle("subtitulo", fontName="Helvetica-Bold", fontSize=9.5, leading=12, textColor=azul,
+                                   spaceAfter=3, keepWithNext=1)
+    est_rotulo = ParagraphStyle("rotulo", fontName="Helvetica-Bold", fontSize=8.5, leading=11)
+    est_valor = ParagraphStyle("valor", fontName="Helvetica", fontSize=8.5, leading=11)
+    est_vazio = ParagraphStyle("vazio", fontName="Helvetica-Oblique", fontSize=8.5, leading=11)
+
+    def par(valor, formato, estilo):
+        texto = escape(_texto(valor, formato)).replace("\n", "<br/>")
+        return Paragraph(texto, estilo)
+
+    pagina = landscape(A4)
+    margem = 14 * mm
+    largura = pagina[0] - 2 * margem
+
+    licitacao = origem == "licitatorio"
+    lista_secoes = SECOES_LICITACAO if licitacao else SECOES_EXPORTACAO
+    ids = [s[0] for s in lista_secoes if s[0] in secoes]
+    titulo_quadro = {s[0]: s[1] for s in lista_secoes}
+
+    elementos = []
+    for n, registro in enumerate(registros):
+        if n:
+            elementos.append(PageBreak())
+        if licitacao:
+            elementos.append(Paragraph(escape(f"Licitação {registro.edital} - {registro.orgao_licitante}"), est_titulo))
+        else:
+            elementos.append(Paragraph(escape(f"Processo {registro.numero_processo}"), est_titulo))
+        elementos.append(Spacer(1, 6))
+
+        for id_secao in ids:
+            dados = _dados_secao(id_secao, registro, centros, escolha)
+            if not dados["campos"] and not dados["tabelas"]:
+                continue
+            elementos.append(Paragraph(escape(titulo_quadro[id_secao]), est_faixa))
+
+            if dados["campos"]:
+                linhas = [[Paragraph(escape(rotulo), est_rotulo), par(valor, formato, est_valor)]
+                          for _chave, rotulo, valor, formato in dados["campos"]]
+                tabela = Table(linhas, colWidths=[largura * 0.32, largura * 0.68])
+                tabela.setStyle(TableStyle([
+                    ("BACKGROUND", (0, 0), (0, -1), cinza),
+                    ("GRID", (0, 0), (-1, -1), 0.4, borda),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ]))
+                elementos.append(tabela)
+                elementos.append(Spacer(1, 8))
+
+            for sub in dados["tabelas"]:
+                elementos.append(Paragraph(escape(sub["titulo"]), est_subtitulo))
+                if not sub["linhas"]:
+                    elementos.append(Paragraph("Nenhum registro.", est_vazio))
+                    elementos.append(Spacer(1, 8))
+                    continue
+                colunas = len(sub["cabecalhos"])
+                tamanho = 8 if colunas <= 6 else (7 if colunas <= 9 else 6.2)
+                est_cab = ParagraphStyle("cab", fontName="Helvetica-Bold", fontSize=tamanho,
+                                         leading=tamanho + 2, textColor=colors.white, alignment=1)
+                est_cel = ParagraphStyle("cel", fontName="Helvetica", fontSize=tamanho, leading=tamanho + 2)
+                corpo = [[Paragraph(escape(c), est_cab) for c in sub["cabecalhos"]]]
+                for reg in sub["linhas"]:
+                    corpo.append([par(v, f, est_cel) for v, f in zip(reg, sub["formatos"])])
+                tabela = Table(corpo, colWidths=[largura / colunas] * colunas, repeatRows=1)
+                tabela.setStyle(TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, 0), azul),
+                    ("GRID", (0, 0), (-1, -1), 0.4, borda),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, cinza]),
+                ]))
+                elementos.append(tabela)
+                elementos.append(Spacer(1, 8))
+            elementos.append(Spacer(1, 6))
+
+    def rodape(canvas, doc):
+        canvas.saveState()
+        canvas.setFont("Helvetica", 7.5)
+        canvas.setFillColor(colors.HexColor("#6B6B6B"))
+        canvas.drawString(margem, 8 * mm, f"Gerado em {datetime.now():%d/%m/%Y %H:%M}")
+        canvas.drawRightString(pagina[0] - margem, 8 * mm, f"Página {doc.page}")
+        canvas.restoreState()
+
+    saida = io.BytesIO()
+    SimpleDocTemplate(
+        saida, pagesize=pagina, leftMargin=margem, rightMargin=margem,
+        topMargin=margem, bottomMargin=16 * mm, title="Exportação de processos",
+    ).build(elementos, onFirstPage=rodape, onLaterPages=rodape)
+    saida.seek(0)
+    return saida
