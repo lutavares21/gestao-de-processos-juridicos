@@ -356,6 +356,20 @@ def acesso_negado(erro):
 
 
 @app.context_processor
+def injetar_versao_dos_estaticos():
+    """Dá aos templates versao_estatico('arquivo'): a data de modificação do
+    arquivo na pasta static. Usada como ?v=... no link do style.css, assim o
+    navegador busca o arquivo de novo sempre que ele muda (sem precisar de
+    Ctrl+F5)."""
+    def versao_estatico(nome):
+        try:
+            return int(os.path.getmtime(os.path.join(app.static_folder, nome)))
+        except OSError:
+            return 0
+    return dict(versao_estatico=versao_estatico)
+
+
+@app.context_processor
 def injetar_areas_do_sistema():
     """Disponibiliza tipos de processo e funções para os templates de operadores."""
     return dict(areas_do_sistema=AREAS_DO_SISTEMA, funcoes_do_sistema=FUNCOES_DO_SISTEMA)
