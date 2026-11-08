@@ -271,7 +271,7 @@
                     {% for numero in [t.valor, t.saldo, t.juros, t.correcao, t.outros, t.total] %}
                     <td class="col-num">{{ (numero|moeda)|replace('R$ ', '') if numero is not none else '—' }}</td>
                     {% endfor %}
-                    <td><span class="selo-pedido {{ t.status or 'em_analise' }}">{{ rotulos_status_pedido.get(t.status, 'Em análise') }}</span></td>
+                    <td><span class="selo-pedido selo-credor {{ t.status or 'em_analise' }}">{{ rotulos_status_pedido.get(t.status, 'Em análise') }}</span></td>
                   </tr>
                   {% endfor %}
                 </tbody>

@@ -1090,6 +1090,14 @@ select.selo-pedido-select.em_analise { background: #fff; color: var(--risco-poss
 select.selo-pedido-select.deferido   { background: #fff; color: var(--risco-provavel); }
 select.selo-pedido-select.indeferido { background: #fff; color: var(--risco-remoto); }
 
+/* Recuperação de Crédito: a empresa é quem cobra, então a leitura é invertida em
+   relação ao trabalhista. Empresa ganha = Deferido (verde); empresa perde =
+   Indeferido (vermelho). Basta somar a classe "selo-credor" ao selo/select. */
+.selo-pedido.selo-credor.deferido   { background: #e3f0e6; color: var(--risco-remoto); }
+.selo-pedido.selo-credor.indeferido { background: #f6dede; color: var(--risco-provavel); }
+select.selo-pedido-select.selo-credor.deferido   { background: #fff; color: var(--risco-remoto); }
+select.selo-pedido-select.selo-credor.indeferido { background: #fff; color: var(--risco-provavel); }
+
 /* --- Situação da parcela do acordo: Pendente = vermelho / Pago = verde --- */
 select.selo-pedido-select.situacao-pendente { background: #f6dede; color: var(--risco-provavel); border-color: var(--risco-provavel); }
 select.selo-pedido-select.situacao-pago     { background: #e3f0e6; color: var(--risco-remoto);    border-color: var(--risco-remoto); }
