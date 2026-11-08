@@ -87,7 +87,7 @@
                      oninput="recalcularRodapeRecuperacao()" onblur="formatarCelulaMoeda(this)"></td>
           <td>
             {% set situacao = t.status or 'em_analise' %}
-            <select name="rec_status" class="selo-pedido-select {{ situacao }}"
+            <select name="rec_status" class="selo-pedido-select selo-credor {{ situacao }}"
                     onchange="atualizarCorStatus(this)">
               <option value="deferido" {{ 'selected' if situacao == 'deferido' else '' }}>Deferido</option>
               <option value="em_analise" {{ 'selected' if situacao == 'em_analise' else '' }}>Em análise</option>
@@ -144,7 +144,7 @@
     <td><input type="text" name="rec_total" class="cel-num cel-total" inputmode="decimal"
                oninput="recalcularRodapeRecuperacao()" onblur="formatarCelulaMoeda(this)"></td>
     <td>
-      <select name="rec_status" class="selo-pedido-select em_analise"
+      <select name="rec_status" class="selo-pedido-select selo-credor em_analise"
               onchange="atualizarCorStatus(this)">
         <option value="deferido">Deferido</option>
         <option value="em_analise" selected>Em análise</option>
@@ -236,7 +236,7 @@
 
   // Mantém a cor do seletor de situação igual à dos selos de pedidos
   function atualizarCorStatus(select) {
-    select.className = 'selo-pedido-select ' + select.value;
+    select.className = 'selo-pedido-select selo-credor ' + select.value;
   }
 
   // Adiciona uma linha. Se vier um objeto "dados" (linha da planilha),
