@@ -214,8 +214,7 @@
                 <th>Tempo de tramitação</th>
                 <th>Valor da causa</th>
                 <th>Provisão estimada</th>
-                <th>Acordo</th>
-                <th>Sentença à receber</th>
+                <th>Acordo/Sentença</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -232,8 +231,7 @@
                 <td style="text-align:right; white-space:nowrap;">{{ p.dias_ativos if p.dias_ativos is not none else '—' }}{{ ' dias' if p.dias_ativos is not none else '' }}</td>
                 <td style="min-width:130px;">{{ celula_moeda(p.valor_causa) }}</td>
                 <td style="min-width:130px;">{{ celula_moeda(p.valor_provisao) }}</td>
-                <td style="min-width:130px;">{{ celula_moeda(p.total_acordo) }}</td>
-                <td style="min-width:130px;">{{ celula_moeda(p.sentenca_a_receber) }}</td>
+                <td style="min-width:130px;">{{ celula_moeda(p.total_acordo or p.sentenca_a_receber) }}</td>
                 <td>
                   <a class="btn-detalhe" href="{{ url_for('processo_detalhe', processo_id=p.id) }}">Ver detalhes</a>
                   <a class="btn-detalhe btn-editar" href="{{ url_for('processo_editar', processo_id=p.id) }}">Editar</a>
