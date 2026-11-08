@@ -125,9 +125,10 @@
                        data-alvo="valor_causa" oninput="formatarDinheiro(this); sincronizarProvisao()">
                 <input type="hidden" id="valor_causa" name="valor_causa" value="{{ p.valor_causa if p.valor_causa is not none else '' }}">
               </div>
-              {% if eh_trabalhista %}
-              {# Processo antigo, sem provisão informada: mostra o valor da causa, que é o que o Panorama já usava. #}
-              {% set provisao = p.valor_provisao if p.valor_provisao is not none else p.valor_causa %}
+              {% if eh_trabalhista or eh_recuperacao %}
+              {# Trabalhista: processo antigo sem provisão mostra o valor da causa (o que o Panorama já usava).
+                 Recuperação de Crédito: a provisão é sempre digitada à mão, sem cópia do valor da causa. #}
+              {% set provisao = p.valor_provisao if (p.valor_provisao is not none or eh_recuperacao) else p.valor_causa %}
               <div class="campo">
                 <label for="valor_provisao_display">Valor da provisão estimada (R$)</label>
                 <input type="text" inputmode="numeric" id="valor_provisao_display" placeholder="R$ 0,00"
@@ -655,6 +656,8 @@
 
     // A provisão só acompanha o valor da causa enquanto os dois forem iguais
     // (ao abrir a página, se já forem diferentes, ela foi alterada à mão).
+    // Só no trabalhista a provisão repete o valor da causa; na Recuperação de Crédito ela é digitada.
+    const provisaoSegueCausa = {{ 'false' if eh_recuperacao else 'true' }};
     let provisaoEditadaManualmente = (function () {
       const causa = document.getElementById('valor_causa');
       const provisao = document.getElementById('valor_provisao');
@@ -666,7 +669,7 @@
     // CAUSA. Se ele digitar um valor próprio, deixa de acompanhar; se apagar o
     // campo, volta a repetir o valor da causa.
     function sincronizarProvisao() {
-      if (provisaoEditadaManualmente) return;
+      if (!provisaoSegueCausa || provisaoEditadaManualmente) return;
       const provisaoTexto = document.getElementById('valor_provisao_display');
       const provisaoOculto = document.getElementById('valor_provisao');
       if (!provisaoTexto || !provisaoOculto) return;

@@ -68,7 +68,7 @@
   'tst':'Instância Extraordinária - TST',
   'nao_informado':'Não informado'
 } %}
-{% set rotulos_status = {'ativo':'Ativo', 'arquivado':'Arquivado', 'suspenso':'Suspenso'} %}
+{% set rotulos_status = {'ativo':'Ativo', 'ativo_sem_exposicao':'Ativo - Sem exposição', 'arquivado':'Arquivado', 'suspenso':'Suspenso'} %}
 {% set rotulos_status_pedido = {'em_analise': 'Em análise', 'deferido': 'Deferido', 'indeferido': 'Indeferido'} %}
 {% set rotulos_modalidade = {'hibrida':'Híbrida','presencial':'Presencial','telepresencial':'Telepresencial','videoconferencia':'Videoconferência'} %}
 
@@ -127,8 +127,8 @@
           <div class="linha">
             {{ cv('Data de distribuição', p.data_distribuicao.strftime('%d/%m/%Y') if p.data_distribuicao else '') }}
             {{ cv('Valor da causa (R$)', p.valor_causa|moeda if p.valor_causa is not none else '') }}
-            {% if eh_trabalhista %}
-            {% set provisao = p.valor_provisao if p.valor_provisao is not none else p.valor_causa %}
+            {% if eh_trabalhista or eh_recuperacao %}
+            {% set provisao = p.valor_provisao if (p.valor_provisao is not none or eh_recuperacao) else p.valor_causa %}
             {{ cv('Valor da provisão estimada (R$)', provisao|moeda if provisao is not none else '') }}
             {% endif %}
           </div>
