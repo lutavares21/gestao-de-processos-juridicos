@@ -206,7 +206,7 @@
             <div class="campo" style="flex: 0 1 140px;">
               <label>Risco</label>
               {% if p.risco %}
-              <span class="selo-risco {{ p.risco }}">{{ p.risco|title }}</span>
+              <span class="selo-risco{{ ' credor' if eh_recuperacao else '' }} {{ p.risco }}">{{ p.risco|title }}</span>
               {% else %}
               <span class="texto-vazio">—</span>
               {% endif %}

@@ -594,6 +594,9 @@ input[readonly] {
 .selo-risco.remoto { background: #e3f0e6; color: var(--risco-remoto); }
 .selo-risco.possivel { background: #fbeecb; color: var(--risco-possivel); }
 .selo-risco.provavel { background: #f6dede; color: var(--risco-provavel); }
+/* Recuperação de crédito: possível e provável com as cores trocadas */
+.selo-risco.credor.possivel { background: #f6dede; color: var(--risco-provavel); }  /* vermelho */
+.selo-risco.credor.provavel { background: #fbeecb; color: var(--risco-possivel); }  /* amarelo */
 
 .estado-vazio {
   padding: 40px 20px;
