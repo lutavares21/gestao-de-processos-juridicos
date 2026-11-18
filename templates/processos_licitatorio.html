@@ -1,0 +1,243 @@
+{% extends "base_painel.html" %}
+
+{% block titulo %}Processos Cadastrados - Licitatório{% endblock %}
+{% block cabecalho_titulo %}Processos Cadastrados - Licitatório{% endblock %}
+{% block container_attrs %} style="max-width: 1200px;"{% endblock %}
+
+{% block conteudo %}
+        {% set filtros = filtros|default({}) %}
+        {% set filtros_ativos = filtros_ativos|default(false) %}
+
+        {# Legenda no mesmo formato da legenda de risco das outras páginas.
+           Licitação não tem campo de risco, então a legenda mostra a Participação. #}
+        <div style="display:flex; flex-wrap:wrap; gap:18px; align-items:center; background:var(--papel-cartao); border:1px solid var(--borda); border-radius:4px; padding:10px 16px; margin-bottom:16px; font-size:13px; color:var(--texto-suave);">
+          <span><strong>Participação:</strong></span>
+          <span style="display:flex; align-items:center; gap:7px;">
+            <span style="width:11px; height:11px; border-radius:50%; display:inline-block; background:var(--risco-remoto);"></span>
+            Participamos da licitação
+          </span>
+          <span style="display:flex; align-items:center; gap:7px;">
+            <span style="width:11px; height:11px; border-radius:50%; display:inline-block; background:#625d51;"></span>
+            Não participamos
+          </span>
+        </div>
+
+        <div class="secao" style="margin-bottom:16px;">
+          <h2>Pesquisa Processual</h2>
+          <form method="GET" action="{{ url_for('processos_licitatorio') }}">
+            <div class="linha-filtro">
+              <div class="campo">
+                <label for="f_edital">Edital</label>
+                <input type="text" id="f_edital" name="edital" value="{{ filtros.get('edital', '') }}" placeholder="Ex.: 129898/2026">
+              </div>
+              <div class="campo">
+                <label for="f_orgao">Órgão licitante</label>
+                <input type="text" id="f_orgao" name="orgao_licitante" value="{{ filtros.get('orgao_licitante', '') }}" placeholder="Nome do órgão">
+              </div>
+              <div class="campo">
+                <label for="f_municipio">Município</label>
+                <input type="text" id="f_municipio" name="municipio" value="{{ filtros.get('municipio', '') }}">
+              </div>
+              <div class="campo">
+                <label for="f_pa">Processo administrativo</label>
+                <input type="text" id="f_pa" name="processo_administrativo" value="{{ filtros.get('processo_administrativo', '') }}">
+              </div>
+            </div>
+
+            <div id="filtros_avancados" class="oculto linha-filtro">
+              <div class="campo">
+                <label for="f_uf">UF</label>
+                <select id="f_uf" name="uf">
+                  <option value="">Todas</option>
+                  {% for sigla in ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'] %}
+                  <option value="{{ sigla }}" {% if filtros.get('uf') == sigla %}selected{% endif %}>{{ sigla }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="campo">
+                <label for="f_tipo">Tipo de processo</label>
+                <select id="f_tipo" name="tipo_processo">
+                  <option value="">Todos</option>
+                  {% for valor, texto in tipos_licitacao.items() %}
+                  <option value="{{ valor }}" {% if filtros.get('tipo_processo') == valor %}selected{% endif %}>{{ texto }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="campo">
+                <label for="f_objeto">Objeto</label>
+                <select id="f_objeto" name="objeto">
+                  <option value="">Todos</option>
+                  {% for valor, texto in objetos_licitacao.items() %}
+                  <option value="{{ valor }}" {% if filtros.get('objeto') == valor %}selected{% endif %}>{{ texto }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="campo">
+                <label for="f_participacao">Participação</label>
+                <select id="f_participacao" name="participacao">
+                  <option value="">Todas</option>
+                  <option value="sim" {% if filtros.get('participacao') == 'sim' %}selected{% endif %}>Sim</option>
+                  <option value="nao" {% if filtros.get('participacao') == 'nao' %}selected{% endif %}>Não</option>
+                </select>
+              </div>
+              <div class="campo">
+                <label for="f_plataforma">Plataforma</label>
+                <select id="f_plataforma" name="plataforma">
+                  <option value="">Todas</option>
+                  {% for nome in plataformas_licitacao %}
+                  <option value="{{ nome }}" {% if filtros.get('plataforma') == nome %}selected{% endif %}>{{ nome }}</option>
+                  {% endfor %}
+                  <option value="outros" {% if filtros.get('plataforma') == 'outros' %}selected{% endif %}>Outros</option>
+                </select>
+              </div>
+              <div class="campo">
+                <label for="f_disputa">Tipo de disputa</label>
+                <select id="f_disputa" name="tipo_disputa">
+                  <option value="">Todos</option>
+                  {% for valor, texto in tipos_disputa.items() %}
+                  <option value="{{ valor }}" {% if filtros.get('tipo_disputa') == valor %}selected{% endif %}>{{ texto }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="campo">
+                <label for="f_empresa">Empresa vencedora (itens)</label>
+                <select id="f_empresa" name="empresa_vencedora">
+                  <option value="">Todas</option>
+                  {% for valor, texto in empresas_vencedoras.items() %}
+                  <option value="{{ valor }}" {% if filtros.get('empresa_vencedora') == valor %}selected{% endif %}>{{ texto }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="campo">
+                <label for="f_ano">Ano da licitação</label>
+                <input type="text" id="f_ano" name="ano_licitacao" inputmode="numeric" maxlength="4" placeholder="2026" value="{{ filtros.get('ano_licitacao', '') }}">
+              </div>
+              <div class="campo">
+                <label for="f_cliente">Cliente (faturamento)</label>
+                <input type="text" id="f_cliente" name="cliente" value="{{ filtros.get('cliente', '') }}">
+              </div>
+              <div class="campo">
+                <label for="f_contrato">Nº do contrato</label>
+                <input type="text" id="f_contrato" name="numero_contrato" value="{{ filtros.get('numero_contrato', '') }}">
+              </div>
+              <div class="campo">
+                <label for="f_lic_de">Data da licitação de</label>
+                <input type="date" id="f_lic_de" name="data_licitacao_de" value="{{ filtros.get('data_licitacao_de', '') }}">
+              </div>
+              <div class="campo">
+                <label for="f_lic_ate">Data da licitação até</label>
+                <input type="date" id="f_lic_ate" name="data_licitacao_ate" value="{{ filtros.get('data_licitacao_ate', '') }}">
+              </div>
+            </div>
+            <button type="button" class="btn btn-adicionar" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="document.getElementById('filtros_avancados').classList.toggle('oculto')">Filtros avançados ▾</button>
+
+            <button type="submit" class="btn btn-salvar">Buscar</button>
+
+            {% if filtros_ativos %}
+            <a href="{{ url_for('processos_licitatorio') }}" class="link-voltar" style="margin-top:10px;">✕ Limpar filtros</a>
+            {% endif %}
+          </form>
+        </div>
+
+        {% if licitacoes %}
+        <div class="scroll-topo" id="scrollTopo"><div id="scrollTopoInterno"></div></div>
+
+        <div class="tabela-wrap" id="tabelaWrap">
+          <table class="tabela-processos">
+            <thead>
+              <tr>
+                <th>Edital</th>
+                <th>Órgão licitante</th>
+                <th>Município/UF</th>
+                <th>Tipo de processo</th>
+                <th>Objeto</th>
+                <th>Participação</th>
+                <th>Data da licitação</th>
+                <th style="text-align:left;">Valor do contrato</th>
+                {# <th>Ações</th> — entra quando existirem as telas de detalhe e edição da licitação #}
+              </tr>
+            </thead>
+            <tbody>
+              {% for l in licitacoes %}
+              <tr>
+                <td>{{ l.edital }}</td>
+                <td>{{ l.orgao_licitante }}</td>
+                <td>{{ l.municipio or '—' }}{{ '/' ~ l.uf if l.uf else '' }}</td>
+                <td>{{ tipos_licitacao.get(l.tipo_processo, '—') }}</td>
+                <td>{{ objetos_licitacao.get(l.objeto, '—') }}</td>
+                <td>
+                  {% if l.participacao == 'sim' %}
+                  <span class="selo-status ativo">Sim</span>
+                  {% elif l.participacao == 'nao' %}
+                  <span class="selo-status arquivado">Não</span>
+                  {% else %}—{% endif %}
+                </td>
+                <td style="white-space:nowrap;">
+                  {{ l.data_licitacao.strftime('%d/%m/%Y') if l.data_licitacao else '—' }}{{ ' ' ~ l.horario_licitacao if l.data_licitacao and l.horario_licitacao else '' }}
+                </td>
+                <td style="text-align:left; white-space:nowrap;">
+                  {% if l.valor_total_contrato is not none %}
+                  {% set texto_moeda = l.valor_total_contrato|moeda %}
+                  <div style="display:flex; justify-content:space-between; width:130px;">
+                    <span>{{ texto_moeda.split(' ')[0] }}</span>
+                    <span>{{ texto_moeda.split(' ', 1)[1] }}</span>
+                  </div>
+                  {% else %}
+                  —
+                  {% endif %}
+                </td>
+                {# <td>
+                  <a class="btn-detalhe" href="{{ url_for('licitacao_detalhe', licitacao_id=l.id) }}">Ver detalhes</a>
+                  <a class="btn-detalhe btn-editar" href="{{ url_for('licitacao_editar', licitacao_id=l.id) }}">Editar</a>
+                </td> #}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="tabela-wrap">
+          <div class="estado-vazio">
+            {% if filtros_ativos %}
+            Nenhum processo encontrado com esses filtros. <a href="{{ url_for('processos_licitatorio') }}">Limpar filtros</a>.
+            {% else %}
+            Nenhum processo licitatório cadastrado ainda. <a href="{{ url_for('cadastro_licitatorio') }}">Cadastrar o primeiro</a>.
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+    // Barra de rolagem horizontal duplicada no topo da tabela
+    document.addEventListener('DOMContentLoaded', () => {
+      const topo = document.getElementById('scrollTopo');
+      const interno = document.getElementById('scrollTopoInterno');
+      const wrap = document.getElementById('tabelaWrap');
+      const tabela = wrap ? wrap.querySelector('table') : null;
+      if (!topo || !interno || !wrap || !tabela) return;
+
+      function sincronizarLargura() {
+        interno.style.width = tabela.scrollWidth + 'px';
+      }
+      sincronizarLargura();
+      window.addEventListener('resize', sincronizarLargura);
+
+      let sincronizando = false;
+      topo.addEventListener('scroll', () => {
+        if (sincronizando) return;
+        sincronizando = true;
+        wrap.scrollLeft = topo.scrollLeft;
+        sincronizando = false;
+      });
+      wrap.addEventListener('scroll', () => {
+        if (sincronizando) return;
+        sincronizando = true;
+        topo.scrollLeft = wrap.scrollLeft;
+        sincronizando = false;
+      });
+    });
+  </script>
+{% endblock %}
