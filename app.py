@@ -787,6 +787,8 @@ def injetar_contadores_menu():
         contagem_civel_ativos=Processo.query.filter_by(origem_cadastro="civel", status="ativo").count(),
         contagem_trabalhista_ativos=Processo.query.filter_by(origem_cadastro="trabalhista", status="ativo").count(),
         contagem_recuperacao_ativos=Processo.query.filter_by(origem_cadastro="civel_recuperacao", status="ativo").count(),
+        # Licitação não tem campo "status": conta como ativa a que participamos.
+        contagem_licitatorio_ativos=Licitacao.query.filter_by(participacao="sim").count(),
     )
 
 
