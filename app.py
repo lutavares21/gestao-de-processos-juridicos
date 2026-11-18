@@ -2264,6 +2264,101 @@ def processos_civel_recuperacao():
     )
 
 
+# ---------------------------------------------------------------------------
+# PROCESSOS CADASTRADOS - LICITATÓRIO
+# ---------------------------------------------------------------------------
+@app.route("/processos/licitatorio")
+@permissao_required("cadastrar", "licitatorio")
+def processos_licitatorio():
+    query = Licitacao.query
+    f = request.args
+
+    def texto(chave):
+        return f.get(chave, "").strip()
+
+    def data_ou_none(chave):
+        # Data inválida digitada na URL é ignorada em vez de dar erro 500.
+        try:
+            return texto_para_data(texto(chave))
+        except ValueError:
+            return None
+
+    edital = texto("edital")
+    orgao_licitante = texto("orgao_licitante")
+    municipio = texto("municipio")
+    processo_administrativo = texto("processo_administrativo")
+    uf = texto("uf")
+    tipo_processo = texto("tipo_processo")
+    objeto = texto("objeto")
+    participacao = texto("participacao")
+    plataforma = texto("plataforma")
+    tipo_disputa = texto("tipo_disputa")
+    empresa_vencedora = texto("empresa_vencedora")
+    ano_licitacao = texto("ano_licitacao")
+    cliente = texto("cliente")
+    numero_contrato = texto("numero_contrato")
+
+    if edital:
+        query = query.filter(Licitacao.edital.ilike(f"%{edital}%"))
+    if orgao_licitante:
+        query = query.filter(Licitacao.orgao_licitante.ilike(f"%{orgao_licitante}%"))
+    if municipio:
+        query = query.filter(Licitacao.municipio.ilike(f"%{municipio}%"))
+    if processo_administrativo:
+        query = query.filter(Licitacao.processo_administrativo.ilike(f"%{processo_administrativo}%"))
+    if uf:
+        query = query.filter(Licitacao.uf == uf)
+    if tipo_processo:
+        query = query.filter(Licitacao.tipo_processo == tipo_processo)
+    if objeto:
+        query = query.filter(Licitacao.objeto == objeto)
+    if participacao in ("sim", "nao"):
+        query = query.filter(Licitacao.participacao == participacao)
+    if plataforma:
+        # "outros" é o valor gravado quando a plataforma foi digitada à mão.
+        query = query.filter(Licitacao.plataforma == plataforma)
+    if tipo_disputa:
+        query = query.filter(Licitacao.tipo_disputa == tipo_disputa)
+    if empresa_vencedora:
+        # Vale se a empresa venceu pelo menos um item da planilha.
+        query = query.filter(Licitacao.itens.any(LicitacaoItem.empresa_vencedora == empresa_vencedora))
+    if ano_licitacao.isdigit():
+        query = query.filter(Licitacao.ano_licitacao == int(ano_licitacao))
+    if cliente:
+        query = query.filter(Licitacao.cliente.ilike(f"%{cliente}%"))
+    if numero_contrato:
+        query = query.filter(Licitacao.numero_contrato.ilike(f"%{numero_contrato}%"))
+
+    data_de = data_ou_none("data_licitacao_de")
+    if data_de:
+        query = query.filter(Licitacao.data_licitacao >= data_de)
+    data_ate = data_ou_none("data_licitacao_ate")
+    if data_ate:
+        query = query.filter(Licitacao.data_licitacao <= data_ate)
+
+    licitacoes = query.order_by(Licitacao.data_cadastro.desc()).all()
+
+    campos_filtro = [
+        "edital", "orgao_licitante", "municipio", "processo_administrativo",
+        "uf", "tipo_processo", "objeto", "participacao", "plataforma",
+        "tipo_disputa", "empresa_vencedora", "ano_licitacao", "cliente",
+        "numero_contrato", "data_licitacao_de", "data_licitacao_ate",
+    ]
+    filtros_ativos = any(texto(c) for c in campos_filtro)
+
+    return render_template(
+        "processos_licitatorio.html",
+        licitacoes=licitacoes,
+        filtros=f,
+        filtros_ativos=filtros_ativos,
+        tipos_licitacao=TIPOS_LICITACAO,
+        objetos_licitacao=OBJETOS_LICITACAO,
+        plataformas_licitacao=PLATAFORMAS_LICITACAO,
+        tipos_disputa=TIPOS_DISPUTA,
+        empresas_vencedoras=EMPRESAS_VENCEDORAS,
+    )
+
+
 @app.route("/agenda")
 @login_required
 def agenda():
