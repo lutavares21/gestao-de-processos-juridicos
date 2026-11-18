@@ -30,12 +30,12 @@
           </ul>
         </div>
 
-        <div class="item-com-submenu{{ ' ativo' if request.endpoint in ['processos_civel', 'processos_civel_recuperacao', 'processos_trabalhista', 'processo_detalhe', 'processo_editar'] else '' }}">
+        <div class="item-com-submenu{{ ' ativo' if request.endpoint in ['processos_civel', 'processos_civel_recuperacao', 'processos_licitatorio', 'processos_trabalhista', 'processo_detalhe', 'processo_editar'] else '' }}">
           <span class="rotulo-menu">Processos Cadastrados <span class="seta-submenu">▸</span></span>
           <ul class="submenu">
             <li><a href="{{ url_for('processos_civel') if cad_civel else '#' }}" class="{{ 'desabilitado' if not cad_civel }}"{{ bloqueio(cad_civel) }}>Processos Cível <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_civel_ativos }}</span></a></li>
             <li><a href="{{ url_for('processos_civel_recuperacao') if cad_rec else '#' }}" class="{{ 'ativo' if request.endpoint == 'processos_civel_recuperacao' else '' }} {{ 'desabilitado' if not cad_rec }}"{{ bloqueio(cad_rec) }}>Processos Cível - Recuperação de Crédito <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_recuperacao_ativos }}</span></a></li>
-            <li><a href="#" class="oculto-visual">Processos Licitatórios</a></li>
+            <li><a href="{{ url_for('processos_licitatorio') if cad_lic else '#' }}" class="{{ 'ativo' if request.endpoint == 'processos_licitatorio' else '' }} {{ 'desabilitado' if not cad_lic }}"{{ bloqueio(cad_lic) }}>Processos Licitatórios</a></li>
             <li><a href="{{ url_for('processos_trabalhista') if cad_trab else '#' }}" class="{{ 'desabilitado' if not cad_trab }}"{{ bloqueio(cad_trab) }}>Processos Trabalhista <span class="badge-ativos"><span class="bolinha-verde"></span>{{ contagem_trabalhista_ativos }}</span></a></li>
             <li><a href="#" class="oculto-visual">Processos Tributários</a></li>
           </ul>
