@@ -1785,12 +1785,17 @@ def cadastro_licitatorio():
             return None
 
     def decimal_valido(valor, rotulo):
-        """Valor em reais (aceita ponto ou vírgula). Vazio vira None."""
+        """Valor em reais (aceita 18.365.420,00, vírgula ou ponto). Vazio vira None."""
         valor = (valor or "").strip()
         if not valor:
             return None
+        # Aceita o formato contábil brasileiro (18.365.420,00) e também 8332.50.
+        if "," in valor:
+            valor = valor.replace(".", "").replace(",", ".")
+        elif valor.count(".") > 1:
+            valor = valor.replace(".", "")
         try:
-            numero = round(float(valor.replace(",", ".")), 2)
+            numero = round(float(valor), 2)
         except ValueError:
             erros.append(f"Informe um valor válido em {rotulo}.")
             return None

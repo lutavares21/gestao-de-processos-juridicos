@@ -60,9 +60,10 @@
           <td><input type="text" name="item_marca" maxlength="100" value="{{ linha.get('item_marca', '') }}"></td>
           <td><input type="text" name="item_modelo" maxlength="100" value="{{ linha.get('item_modelo', '') }}"></td>
           <td><input type="text" name="item_codigo" maxlength="60" value="{{ linha.get('item_codigo', '') }}"></td>
-          <td><input type="number" name="item_unitario_inicial" step="0.01" min="0" placeholder="0,00" value="{{ linha.get('item_unitario_inicial', '') }}"></td>
-          <td><input type="number" name="item_ultimo_lance" step="0.01" min="0" placeholder="0,00" value="{{ linha.get('item_ultimo_lance', '') }}"></td>
-          <td><input type="number" name="item_valor_vencedor" step="0.01" min="0" placeholder="0,00" value="{{ linha.get('item_valor_vencedor', '') }}"></td>
+          <td><input type="text" class="moeda" inputmode="decimal" name="item_unitario_inicial" maxlength="18" placeholder="0,00" value="{{ linha.get('item_unitario_inicial', '') }}"></td>
+          <td><input type="text" class="moeda" inputmode="decimal" name="item_ultimo_lance" maxlength="18" placeholder="0,00" value="{{ linha.get('item_ultimo_lance', '') }}"></td>
+          <td><input type="text" class="moeda" inputmode="decimal" name="item_valor_vencedor" maxlength="18" placeholder="0,00" value="{{ linha.get('item_valor_vencedor', '') }}"></td>
+          <td><input type="text" class="moeda item-total-vencedor" readonly tabindex="-1" placeholder="0,00"></td>
           <td>
             <select name="item_empresa_vencedora">
               <option value="">Selecione</option>
@@ -96,7 +97,7 @@
             </select>
           </td>
           <td><input type="text" class="resumo-total" readonly tabindex="-1" placeholder="—"></td>
-          <td><input type="number" name="resumo_ticket_medio" step="0.01" min="0" placeholder="0,00" value="{{ linha.get('resumo_ticket_medio', '') }}"></td>
+          <td><input type="text" class="moeda" inputmode="decimal" name="resumo_ticket_medio" maxlength="18" placeholder="0,00" value="{{ linha.get('resumo_ticket_medio', '') }}"></td>
           <td>
             <select name="resumo_empresa_vencedora">
               <option value="">Selecione</option>
@@ -547,7 +548,13 @@
     <!-- PLANILHA PROCESSO LICITATÓRIO -->
     <div class="secao">
       <h2>Planilha Processo Licitatório</h2>
-      <p class="dica-secao">Role a tabela para o lado para ver todas as colunas. Use "Adicionar item" para novas linhas.</p>
+      <p class="dica-secao">Role a tabela para o lado para ver todas as colunas. Use "Adicionar item" para novas linhas. O valor total vencedor (quantidade × valor unitário vencedor) e os totais da última linha são calculados sozinhos.</p>
+      <style>
+        .tabela-planilha input.moeda { text-align:right; }
+        .tabela-planilha tfoot td { font-weight:700; background:#eef1f6; border-top:2px solid #1f2a44; padding:10px 12px; white-space:nowrap; }
+        .tabela-planilha tfoot #soma-quantidade,
+        .tabela-planilha tfoot #soma-valor-total { text-align:right; }
+      </style>
       <div class="tabela-wrap" style="margin-bottom:12px;">
         <table class="tabela-processos tabela-planilha">
           <thead>
@@ -560,7 +567,8 @@
               <th class="col-m">Código produto</th>
               <th class="col-m">Unitário inicial</th>
               <th class="col-m">Último lance Atomed</th>
-              <th class="col-m">Valor vencedor</th>
+              <th class="col-m">Valor unitário vencedor</th>
+              <th class="col-m">Valor total vencedor</th>
               <th class="col-gg">Empresa vencedora</th>
               <th class="col-m">Marca vencedora</th>
               <th class="col-m">Modelo vencedor</th>
@@ -571,6 +579,15 @@
           <tbody id="corpo-itens">
             {% for linha in itens %}{{ linha_item(linha, empresas_vencedoras, participacao_item) }}{% endfor %}
           </tbody>
+          <tfoot>
+            <tr class="linha-soma">
+              <td>TOTAL</td>
+              <td id="soma-quantidade">0</td>
+              <td colspan="7"></td>
+              <td id="soma-valor-total">0,00</td>
+              <td colspan="5"></td>
+            </tr>
+          </tfoot>
         </table>
       </div>
       <button type="button" class="btn btn-adicionar" id="btn-add-item">+ Adicionar item</button>
@@ -710,14 +727,106 @@
       });
     });
 
-    // Planilha do processo.
-    listaDinamica('corpo-itens', 'tpl-item', 'btn-add-item');
+    // ---- Valores em formato contábil (18.365.420,00) -----------------------
+    function formatBR(n) {
+      return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    // Lê "18.365.420,00" (ou "8332.50" / "8332") e devolve número; NaN se vazio/inválido.
+    function parseBR(texto) {
+      let t = (texto || '').trim().replace(/[^\d.,]/g, '');
+      if (!t) return NaN;
+      if (t.indexOf(',') > -1) t = t.replace(/\./g, '').replace(',', '.');
+      else if (!/^\d+\.\d{1,2}$/.test(t)) t = t.replace(/\./g, '');
+      return parseFloat(t);
+    }
+    function formatarCampoMoeda(el) {
+      const n = parseBR(el.value);
+      el.value = isNaN(n) ? '' : formatBR(n);
+    }
+    // Formata enquanto digita: 18365420,5 vira 18.365.420,5 (o ",00" fecha ao sair do campo).
+    function mascaraMoeda(el) {
+      const pos = el.selectionStart;
+      let antes = el.value.slice(0, pos).replace(/[^\d,]/g, '').length;
+      const t = el.value.replace(/[^\d,]/g, '');
+      const i = t.indexOf(',');
+      let inteiro = i > -1 ? t.slice(0, i) : t;
+      const dec = i > -1 ? t.slice(i + 1).replace(/,/g, '').slice(0, 2) : null;
+      inteiro = inteiro.replace(/^0+(?=\d)/, '');
+      if (inteiro === '' && dec !== null) { inteiro = '0'; antes += 1; }
+      inteiro = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      el.value = dec === null ? inteiro : inteiro + ',' + dec;
+      let cont = 0, np = 0;
+      while (np < el.value.length && cont < antes) {
+        if (/[\d,]/.test(el.value[np])) cont++;
+        np++;
+      }
+      el.setSelectionRange(np, np);
+    }
+    function ativarMoeda(container) {
+      const alvo = function (ev) {
+        return ev.target.classList && ev.target.classList.contains('moeda') && !ev.target.readOnly ? ev.target : null;
+      };
+      container.addEventListener('input', function (ev) {
+        const el = alvo(ev);
+        if (el) mascaraMoeda(el);
+      });
+      // O ponto do teclado numérico vira vírgula (só uma vírgula por valor).
+      container.addEventListener('keydown', function (ev) {
+        const el = alvo(ev);
+        if (!el || (ev.key !== '.' && ev.key !== 'Decimal')) return;
+        ev.preventDefault();
+        if (el.value.indexOf(',') === -1) {
+          el.setRangeText(',', el.selectionStart, el.selectionEnd, 'end');
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      // Colar "8332.50" ou "18.365.420,00": entende o número e já formata.
+      container.addEventListener('paste', function (ev) {
+        const el = alvo(ev);
+        if (!el) return;
+        const n = parseBR((ev.clipboardData || window.clipboardData).getData('text'));
+        if (isNaN(n)) return;
+        ev.preventDefault();
+        el.value = formatBR(n);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      container.addEventListener('focusout', function (ev) {
+        const el = alvo(ev);
+        if (el) formatarCampoMoeda(el);
+      });
+      container.querySelectorAll('.moeda:not([readonly])').forEach(formatarCampoMoeda);
+    }
+
+    // Planilha do processo: valor total vencedor = quantidade x valor unitário vencedor,
+    // e linha de soma no rodapé (quantidade e valor total vencedor).
+    function atualizarItens() {
+      let somaQtd = 0, somaTotal = 0;
+      document.querySelectorAll('#corpo-itens tr').forEach(function (linha) {
+        const qtd = parseInt(linha.querySelector('[name="item_quantidade"]').value, 10);
+        const unit = parseBR(linha.querySelector('[name="item_valor_vencedor"]').value);
+        const campoTotal = linha.querySelector('.item-total-vencedor');
+        if (!isNaN(qtd)) somaQtd += qtd;
+        if (!isNaN(qtd) && !isNaN(unit)) {
+          const total = Math.round(qtd * unit * 100) / 100;
+          campoTotal.value = formatBR(total);
+          somaTotal += total;
+        } else {
+          campoTotal.value = '';
+        }
+      });
+      document.getElementById('soma-quantidade').textContent = somaQtd.toLocaleString('pt-BR');
+      document.getElementById('soma-valor-total').textContent = formatBR(Math.round(somaTotal * 100) / 100);
+    }
+    const corpoItens = listaDinamica('corpo-itens', 'tpl-item', 'btn-add-item', atualizarItens);
+    ativarMoeda(corpoItens);
+    corpoItens.addEventListener('input', atualizarItens);
+    atualizarItens();
 
     // Planilha resumo: valor total = quantidade x ticket médio.
     function calcularTotais() {
       document.querySelectorAll('#corpo-resumos tr').forEach(function (linha) {
         const qtd = parseInt(linha.querySelector('[name="resumo_quantidade"]').value, 10);
-        const ticket = parseFloat(linha.querySelector('[name="resumo_ticket_medio"]').value);
+        const ticket = parseBR(linha.querySelector('[name="resumo_ticket_medio"]').value);
         const campoTotal = linha.querySelector('.resumo-total');
         if (isNaN(qtd) || isNaN(ticket)) {
           campoTotal.value = '';
@@ -728,6 +837,8 @@
     }
     const corpoResumos = listaDinamica('corpo-resumos', 'tpl-resumo', 'btn-add-resumo', calcularTotais);
     corpoResumos.addEventListener('input', calcularTotais);
+    ativarMoeda(corpoResumos);
+    calcularTotais();
 
     // CNPJ: coloca a máscara 00.000.000/0000-00 enquanto a pessoa digita.
     const cnpj = document.getElementById('cnpj');
