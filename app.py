@@ -9,6 +9,7 @@ import os
 import re
 import unicodedata
 from datetime import datetime, date, timedelta
+from decimal import Decimal
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_file
 from flask_login import (
@@ -397,6 +398,18 @@ def formatar_moeda(valor):
     texto = f"{float(valor):,.2f}"
     texto = texto.replace(",", "_").replace(".", ",").replace("_", ".")
     return f"R$ {texto}"
+
+
+@app.template_filter("data_br")
+def formatar_data_br(valor):
+    """Data no formato 31/12/2026. Retorna None quando vazia."""
+    return valor.strftime("%d/%m/%Y") if valor else None
+
+
+@app.template_filter("sim_nao")
+def formatar_sim_nao(valor):
+    """'sim' -> Sim, 'nao' -> Não, vazio -> None."""
+    return {"sim": "Sim", "nao": "Não"}.get(valor)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -1648,13 +1661,14 @@ def formatar_cnpj(digitos):
     return f"{digitos[:2]}.{digitos[2:5]}.{digitos[5:8]}/{digitos[8:12]}-{digitos[12:]}"
 
 
-@app.route("/cadastro/licitatorio", methods=["GET", "POST"])
-@permissao_required("cadastrar", "licitatorio")
-def cadastro_licitatorio():
-    if request.method == "GET":
-        return render_cadastro_licitatorio(sucesso=request.args.get("sucesso") == "1")
+def validar_formulario_licitatorio(form):
+    """Valida o formulário de licitação (usado pelo cadastro e pela edição).
 
-    form = request.form
+    Devolve (erros, dados, aditivos, itens, resumos, linhas_aditivos,
+    linhas_itens, linhas_resumos): "dados" são as colunas simples da
+    Licitacao já convertidas; os três primeiros são objetos prontos para
+    gravar; os três últimos são o que a pessoa digitou, para reexibir o
+    formulário quando houver erro."""
 
     def campo(nome):
         return (form.get(nome) or "").strip()
@@ -1904,13 +1918,7 @@ def cadastro_licitatorio():
             ticket_medio=ticket, valor_total=total, empresa_vencedora=empresa or None,
         ))
 
-    if erros:
-        return render_cadastro_licitatorio(
-            erros=erros, valores=form,
-            aditivos=linhas_aditivos, itens=linhas_itens, resumos=linhas_resumos,
-        )
-
-    licitacao = Licitacao(
+    dados = dict(
         tipo_processo=campo("tipo_processo"),
         participacao=campo("participacao"),
         justificativa_nao_participacao=justificativa or None,
@@ -1979,10 +1987,75 @@ def cadastro_licitatorio():
         resp_envio_nome=campo("resp_envio_nome")[:120] or None,
         resp_envio_telefone=campo("resp_envio_telefone")[:30] or None,
         resp_envio_email=campo("resp_envio_email")[:120] or None,
-        aditivos=aditivos,
-        itens=itens,
-        resumos=resumos,
     )
+    return erros, dados, aditivos, itens, resumos, linhas_aditivos, linhas_itens, linhas_resumos
+
+
+def _texto_do_valor(valor):
+    """Converte um valor do banco para o texto que o formulário espera."""
+    if valor is None:
+        return ""
+    if isinstance(valor, (date, datetime)):
+        return valor.isoformat()[:10]  # yyyy-mm-dd, formato do <input type="date">
+    if isinstance(valor, (Decimal, float)):
+        return f"{valor:.2f}"
+    return str(valor)
+
+
+def formulario_a_partir_da_licitacao(licitacao):
+    """Monta, a partir de uma Licitacao salva, os mesmos dados que o
+    formulário de cadastro receberia (nomes de campo iguais aos do POST)."""
+    valores = {c.name: _texto_do_valor(getattr(licitacao, c.name))
+               for c in Licitacao.__table__.columns}
+    aditivos = [
+        {"aditivo_data": _texto_do_valor(a.data_aditivo), "aditivo_final": _texto_do_valor(a.data_final)}
+        for a in licitacao.aditivos
+    ]
+    itens = [
+        {
+            "item_item": _texto_do_valor(i.item),
+            "item_quantidade": _texto_do_valor(i.quantidade),
+            "item_produto": _texto_do_valor(i.produto),
+            "item_marca": _texto_do_valor(i.marca),
+            "item_modelo": _texto_do_valor(i.modelo),
+            "item_codigo": _texto_do_valor(i.codigo_produto),
+            "item_unitario_inicial": _texto_do_valor(i.unitario_inicial),
+            "item_ultimo_lance": _texto_do_valor(i.ultimo_lance_atomed),
+            "item_valor_vencedor": _texto_do_valor(i.valor_vencedor),
+            "item_empresa_vencedora": _texto_do_valor(i.empresa_vencedora),
+            "item_marca_vencedora": _texto_do_valor(i.marca_vencedora),
+            "item_modelo_vencedor": _texto_do_valor(i.modelo_vencedor),
+            "item_participacao": _texto_do_valor(i.tipo_participacao),
+        }
+        for i in licitacao.itens
+    ]
+    resumos = [
+        {
+            "resumo_quantidade": _texto_do_valor(r.quantidade),
+            "resumo_produto": _texto_do_valor(r.produto),
+            "resumo_ticket_medio": _texto_do_valor(r.ticket_medio),
+            "resumo_empresa_vencedora": _texto_do_valor(r.empresa_vencedora),
+        }
+        for r in licitacao.resumos
+    ]
+    return valores, aditivos, itens, resumos
+
+
+@app.route("/cadastro/licitatorio", methods=["GET", "POST"])
+@permissao_required("cadastrar", "licitatorio")
+def cadastro_licitatorio():
+    if request.method == "GET":
+        return render_cadastro_licitatorio(sucesso=request.args.get("sucesso") == "1")
+
+    erros, dados, aditivos, itens, resumos, linhas_aditivos, linhas_itens, linhas_resumos = \
+        validar_formulario_licitatorio(request.form)
+    if erros:
+        return render_cadastro_licitatorio(
+            erros=erros, valores=request.form,
+            aditivos=linhas_aditivos, itens=linhas_itens, resumos=linhas_resumos,
+        )
+
+    licitacao = Licitacao(**dados, aditivos=aditivos, itens=itens, resumos=resumos)
     db.session.add(licitacao)
     registrar_atividade(
         "processo_criado",
@@ -1990,6 +2063,61 @@ def cadastro_licitatorio():
     )
     db.session.commit()
     return redirect(url_for("cadastro_licitatorio", sucesso=1))
+
+
+@app.route("/processos/licitatorio/<int:licitacao_id>/editar", methods=["GET", "POST"])
+@login_required
+def licitacao_editar(licitacao_id):
+    licitacao = Licitacao.query.get_or_404(licitacao_id)
+    if not current_user.pode("editar", "licitatorio"):
+        abort(403)
+
+    if request.method == "GET":
+        valores, aditivos, itens, resumos = formulario_a_partir_da_licitacao(licitacao)
+        return render_cadastro_licitatorio(
+            modo_edicao=True, licitacao=licitacao,
+            valores=valores, aditivos=aditivos, itens=itens, resumos=resumos,
+        )
+
+    erros, dados, aditivos, itens, resumos, linhas_aditivos, linhas_itens, linhas_resumos = \
+        validar_formulario_licitatorio(request.form)
+    if erros:
+        return render_cadastro_licitatorio(
+            modo_edicao=True, licitacao=licitacao, erros=erros, valores=request.form,
+            aditivos=linhas_aditivos, itens=linhas_itens, resumos=linhas_resumos,
+        )
+
+    dados["edital"] = licitacao.edital  # o edital identifica o processo e não muda
+    for coluna, valor in dados.items():
+        setattr(licitacao, coluna, valor)
+    # As linhas das tabelas são substituídas pelo que veio do formulário
+    # (cascade delete-orphan apaga as antigas).
+    licitacao.aditivos = aditivos
+    licitacao.itens = itens
+    licitacao.resumos = resumos
+
+    registrar_atividade(
+        "processo_editado",
+        f"Editou o processo licitatório {licitacao.edital} - {licitacao.orgao_licitante}",
+    )
+    db.session.commit()
+    return redirect(url_for("licitacao_detalhe", licitacao_id=licitacao.id))
+
+
+@app.route("/processos/licitatorio/<int:licitacao_id>/excluir", methods=["POST"])
+@admin_required
+def licitacao_excluir(licitacao_id):
+    """Exclui a licitação e as linhas ligadas a ela (aditivos e planilhas,
+    removidas pelo cascade). A confirmação formal é feita no navegador
+    (cadastro_licitatorio.html, em modo de edição) antes de chegar aqui."""
+    licitacao = Licitacao.query.get_or_404(licitacao_id)
+    registrar_atividade(
+        "processo_excluido",
+        f"Excluiu o processo licitatório {licitacao.edital} - {licitacao.orgao_licitante}",
+    )
+    db.session.delete(licitacao)
+    db.session.commit()
+    return redirect(url_for("processos_licitatorio"))
 
 
 @app.route("/processos/civel")
@@ -2358,6 +2486,24 @@ def processos_licitatorio():
         plataformas_licitacao=PLATAFORMAS_LICITACAO,
         tipos_disputa=TIPOS_DISPUTA,
         empresas_vencedoras=EMPRESAS_VENCEDORAS,
+    )
+
+
+@app.route("/processos/licitatorio/<int:licitacao_id>")
+@permissao_required("cadastrar", "licitatorio")
+def licitacao_detalhe(licitacao_id):
+    licitacao = Licitacao.query.get_or_404(licitacao_id)
+    return render_template(
+        "licitacao_detalhe.html",
+        l=licitacao,
+        tipos_licitacao=TIPOS_LICITACAO,
+        objetos_licitacao=OBJETOS_LICITACAO,
+        tipos_disputa=TIPOS_DISPUTA,
+        resultados_licitacao=RESULTADOS_LICITACAO,
+        empresas_vencedoras=EMPRESAS_VENCEDORAS,
+        participacao_item=PARTICIPACAO_ITEM,
+        justificativas_nao_participacao=JUSTIFICATIVAS_NAO_PARTICIPACAO,
+        produtos_resumo=PRODUTOS_RESUMO,
     )
 
 

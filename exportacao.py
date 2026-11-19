@@ -18,11 +18,14 @@ arquivo, para o sistema continuar subindo mesmo se ele não estiver instalado.
 """
 import io
 from datetime import date, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 # Formatos de célula do Excel
 FORMATO_DATA = "DD/MM/YYYY"
 FORMATO_MOEDA = '"R$" #,##0.00'
+# Valor sem "R$", no padrão 18.365.420,00 (o Excel mostra os separadores do
+# idioma do Windows; em português fica 18.365.420,00). Usado no licitatório.
+FORMATO_VALOR = "#,##0.00"
 
 # ----------------------------------------------------------------------------
 # Quadros disponíveis: (id, título na tela, descrição, título da aba/coluna)
@@ -130,9 +133,10 @@ def _texto(valor, formato):
         return "—"
     if formato == "data":
         return valor.strftime("%d/%m/%Y")
-    if formato == "moeda":
+    if formato in ("moeda", "valor"):
         inteiro, _, decimal = f"{float(valor):,.2f}".partition(".")
-        return "R$ " + inteiro.replace(",", ".") + "," + decimal
+        texto = inteiro.replace(",", ".") + "," + decimal
+        return "R$ " + texto if formato == "moeda" else texto
     return str(valor)
 
 
@@ -433,7 +437,7 @@ def _lic_contratacao(l, c):
     return {"campos": [
         ("homologacao", "Data de homologação", l.data_homologacao, "data"),
         ("adjudicacao", "Data de adjudicação", l.data_adjudicacao, "data"),
-        ("valor_contrato", "Valor total do contrato (R$)", _num(l.valor_total_contrato), "moeda"),
+        ("valor_contrato", "Valor total do contrato (R$)", _num(l.valor_total_contrato), "valor"),
         ("n_contrato", "Número do contrato", l.numero_contrato, None),
         ("n_ata", "Número da ata", l.numero_ata, None),
         ("contrato_proc", "Número do processo (contrato)", l.contrato_numero_processo, None),
@@ -470,20 +474,42 @@ def _lic_responsaveis(l, c):
     return {"campos": campos, "tabelas": []}
 
 
+def _total_vencedor(quantidade, valor_unitario):
+    """Valor total vencedor = quantidade x valor unitário vencedor, arredondado
+    em centavos (mesma conta que a página de cadastro faz na tela)."""
+    if quantidade is None or valor_unitario is None:
+        return None
+    total = Decimal(str(quantidade)) * Decimal(str(valor_unitario))
+    return float(total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+
+
 def _lic_planilha_itens(l, c):
     empresas, participacoes = c["empresas"], c["participacao_item"]
     linhas = [[
         i.item, i.quantidade, i.produto, i.marca, i.modelo, i.codigo_produto,
-        _num(i.unitario_inicial), _num(i.ultimo_lance_atomed), _num(i.valor_vencedor),
+        _num(i.unitario_inicial), _num(i.ultimo_lance_atomed),
+        _num(i.valor_vencedor), _total_vencedor(i.quantidade, i.valor_vencedor),
         empresas.get(i.empresa_vencedora, i.empresa_vencedora), i.marca_vencedora, i.modelo_vencedor,
         participacoes.get(i.tipo_participacao, i.tipo_participacao),
     ] for i in l.itens]
+    formatos = [None, "inteiro", None, None, None, None, "valor", "valor", "valor", "valor", None, None, None, None]
+    # Linha TOTAL (igual à da página de cadastro): soma da quantidade e do valor total vencedor.
+    soma = None
+    if linhas:
+        soma = [None] * len(formatos)
+        soma[0] = "TOTAL"
+        soma[1] = sum(int(linha[1]) for linha in linhas if linha[1] is not None)
+        soma[9] = round(sum(linha[9] for linha in linhas if linha[9] is not None), 2)
     return {"campos": [], "tabelas": [{
         "titulo": "Itens",
         "cabecalhos": ["Itens", "Quant.", "Produto", "Marca", "Modelo", "Código produto", "Unitário inicial",
-                       "Último lance Atomed", "Valor vencedor", "Empresa vencedora", "Marca vencedora",
-                       "Modelo vencedor", "Ampla participação / Exclusivo ME/EPP"],
-        "formatos": [None, "inteiro", None, None, None, None, "moeda", "moeda", "moeda", None, None, None, None],
+                       "Último lance Atomed", "Valor unitário vencedor", "Valor total vencedor",
+                       "Empresa vencedora", "Marca vencedora", "Modelo vencedor",
+                       "Ampla participação / Exclusivo ME/EPP"],
+        "formatos": formatos,
+        "soma": soma,
+        # larguras relativas no PDF (os valores precisam de espaço para não quebrar)
+        "pesos": [0.9, 0.7, 1.3, 1.0, 1.0, 1.0, 1.3, 1.3, 1.35, 1.4, 1.3, 1.0, 1.0, 1.4],
         "linhas": linhas,
     }]}
 
@@ -496,7 +522,7 @@ def _lic_planilha_resumo(l, c):
     return {"campos": [], "tabelas": [{
         "titulo": "Resumo do resultado",
         "cabecalhos": ["Quantidade", "Produto", "Valor total", "Ticket médio", "Empresa vencedora"],
-        "formatos": ["inteiro", None, "moeda", "moeda", None],
+        "formatos": ["inteiro", None, "valor", "valor", None],
         "linhas": linhas,
     }]}
 
@@ -634,6 +660,7 @@ def _grava(celula, valor, formato, est, tabular=True, zebra=False):
         celula.alignment = {
             "data": est["alin_data"],
             "moeda": est["alin_numero"],
+            "valor": est["alin_numero"],
             "inteiro": est["alin_numero"],
             "longo": est["alin_longo"],
         }.get(formato, est["alin_texto"])
@@ -647,6 +674,8 @@ def _grava(celula, valor, formato, est, tabular=True, zebra=False):
         celula.number_format = FORMATO_DATA
     elif formato == "moeda":
         celula.number_format = FORMATO_MOEDA
+    elif formato == "valor":
+        celula.number_format = FORMATO_VALOR
     elif formato == "inteiro":
         celula.number_format = "0"
 
@@ -657,7 +686,7 @@ def _tamanho_texto(valor, formato):
         return 0
     if formato == "data":
         return 10
-    if formato == "moeda":
+    if formato in ("moeda", "valor"):
         return len(_texto(valor, formato))
     texto = str(valor)
     return max(len(linha) for linha in texto.split("\n"))
@@ -755,6 +784,14 @@ def gerar_excel_processo(processo, secoes, centros, escolha=None):
                     _grava(ws.cell(row=linha, column=coluna), valor, formato, est)
                     acumula(coluna, valor if formato is None else None)
                 linha += 1
+            if tabela.get("soma") and tabela["linhas"]:
+                # Linha de soma (ex.: TOTAL da planilha de itens), em destaque
+                for coluna, (valor, formato) in enumerate(zip(tabela["soma"], tabela["formatos"]), start=1):
+                    c = ws.cell(row=linha, column=coluna)
+                    _grava(c, valor, formato, est)
+                    c.font, c.fill = est["rotulo_fonte"], est["rotulo_fundo"]
+                    acumula(coluna, valor if formato is None else None)
+                linha += 1
 
         for coluna, valores in larguras.items():
             ws.column_dimensions[get_column_letter(coluna)].width = _largura(valores, minimo=14, maximo=70)
@@ -767,10 +804,16 @@ def _tabela_como_texto(tabela):
     """Uma tabela inteira em uma célula: uma linha de texto por registro."""
     if not tabela["linhas"]:
         return ""
-    return "\n".join(
+    linhas = [
         " | ".join(_texto(v, f) for v, f in zip(registro, tabela["formatos"]))
         for registro in tabela["linhas"]
-    )
+    ]
+    if tabela.get("soma"):
+        partes = [f"{rotulo}: {_texto(v, f)}"
+                  for rotulo, v, f in zip(tabela["cabecalhos"], tabela["soma"], tabela["formatos"])
+                  if v is not None and v != "TOTAL"]
+        linhas.append("TOTAL - " + " | ".join(partes))
+    return "\n".join(linhas)
 
 
 def gerar_excel_processos(processos, origem, secoes, centros, escolha=None):
@@ -961,16 +1004,39 @@ def gerar_pdf(registros, origem, secoes, centros, escolha=None):
                 est_cab = ParagraphStyle("cab", fontName="Helvetica-Bold", fontSize=tamanho,
                                          leading=tamanho + 2, textColor=colors.white, alignment=1)
                 est_cel = ParagraphStyle("cel", fontName="Helvetica", fontSize=tamanho, leading=tamanho + 2)
+                est_num = ParagraphStyle("num", parent=est_cel, alignment=2)  # números à direita
+                est_soma = ParagraphStyle("soma", parent=est_cel, fontName="Helvetica-Bold")
+                est_soma_num = ParagraphStyle("soma_num", parent=est_soma, alignment=2)
+                numericos = ("valor", "moeda", "inteiro")
+
+                def celula_pdf(v, f, normal, numero):
+                    return par(v, f, numero if f in numericos else normal)
+
                 corpo = [[Paragraph(escape(c), est_cab) for c in sub["cabecalhos"]]]
                 for reg in sub["linhas"]:
-                    corpo.append([par(v, f, est_cel) for v, f in zip(reg, sub["formatos"])])
-                tabela = Table(corpo, colWidths=[largura / colunas] * colunas, repeatRows=1)
-                tabela.setStyle(TableStyle([
+                    corpo.append([celula_pdf(v, f, est_cel, est_num) for v, f in zip(reg, sub["formatos"])])
+                soma = sub.get("soma")
+                if soma:
+                    # Valores vazios da linha de soma ficam em branco (não "—")
+                    corpo.append([
+                        Paragraph("", est_soma) if v is None else celula_pdf(v, f, est_soma, est_soma_num)
+                        for v, f in zip(soma, sub["formatos"])
+                    ])
+                pesos = sub.get("pesos") or [1] * colunas
+                colw = [largura * p / sum(pesos) for p in pesos]
+                tabela = Table(corpo, colWidths=colw, repeatRows=1)
+                estilo_tabela = [
                     ("BACKGROUND", (0, 0), (-1, 0), azul),
                     ("GRID", (0, 0), (-1, -1), 0.4, borda),
                     ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, cinza]),
-                ]))
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1 - (1 if soma else 0)), [colors.white, cinza]),
+                ]
+                if soma:
+                    estilo_tabela += [
+                        ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#E8E3D6")),
+                        ("LINEABOVE", (0, -1), (-1, -1), 0.9, azul),
+                    ]
+                tabela.setStyle(TableStyle(estilo_tabela))
                 elementos.append(tabela)
                 elementos.append(Spacer(1, 8))
             elementos.append(Spacer(1, 6))

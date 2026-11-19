@@ -154,7 +154,7 @@
                 <th>Participação</th>
                 <th>Data da licitação</th>
                 <th style="text-align:left;">Valor do contrato</th>
-                {# <th>Ações</th> — entra quando existirem as telas de detalhe e edição da licitação #}
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -186,10 +186,12 @@
                   —
                   {% endif %}
                 </td>
-                {# <td>
+                <td>
                   <a class="btn-detalhe" href="{{ url_for('licitacao_detalhe', licitacao_id=l.id) }}">Ver detalhes</a>
+                  {% if current_user.pode('editar', 'licitatorio') %}
                   <a class="btn-detalhe btn-editar" href="{{ url_for('licitacao_editar', licitacao_id=l.id) }}">Editar</a>
-                </td> #}
+                  {% endif %}
+                </td>
               </tr>
               {% endfor %}
             </tbody>

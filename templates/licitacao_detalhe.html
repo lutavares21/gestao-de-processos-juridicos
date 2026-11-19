@@ -1,0 +1,385 @@
+{% extends "base_painel.html" %}
+
+{# Mesmo padrão da página de detalhe dos outros processos (processo_detalhe.html). #}
+{% macro cv(rotulo, valor, classe_campo='', estilo='') %}
+<div class="campo {{ classe_campo }}" style="{{ estilo }}">
+  <label>{{ rotulo }}</label>
+  {% if valor is not none and valor != '' %}
+  <div class="valor">{{ valor }}</div>
+  {% else %}
+  <div class="valor texto-vazio">—</div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro cv_moeda(rotulo, valor) %}
+<div class="campo">
+  <label>{{ rotulo }}</label>
+  {% if valor is not none %}
+  {% set texto = valor|moeda %}
+  <div class="valor" style="justify-content:space-between;">
+    <span>{{ texto.split(' ')[0] }}</span>
+    <span>{{ texto.split(' ', 1)[1] }}</span>
+  </div>
+  {% else %}
+  <div class="valor texto-vazio">—</div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{# Valor no padrão do formulário de cadastro: 18.365.420,00 (sem "R$"). #}
+{% macro valor_br(v) -%}
+{%- if v is none -%}—{%- else -%}{{ v|moeda|replace('R$ ', '') }}{%- endif -%}
+{%- endmacro %}
+
+{# Data + horário juntos, ex.: 12/03/2026 09:30 #}
+{% macro data_hora(data, horario) -%}
+{%- if data -%}{{ data|data_br }}{{ ' ' ~ horario if horario else '' }}{%- endif -%}
+{%- endmacro %}
+
+{% block titulo %}Licitação {{ l.edital }}{% endblock %}
+{% block cabecalho %}
+      <div class="cabecalho">
+        <div style="display:flex; align-items:center; justify-content:flex-start; gap:12px; flex-wrap:wrap;">
+          <h1>Processo Licitatório {{ l.edital }}</h1>
+          {% if current_user.pode('editar', 'licitatorio') %}
+          <a href="{{ url_for('licitacao_editar', licitacao_id=l.id) }}" class="btn btn-adicionar" style="text-decoration:none;">Editar processo</a>
+          {% endif %}
+        </div>
+        <div class="subtitulo">Gestão de Processos Jurídicos</div>
+      </div>
+{% endblock %}
+
+{% block conteudo %}
+        <a class="link-voltar" href="{{ url_for('processos_licitatorio') }}">← Voltar para a listagem</a>
+
+        <!-- 1. TIPO DE PROCESSO E PARTICIPAÇÃO -->
+        <div class="secao">
+          <h2>Tipo de processo e participação</h2>
+          <div class="linha">
+            {{ cv('Modalidade', tipos_licitacao.get(l.tipo_processo)) }}
+            {{ cv('Objeto', objetos_licitacao.get(l.objeto)) }}
+            {{ cv('Participação', l.participacao|sim_nao, 'campo-pequeno') }}
+          </div>
+          {% if l.participacao == 'nao' %}
+          <div class="linha">
+            {{ cv('Justificativa da não participação', justificativas_nao_participacao.get(l.justificativa_nao_participacao)) }}
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- 2. ÓRGÃO LICITANTE -->
+        <div class="secao">
+          <h2>Dados do órgão licitante</h2>
+          <div class="linha">
+            {{ cv('Edital', l.edital) }}
+            {{ cv('Processo administrativo', l.processo_administrativo) }}
+            {{ cv('UASG', l.uasg) }}
+            {{ cv('Ano da licitação', l.ano_licitacao, 'campo-pequeno') }}
+          </div>
+          <div class="linha">
+            {{ cv('Órgão licitante', l.orgao_licitante) }}
+          </div>
+          <div class="linha">
+            {{ cv('E-mail', l.email) }}
+            {{ cv('Telefone', l.telefone) }}
+            {{ cv('Telefone 2', l.telefone_2) }}
+          </div>
+          <div class="linha">
+            {{ cv('Endereço', l.endereco) }}
+          </div>
+          <div class="linha">
+            {{ cv('Município', l.municipio) }}
+            {{ cv('Estado', l.estado) }}
+            {{ cv('UF', l.uf, '', 'flex: 0 0 90px;') }}
+          </div>
+        </div>
+
+        <!-- 3. FASE INICIAL - ACOMPANHAMENTO -->
+        <div class="secao">
+          <h2>Fase inicial – acompanhamento</h2>
+          <div class="linha">
+            {{ cv('Data e horário da licitação', data_hora(l.data_licitacao, l.horario_licitacao)) }}
+            {{ cv('Plataforma', l.plataforma_outra if l.plataforma == 'outros' else l.plataforma) }}
+            {{ cv('Tipo de disputa', tipos_disputa.get(l.tipo_disputa)) }}
+          </div>
+          <div class="linha">
+            {{ cv('Próxima data de acompanhamento', data_hora(l.proxima_data_acompanhamento, l.proximo_horario_acompanhamento)) }}
+            {{ cv('Última data de acompanhamento', data_hora(l.ultima_data_acompanhamento, l.ultimo_horario_acompanhamento)) }}
+            {{ cv('Penúltima data de acompanhamento', data_hora(l.penultima_data_acompanhamento, l.penultimo_horario_acompanhamento)) }}
+          </div>
+        </div>
+
+        <!-- 4. ESCLARECIMENTO, IMPUGNAÇÃO, RECURSOS E CONTRARRAZÃO -->
+        <div class="secao">
+          <h2>Esclarecimento – impugnação – recursos – contrarrazão</h2>
+          <div class="linha">
+            {{ cv('Esclarecimento', l.esclarecimento|sim_nao) }}
+            {{ cv('Impugnação', l.impugnacao|sim_nao) }}
+            {{ cv('Resultado da impugnação', resultados_licitacao.get(l.impugnacao_resultado) if l.impugnacao == 'sim' else None) }}
+          </div>
+          <div class="linha">
+            {{ cv('Recursos', l.recursos|sim_nao) }}
+            {{ cv('Resultado dos recursos', resultados_licitacao.get(l.recursos_resultado) if l.recursos == 'sim' else None) }}
+          </div>
+          <div class="linha">
+            {{ cv('Contrarrazão', l.contrarrazao|sim_nao) }}
+            {{ cv('Resultado da contrarrazão', resultados_licitacao.get(l.contrarrazao_resultado) if l.contrarrazao == 'sim' else None) }}
+          </div>
+        </div>
+
+        <!-- 5. RESUMO DO PROCESSO -->
+        <div class="secao">
+          <h2>Resumo do processo e informação sobre obrigatoriedade</h2>
+          <div class="linha">
+            <div class="campo">
+              <div class="valor{{ ' texto-vazio' if not l.resumo_processo }}" style="white-space:pre-wrap; align-items:flex-start;">{{ l.resumo_processo or '—' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. CUSTO OBRIGATÓRIO -->
+        <div class="secao">
+          <h2>Custo obrigatório</h2>
+          <div class="linha">
+            {{ cv('Pilhas (cartelas) por AASI', l.pilhas_por_aasi) }}
+            {{ cv('Desumidificador por AASI', l.desumidificador_por_aasi) }}
+            {{ cv('Receptor por AASI', l.receptor_por_aasi) }}
+            {{ cv('Massa Dreve', l.massa_dreve) }}
+          </div>
+          <div class="linha">
+            {{ cv('Molde', l.molde|sim_nao) }}
+            {{ cv('Adaptação aberta', l.adaptacao_aberta|sim_nao) }}
+            {{ cv('Apoio local', l.apoio_local|sim_nao) }}
+          </div>
+        </div>
+
+        <!-- 7. GARANTIA DA LICITAÇÃO -->
+        <div class="secao">
+          <h2>Garantia da licitação</h2>
+          <div class="linha">
+            {{ cv('Garantia da licitação', l.garantia_licitacao|sim_nao, 'campo-pequeno') }}
+            {% if l.garantia_licitacao == 'sim' %}
+            {{ cv('Qual?', l.garantia_qual) }}
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- 8. DADOS DA CONTRATAÇÃO -->
+        <div class="secao">
+          <h2>Dados da contratação</h2>
+          <div class="linha">
+            {{ cv('Data da homologação', l.data_homologacao|data_br) }}
+            {{ cv('Data da adjudicação', l.data_adjudicacao|data_br) }}
+            {{ cv_moeda('Valor total do contrato (R$)', l.valor_total_contrato) }}
+          </div>
+          <div class="linha">
+            {{ cv('Nº do contrato', l.numero_contrato) }}
+            {{ cv('Nº da ata', l.numero_ata) }}
+            {{ cv('Nº do processo (contrato)', l.contrato_numero_processo) }}
+          </div>
+          <div class="linha">
+            {{ cv('Data de assinatura do contrato', l.data_assinatura_contrato|data_br) }}
+            {{ cv('Vigência inicial', l.vigencia_inicial|data_br) }}
+            {{ cv('Vigência final', l.vigencia_final|data_br) }}
+            {{ cv('Prazo contratual', l.prazo_contratual) }}
+          </div>
+
+          {% if l.aditivos %}
+          <label class="rotulo-secao">Aditivos contratuais</label>
+          <div class="tabela-wrap">
+            <table class="tabela-processos tabela-titulos-detalhe">
+              <thead>
+                <tr><th>Aditivo</th><th>Data</th><th>Final</th></tr>
+              </thead>
+              <tbody>
+                {% for a in l.aditivos %}
+                <tr>
+                  <td>{{ loop.index }}º Aditivo Contratual</td>
+                  <td>{{ a.data_aditivo|data_br or '—' }}</td>
+                  <td>{{ a.data_final|data_br or '—' }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- 9. FATURAMENTO -->
+        <div class="secao">
+          <h2>Dados de faturamento</h2>
+          <div class="linha">
+            {{ cv('ID do cliente', l.id_cliente) }}
+            {{ cv('Cliente', l.cliente) }}
+            {{ cv('CNPJ', l.cnpj) }}
+          </div>
+          <div class="linha">
+            {{ cv('Endereço de faturamento', l.endereco_faturamento) }}
+          </div>
+          <div class="linha">
+            {{ cv('Endereço de entrega', l.endereco_entrega) }}
+          </div>
+        </div>
+
+        <!-- 10. RESPONSÁVEIS -->
+        <div class="secao">
+          <h2>Responsáveis</h2>
+          <div class="linha">
+            {{ cv('Responsável Setor de Fono', l.resp_fono_nome) }}
+            {{ cv('Telefone', l.resp_fono_telefone) }}
+            {{ cv('E-mail', l.resp_fono_email) }}
+          </div>
+          <div class="linha">
+            {{ cv('Responsável pelo órgão', l.resp_orgao_nome) }}
+            {{ cv('Telefone', l.resp_orgao_telefone) }}
+            {{ cv('E-mail', l.resp_orgao_email) }}
+          </div>
+          <div class="linha">
+            {{ cv('Responsável pelo envio do pedido', l.resp_envio_nome) }}
+            {{ cv('Telefone', l.resp_envio_telefone) }}
+            {{ cv('E-mail', l.resp_envio_email) }}
+          </div>
+        </div>
+
+        <!-- 11. PLANILHA PROCESSO LICITATÓRIO -->
+        <div class="secao">
+          <h2>Planilha Processo Licitatório</h2>
+          {% if l.itens %}
+          <div class="tabela-wrap">
+            <table class="tabela-processos tabela-titulos-detalhe">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th class="col-num">Quant.</th>
+                  <th>Produto</th>
+                  <th>Marca</th>
+                  <th>Modelo</th>
+                  <th>Código produto</th>
+                  <th class="col-num">Unitário inicial</th>
+                  <th class="col-num">Último lance Atomed</th>
+                  <th class="col-num">Valor unitário vencedor</th>
+                  <th class="col-num">Valor total vencedor</th>
+                  <th>Empresa vencedora</th>
+                  <th>Marca vencedora</th>
+                  <th>Modelo vencedor</th>
+                  <th>Ampla participação / Exclusivo ME/EPP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% set soma = namespace(qtd=0, total=0) %}
+                {% for i in l.itens %}
+                {% set total_item = (i.quantidade * i.valor_vencedor)|round(2) if i.quantidade is not none and i.valor_vencedor is not none else none %}
+                {% if i.quantidade is not none %}{% set soma.qtd = soma.qtd + i.quantidade %}{% endif %}
+                {% if total_item is not none %}{% set soma.total = soma.total + total_item %}{% endif %}
+                <tr>
+                  <td>{{ i.item or '—' }}</td>
+                  <td class="col-num">{{ i.quantidade if i.quantidade is not none else '—' }}</td>
+                  <td>{{ i.produto or '—' }}</td>
+                  <td>{{ i.marca or '—' }}</td>
+                  <td>{{ i.modelo or '—' }}</td>
+                  <td>{{ i.codigo_produto or '—' }}</td>
+                  <td class="col-num">{{ valor_br(i.unitario_inicial) }}</td>
+                  <td class="col-num">{{ valor_br(i.ultimo_lance_atomed) }}</td>
+                  <td class="col-num">{{ valor_br(i.valor_vencedor) }}</td>
+                  <td class="col-num">{{ valor_br(total_item) }}</td>
+                  <td>{{ empresas_vencedoras.get(i.empresa_vencedora, '—') }}</td>
+                  <td>{{ i.marca_vencedora or '—' }}</td>
+                  <td>{{ i.modelo_vencedor or '—' }}</td>
+                  <td>{{ participacao_item.get(i.tipo_participacao, '—') }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td class="rodape-rotulo">TOTAL</td>
+                  <td class="col-num">{{ soma.qtd }}</td>
+                  <td colspan="7"></td>
+                  <td class="col-num">{{ valor_br(soma.total) }}</td>
+                  <td colspan="4"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          {% else %}
+          <div class="estado-vazio">Nenhum item cadastrado na planilha.</div>
+          {% endif %}
+        </div>
+
+        <!-- 12. PLANILHA RESUMO RESULTADO -->
+        <div class="secao">
+          <h2>Planilha Resumo Resultado Processo Licitatório</h2>
+          {% if l.resumos %}
+          <div class="tabela-wrap">
+            <table class="tabela-processos tabela-titulos-detalhe">
+              <thead>
+                <tr>
+                  <th class="col-num">Quantidade</th>
+                  <th>Produto</th>
+                  <th class="col-num">Valor total</th>
+                  <th class="col-num">Ticket médio</th>
+                  <th>Empresa vencedora</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in l.resumos %}
+                <tr>
+                  <td class="col-num">{{ r.quantidade if r.quantidade is not none else '—' }}</td>
+                  <td>{{ produtos_resumo.get(r.produto, '—') }}</td>
+                  <td class="col-num">{{ valor_br(r.valor_total) }}</td>
+                  <td class="col-num">{{ valor_br(r.ticket_medio) }}</td>
+                  <td>{{ empresas_vencedoras.get(r.empresa_vencedora, '—') }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="estado-vazio">Nenhuma linha cadastrada no resumo do resultado.</div>
+          {% endif %}
+        </div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+  // Barra de rolagem horizontal também no topo de toda tabela desta página
+  // que precise de rolagem (mesmo comportamento da página de detalhe dos outros processos).
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.tabela-wrap').forEach((wrap) => {
+      const tabela = wrap.querySelector('table');
+      if (!tabela) return;
+
+      const topo = document.createElement('div');
+      topo.className = 'scroll-topo';
+      const interno = document.createElement('div');
+      topo.appendChild(interno);
+      wrap.parentNode.insertBefore(topo, wrap);
+
+      function ajustar() {
+        interno.style.width = tabela.scrollWidth + 'px';
+        topo.style.display = tabela.scrollWidth > wrap.clientWidth ? '' : 'none';
+      }
+      ajustar();
+      window.addEventListener('resize', ajustar);
+      if (window.ResizeObserver) {
+        new ResizeObserver(ajustar).observe(tabela);
+        new ResizeObserver(ajustar).observe(wrap);
+      }
+
+      let sincronizando = false;
+      topo.addEventListener('scroll', () => {
+        if (sincronizando) return;
+        sincronizando = true;
+        wrap.scrollLeft = topo.scrollLeft;
+        sincronizando = false;
+      });
+      wrap.addEventListener('scroll', () => {
+        if (sincronizando) return;
+        sincronizando = true;
+        topo.scrollLeft = wrap.scrollLeft;
+        sincronizando = false;
+      });
+    });
+  });
+</script>
+{% endblock %}
